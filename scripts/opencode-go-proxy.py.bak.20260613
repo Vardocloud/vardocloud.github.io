@@ -1,0 +1,163 @@
+#!/usr/bin/env python3
+"""OpenCode Go transparent proxy — port 19998 → https://opencode.ai/zen/go"""
+import sys, os, json as _json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import urllib.request
+
+TARGET = 'https://opencode.ai/zen/go'
+PORT = 19998
+BROWSER_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
+
+# API key auth.json'dan okunur
+API_KEY = None
+auth_path = os.path.expanduser('~/.local/share/opencode/auth.json')
+if os.path.exists(auth_path):
+    import builtins
+    try:
+        auth_data = _json.loads(builtins.open(auth_path).read())
+        API_KEY = auth_data.get('opencode-go', '')
+        if API_KEY:
+            print(f"[PROXY] OpenCode Go API key loaded ({len(API_KEY)} chars)", file=sys.stderr, flush=True)
+        else:
+            print("[PROXY] WARNING: opencode-go key not found in auth.json", file=sys.stderr, flush=True)
+    except Exception as e:
+        print(f"[PROXY] ERROR reading auth.json: {e}", file=sys.stderr, flush=True)
+else:
+    print(f"[PROXY] WARNING: auth.json not found at {auth_path}", file=sys.stderr, flush=True)
+
+# Model list for fake endpoints (from actual API discovery)
+OPENCODE_GO_MODELS = [
+    {'id': 'deepseek-v4-flash'}, {'id': 'deepseek-v4-pro'},
+    {'id': 'glm-5'}, {'id': 'glm-5.1'},
+    {'id': 'minimax-m2.7'}, {'id': 'minimax-m2.5'},
+    {'id': 'minimax-m3'},
+    {'id': 'kimi-k2.6'}, {'id': 'kimi-k2.5'},
+    {'id': 'mimo-v2.5'}, {'id': 'mimo-v2.5-pro'},
+    {'id': 'qwen3.7-max'}, {'id': 'qwen3.7-plus'}, {'id': 'qwen3.6-plus'},
+]
+
+class Handler(BaseHTTPRequestHandler):
+    def do_POST(s):
+        # OpenCode /v1/responses → /v1/chat/completions donusumu
+        if s.path == '/v1/responses':
+            s.path = '/v1/chat/completions'
+        s._fw('POST')
+
+    def do_GET(s):
+        # Hermes'in sorguladigi endpoint'lere sahte yanit
+        fake_responses = {
+            '/api/tags': {'models': [{'name': m['id']} for m in OPENCODE_GO_MODELS]},
+            '/v1/models': {'object': 'list', 'data': OPENCODE_GO_MODELS},
+            '/api/v1/models': {'object': 'list', 'data': OPENCODE_GO_MODELS},
+            '/v1/props': {'opencode_go': True, 'supports_tools': True, 'supports_streaming': True},
+            '/props': {'opencode_go': True},
+            '/version': {'version': 'go-1.0'},
+            '/api/show': {'license': 'MIT', 'modelfile': '', 'parameters': '', 'template': ''},
+        }
+        # /api/show?name=X
+        if s.path.startswith('/api/show'):
+            s.send_response(200)
+            s.send_header('Content-Type', 'application/json')
+            s.end_headers()
+            s.wfile.write(_json.dumps({'license': 'MIT', 'modelfile': '', 'parameters': '', 'template': ''}).encode())
+            print(f"[PROXY] GET {s.path} → FAKE 200", file=sys.stderr, flush=True)
+            return
+        if s.path in fake_responses:
+            s.send_response(200)
+            s.send_header('Content-Type', 'application/json')
+            s.end_headers()
+            s.wfile.write(_json.dumps(fake_responses[s.path]).encode())
+            print(f"[PROXY] GET {s.path} → FAKE 200", file=sys.stderr, flush=True)
+        else:
+            s.send_response(404)
+            s.end_headers()
+            print(f"[PROXY] GET {s.path} → 404", file=sys.stderr, flush=True)
+
+    def do_OPTIONS(s):
+        s.send_response(200)
+        s.send_header('Access-Control-Allow-Origin', '*')
+        s.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        s.send_header('Access-Control-Allow-Headers', '*')
+        s.end_headers()
+
+    def log_message(s, *a):
+        import sys
+        print(f"[PROXY] {s.command} {s.path} -> {s.headers.get('Authorization','no-auth')[:20]}...", file=sys.stderr, flush=True)
+
+    def _fw(s, method):
+        cl = int(s.headers.get('Content-Length', 0))
+        body = s.rfile.read(cl) if cl else None
+
+        # Responses API -> Chat Completions donusumu
+        if body and b'"input"' in body:
+            try:
+                data = _json.loads(body)
+                if 'input' in data:
+                    data['messages'] = []
+                    for msg in data.pop('input'):
+                        role = msg.get('role', 'user')
+                        if role == 'developer':
+                            role = 'system'
+                        data['messages'].append({'role': role, 'content': msg.get('content', '')})
+                    for key in ['text', 'store', 'include', 'prompt_cache_key', 'reasoning']:
+                        data.pop(key, None)
+                    body = _json.dumps(data).encode()
+                    print(f"[PROXY] Responses->Chat transform | {len(body)}b", file=sys.stderr, flush=True)
+            except Exception as e:
+                print(f"[PROXY] Transform error: {e}", file=sys.stderr, flush=True)
+
+        # Model name log
+        if body:
+            body_preview = body[:300].decode('utf-8', 'ignore')
+            if '"model"' in body_preview:
+                try:
+                    req_data = _json.loads(body)
+                    model = req_data.get('model', '?')
+                    print(f"[PROXY] {method} {s.path} | model={model} | body={len(body)}b", file=sys.stderr, flush=True)
+                except:
+                    print(f"[PROXY] {method} {s.path} | body={len(body)}b", file=sys.stderr, flush=True)
+            else:
+                print(f"[PROXY] {method} {s.path} | body={len(body)}b", file=sys.stderr, flush=True)
+
+        req = urllib.request.Request(TARGET + s.path, data=body, method=method)
+        for h, v in s.headers.items():
+            if h.lower() in ('host', 'content-length', 'user-agent', 'authorization'):
+                continue
+            req.add_header(h, v)
+        req.add_header('User-Agent', BROWSER_UA)
+        # Always use our own API key - replace 'no-auth' or any key from client
+        if API_KEY:
+            req.add_header('Authorization', f'Bearer {API_KEY}')
+
+        try:
+            resp = urllib.request.urlopen(req, timeout=300)
+            s.send_response(resp.status)
+            for rh, rv in resp.getheaders():
+                if rh.lower() not in ('transfer-encoding', 'connection'):
+                    s.send_header(rh, rv)
+            s.end_headers()
+            full_body = b''
+            while True:
+                chunk = resp.read(65536)
+                if not chunk:
+                    break
+                full_body += chunk
+                s.wfile.write(chunk)
+            # Truncated log
+            log_content = full_body[:150]
+            print(f"[PROXY] ← {resp.status} | {len(full_body)}b | {log_content}", file=sys.stderr, flush=True)
+        except urllib.error.HTTPError as e:
+            err_body = e.read()
+            s.send_response(e.code)
+            s.end_headers()
+            s.wfile.write(err_body)
+            print(f"[PROXY] ← HTTP {e.code} | {err_body[:200]}", file=sys.stderr, flush=True)
+        except Exception as e:
+            s.send_response(502)
+            s.end_headers()
+            s.wfile.write(_json.dumps({'error': str(e)}).encode())
+            print(f"[PROXY] ← ERROR: {e}", file=sys.stderr, flush=True)
+
+if __name__ == '__main__':
+    print(f'OpenCode Go proxy :{PORT} -> {TARGET}', flush=True)
+    HTTPServer(('127.0.0.1', PORT), Handler).serve_forever()

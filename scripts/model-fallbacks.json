@@ -1,0 +1,61 @@
+{
+  "glm-5.1": [
+    "deepseek-v4-flash",
+    "qwen3.7-max",
+    "kimi-k2.5"
+  ],
+  "deepseek-v4-flash": [
+    "qwen3.7-max",
+    "kimi-k2.5",
+    "deepseek-v4-flash-free"
+  ],
+  "deepseek-v4-pro": [
+    "deepseek-v4-flash",
+    "qwen3.7-max",
+    "kimi-k2.5"
+  ],
+  "qwen3.7-max": [
+    "deepseek-v4-flash",
+    "kimi-k2.5",
+    "glm-5.1"
+  ],
+  "mistral-large": [
+    "glm-5.1",
+    "deepseek-v4-flash",
+    "qwen3.7-max"
+  ],
+  "kimi-k2.5": [
+    "deepseek-v4-flash",
+    "qwen3.7-max",
+    "glm-5.1"
+  ],
+  "gpt-5.4-mini": [
+    "gemma",
+    "deepseek-v4-flash"
+  ],
+  "gemma": [
+    "gpt-5.4-mini",
+    "deepseek-v4-flash"
+  ],
+  "minimax-m3": [
+    "deepseek-v4-flash",
+    "qwen3.7-max",
+    "kimi-k2.5"
+  ],
+  "mimo-v2.5-free": [
+    "deepseek-v4-flash-free",
+    "nemotron-3-ultra-free"
+  ],
+  "minimax-m3-free": [
+    "deepseek-v4-flash-free",
+    "mimo-v2.5-free"
+  ],
+  "deepseek-v4-flash-free": [
+    "mimo-v2.5-free",
+    "nemotron-3-ultra-free"
+  ],
+  "nemotron-3-ultra-free": [
+    "mimo-v2.5-free",
+    "deepseek-v4-flash-free"
+  ]
+}

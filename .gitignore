@@ -1,0 +1,40 @@
+# Sensitive — NEVER commit
+.env
+secrets/
+google_token.json
+google_client_secret.json
+.nb_totp_secret*
+.git-credentials
+*.key
+*.pem
+*.cert
+
+# Logs
+*.log
+logs/
+
+# Cache
+__pycache__/
+*.pyc
+node_modules/
+.cache/
+
+# System
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+
+# Hermes runtime
+cron/jobs.json
+data/
+google_oauth_pending.json
+google_oauth_last_url.txt
+
+# Temp
+tmp/
+/tmp/
+
+# Browser config
+.config/

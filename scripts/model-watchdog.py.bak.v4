@@ -1,0 +1,342 @@
+#!/usr/bin/env python3
+"""
+Model Watchdog v2 — Auto-detect model changes and update configs.
+
+Strategy:
+1. Get available models from Go proxy + Pollinations proxy
+2. For Zen-only models: test via Go proxy (may not be listed) or test individually
+3. If model works in chat completion -> keep it
+4. If model fails -> select fallback based on task type
+5. Update configs and restart gateway if needed
+6. Send Telegram notification
+
+Scheduled: 0 4 * * * (daily at 04:00)
+"""
+
+import json
+import os
+import subprocess
+import sys
+import urllib.request
+import urllib.error
+from datetime import datetime
+
+HERMES_HOME = os.path.expanduser('~/.hermes')
+CRON_PATH = os.path.join(HERMES_HOME, 'cron', 'jobs.json')
+PROFILES_DIR = os.path.join(HERMES_HOME, 'profiles')
+STATE_PATH = os.path.join(HERMES_HOME, 'scripts', 'model-state.json')
+LOG_PATH = os.path.join(HERMES_HOME, 'scripts', 'model-watchdog.log')
+
+# Task-type to model mapping (priority order, only verified models)
+TASK_MODEL_MAP = {
+    'reasoning': ['glm-5.1', 'deepseek-v4-flash', 'qwen3.7-max', 'kimi-k2.5', 'mimo-v2.5-free'],
+    'coding': ['deepseek-v4-flash', 'minimax-m3', 'kimi-k2.5', 'deepseek-v4-flash-free'],
+    'general': ['deepseek-v4-flash', 'minimax-m3', 'qwen3.7-max', 'deepseek-v4-flash-free'],
+    'writing_tr': ['gpt-5.4-mini', 'gemma'],
+    'quick': ['gemma', 'minimax'],
+    'security': ['glm-5.1', 'deepseek-v4-flash', 'qwen3.7-max'],
+    'ig_analysis': ['glm-5.1', 'deepseek-v4-flash', 'kimi-k2.5'],
+}
+
+# Provider for each model
+MODEL_PROVIDERS = {
+    'mimo-v2.5-free': 'opencode-zen',
+    'minimax-m3-free': 'opencode-zen',
+    'deepseek-v4-flash-free': 'opencode-zen',
+    'nemotron-3-super-free': 'opencode-zen',
+    'nemotron-3-ultra-free': 'opencode-zen',
+    'gpt-5.4-mini': 'custom:Pollinations',
+    'gemma': 'custom:Pollinations',
+    'minimax': 'custom:Pollinations',
+    'glm': 'custom:Pollinations',
+    'deepseek-v4-pro': 'custom:opencode-go',
+    'deepseek-v4-flash': 'custom:opencode-go',
+    'kimi-k2.5': 'custom:opencode-go',
+    'kimi-k2.6': 'custom:opencode-go',
+    'minimax-m3': 'custom:opencode-go',
+    'minimax-m2.7': 'custom:opencode-go',
+    'glm-5': 'custom:opencode-go',
+    'glm-5.1': 'custom:opencode-go',
+    'qwen3.7-max': 'custom:opencode-go',
+    'minimax-m2.5': 'custom:opencode-go',
+    'mimo-v2.5': 'custom:opencode-go',
+    'mimo-v2.5-pro': 'custom:opencode-go',
+    'qwen3.7-plus': 'custom:opencode-go',
+    'qwen3.6-plus': 'custom:opencode-go',
+    'mistral-large': 'Mistral',
+}
+
+
+def log(msg):
+    ts = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    line = f'[{ts}] {msg}'
+    print(line)
+    with open(LOG_PATH, 'a') as f:
+        f.write(line + '\n')
+
+
+def load_env():
+    env = {}
+    env_path = os.path.join(HERMES_HOME, '.env')
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if '=' in line and not line.startswith('#'):
+                    k, v = line.split('=', 1)
+                    env[k] = v
+    return env
+
+
+def get_models_from_proxy(url, auth_header=None):
+    headers = {}
+    if auth_header:
+        headers['Authorization'] = auth_header
+    try:
+        req = urllib.request.Request(url + '/models', headers=headers)
+        resp = urllib.request.urlopen(req, timeout=10)
+        data = json.loads(resp.read())
+        return [m['id'] for m in data.get('data', [])]
+    except Exception as e:
+        log(f'Proxy模特 list error ({url}): {e}')
+        return []
+
+
+def test_model_chat(model, url, auth_key, timeout=20):
+    payload = json.dumps({
+        'model': model,
+        'messages': [{'role': 'user', 'content': 'Reply with just: OK'}],
+        'max_tokens': 5
+    }).encode()
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {auth_key}'
+    }
+    req = urllib.request.Request(url + '/chat/completions', data=payload, headers=headers)
+    try:
+        resp = urllib.request.urlopen(req, timeout=timeout)
+        data = json.loads(resp.read())
+        content = data.get('choices', [{}])[0].get('message', {}).get('content', '')
+        return len(content) > 0
+    except urllib.error.HTTPError as e:
+        if e.code == 404 or e.code == 400:
+            body = e.read().decode()[:200]
+            if 'not supported' in body or 'not found' in body or 'does not exist' in body:
+                return False
+        return False
+    except Exception:
+        return False
+
+
+def test_all_models(env):
+    """Test all configured models and return working set."""
+    working = set()
+    poll_key = env.get('POLLINATIONS_API_KEY', '')
+    go_key = env.get('OPENCODE_GO_API_KEY', '')
+
+    # Test OpenCode Go models
+    go_models = get_models_from_proxy('http://127.0.0.1:19998/v1', 'Bearer no-auth')
+    for model in go_models:
+        if test_model_chat(model, 'http://127.0.0.1:19998/v1', go_key or 'no-auth', timeout=15):
+            working.add(model)
+            log(f'  GO OK: {model}')
+
+    # Test Pollinations models
+    poll_models = get_models_from_proxy('http://127.0.0.1:19999/v1')
+    for model in poll_models:
+        if test_model_chat(model, 'http://127.0.0.1:19999/v1', poll_key, timeout=30):
+            working.add(model)
+            log(f'  POLL OK: {model}')
+
+    # Test Zen-only free models (not in Go list but should work via Hermes gateway)
+    # These need to be tested via Hermes gateway which handles Zen auth
+    zen_free = ['mimo-v2.5-free', 'minimax-m3-free', 'deepseek-v4-flash-free',
+                'nemotron-3-super-free', 'nemotron-3-ultra-free']
+    go_url = 'http://127.0.0.1:19998/v1'
+    for model in zen_free:
+        if model not in working:
+            # Try via Go proxy - it may forward to Zen
+            if test_model_chat(model, go_url, go_key or 'no-auth', timeout=15):
+                working.add(model)
+                log(f'  ZEN VIA GO OK: {model}')
+            else:
+                log(f'  ZEN FAILED: {model}')
+
+    return working
+
+
+def select_fallback(task_type, working_models):
+    candidates = TASK_MODEL_MAP.get(task_type, TASK_MODEL_MAP['general'])
+    for model in candidates:
+        if model in working_models:
+            return model
+    return None
+
+
+def send_telegram(msg, env):
+    bot_token = env.get('TELEGRAM_BOT_TOKEN', '')
+    chat_id = env.get('TELEGRAM_HOME_CHANNEL', '6306976553')
+    if not bot_token:
+        log('No Telegram bot token, skipping notification')
+        return
+    payload = json.dumps({
+        'chat_id': chat_id,
+        'text': f'Model Watchdog\n\n{msg}',
+        'parse_mode': 'Markdown'
+    }).encode()
+    req = urllib.request.Request(
+        f'https://api.telegram.org/bot{bot_token}/sendMessage',
+        data=payload,
+        headers={'Content-Type': 'application/json'}
+    )
+    try:
+        urllib.request.urlopen(req, timeout=10)
+    except Exception as e:
+        log(f'Telegram notification failed: {e}')
+
+
+def main():
+    log('Model Watchdog v2 starting...')
+    env = load_env()
+    changes = []
+
+    # Test all models
+    log('Testing model availability...')
+    working = test_all_models(env)
+    log(f'Working models: {sorted(working)}')
+
+    # Load previous state
+    prev_state = {}
+    if os.path.exists(STATE_PATH):
+        with open(STATE_PATH) as f:
+            prev_state = json.load(f)
+
+    # Check profile configs
+    profile_task_map = {
+        'analist': 'reasoning',
+        'kodcu': 'coding',
+        'yardimci': 'quick',
+        'yazar': 'writing_tr',
+    }
+
+    for profile, task_type in profile_task_map.items():
+        config_path = os.path.join(PROFILES_DIR, profile, 'config.yaml')
+        if not os.path.exists(config_path):
+            continue
+
+        with open(config_path) as f:
+            content = f.read()
+
+        model = None
+        for line in content.split('\n'):
+            if line.startswith('model:'):
+                model = line.split(':', 1)[1].strip()
+                break
+
+        if not model:
+            continue
+
+        # Check if model works
+        if model in working:
+            log(f'{profile}: {model} OK')
+            continue
+
+        # Model not working -> fallback
+        log(f'{profile}: {model} NOT WORKING')
+        fallback = select_fallback(task_type, working)
+        if fallback and fallback != model:
+            new_provider = MODEL_PROVIDERS.get(fallback, 'opencode-zen')
+            log(f'{profile}: Replacing {model} -> {fallback} ({new_provider})')
+            changes.append(f'{profile}: {model} -> {fallback} ({new_provider})')
+
+            # Update config.yaml
+            new_config = f'model: {fallback}\nprovider: {new_provider}\n'
+            if new_provider == 'custom:Pollinations':
+                new_config += f'base_url: http://127.0.0.1:19999/v1\napi_key: {env.get("POLLINATIONS_API_KEY", "")}\napi_mode: chat_completions\n'
+            with open(config_path, 'w') as f:
+                f.write(new_config)
+
+            # Update SOUL.md header
+            soul_path = os.path.join(PROFILES_DIR, profile, 'SOUL.md')
+            if os.path.exists(soul_path):
+                with open(soul_path) as f:
+                    lines = f.readlines()
+                new_lines = []
+                for line in lines:
+                    if line.startswith('# Model:'):
+                        if new_provider == 'custom:Pollinations':
+                            new_lines.append(f'# Model: {fallback} | Platform: Pollinations (UA proxy) | Endpoint: http://127.0.0.1:19999/v1 | Auth: POLLINATIONS_API_KEY\n')
+                        elif new_provider == 'opencode-zen':
+                            new_lines.append(f'# Model: {fallback} | Platform: OpenCode Zen | Auth: OPENCODE_ZEN_API_KEY\n')
+                        else:
+                            new_lines.append(f'# Model: {fallback} | Platform: {new_provider}\n')
+                    else:
+                        new_lines.append(line)
+                with open(soul_path, 'w') as f:
+                    f.writelines(new_lines)
+
+    # Check cron jobs
+    if os.path.exists(CRON_PATH):
+        with open(CRON_PATH) as f:
+            cron_data = json.load(f)
+
+        for job in cron_data.get('jobs', []):
+            model = job.get('model')
+            provider = job.get('provider')
+            if not model or not provider:
+                continue
+
+            if model in working:
+                continue
+
+            log(f'Cron "{job.get("name", "")}": {model} NOT WORKING')
+            name_lower = (job.get('name', '') or '').lower()
+            if 'güvenlik' in name_lower or 'guvenlik' in name_lower:
+                if 'haftalık' in name_lower or 'haftalik' in name_lower:
+                    task_type = 'reasoning'
+                else:
+                    task_type = 'general'
+            elif 'analiz' in name_lower or 'gündem' in name_lower or 'gundem' in name_lower or 'bundle' in name_lower:
+                task_type = 'reasoning'
+            else:
+                task_type = 'general'
+
+            fallback = select_fallback(task_type, working)
+            if fallback and fallback != model:
+                new_provider = MODEL_PROVIDERS.get(fallback, provider)
+                job['model'] = fallback
+                job['provider'] = new_provider
+                if new_provider == 'opencode-zen':
+                    job['base_url'] = None
+                elif new_provider == 'custom:Pollinations':
+                    job['base_url'] = 'http://127.0.0.1:19999/v1'
+                changes.append(f'Cron "{job.get("name", "")}": {model} -> {fallback}')
+
+        with open(CRON_PATH, 'w') as f:
+            json.dump(cron_data, f, indent=2, ensure_ascii=False)
+
+    # Save state
+    current_state = {
+        'timestamp': datetime.now().isoformat(),
+        'working_models': sorted(list(working)),
+        'changes': changes
+    }
+    with open(STATE_PATH, 'w') as f:
+        json.dump(current_state, f, indent=2)
+
+    # Restart gateway if changes were made
+    if changes:
+        log(f'Changes: {changes}')
+        log('Restarting gateway...')
+        subprocess.run(['systemctl', '--user', 'restart', 'hermes-gateway'], check=False)
+        msg = 'Model changes:\n' + '\n'.join(f'- {c}' for c in changes)
+        msg += '\n\nGateway restarted.'
+        send_telegram(msg, env)
+    else:
+        log('All models working. No changes needed.')
+
+    log('Model Watchdog v2 completed.')
+
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,42 @@
+{
+  "timestamp": "2026-07-11T04:02:14.968534",
+  "working_models": [
+    "deepseek-v4-flash",
+    "deepseek-v4-pro",
+    "glm-5",
+    "glm-5.1",
+    "kimi-k2.5",
+    "kimi-k2.6",
+    "mimo-v2.5",
+    "mimo-v2.5-pro",
+    "minimax-m2.5",
+    "minimax-m2.7",
+    "minimax-m3",
+    "mistral-small-3.2",
+    "qwen3.6-plus",
+    "qwen3.7-max",
+    "qwen3.7-plus"
+  ],
+  "changes": [],
+  "skipped": [
+    "glm-5.1 (PROTECTED)",
+    "deepseek-v4-flash (PROTECTED)",
+    "gemma (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash (PROTECTED)",
+    "gpt-5.4-mini (PROTECTED)",
+    "gpt-5.4-mini (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash (PROTECTED)",
+    "glm-5.1 (PROTECTED)",
+    "glm-5.1 (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)"
+  ]
+}
