@@ -181,14 +181,11 @@ Tell them what you created in plain prose, naming the actual profiles you used:
 
 ## Decomposer model ve dil yonetimi
 
-Kanban decomposer (`auxiliary.kanban_decomposer`), triage task'larini otomatik olarak alt gorevlere ayirir. Sistem prompt'u `hermes_cli/kanban_decompose.py` dosyasindaki `_SYSTEM_PROMPT` degiskenindedir.
+Kanban decomposer (`auxiliary.kanban_decomposer`), triage task'larini otomatik olarak alt gorevlere ayirir. Sistem prompt'u `hermes_cli/kanban_decompose.py` dosyasindaki `_SYSTEM_PROMPT` degiskenindedir. Decomposer `get_text_auxiliary_client("kanban_decomposer")` kullanir — **text-only**, multimodal/vision destegi YOKTUR.
 
-**Dil kurali:** Decomposer'a gonderilen task title/body hangi dilde olursa olsun, CIKTI Ingilizce olmalidir. Sistem prompt'u Ingilizcedir ancak model input diline gore output dilini degistirebilir. Bunu onlemek icin sistem prompt'una su satir eklenmistir:
-```
-IMPORTANT: ALL output MUST be in English, regardless of the language of the input task.
-```
+**Dil kurali:** Sistem prompt'u Ingilizcedir ancak model input diline gore output dilini degistirebilir. Bunu engellemek icin prompt'a su satir eklenmistir: `IMPORTANT: ALL output MUST be in English, regardless of the language of the input task.`
 
-Eger decomposer Turkce output uretirse, prompt'daki dil zorunlulugunu guclendir. Gerekiyorsa `_SYSTEM_PROMPT`'i duzenle (dosya root'a ait, sudo gerekebilir).
+Eger decomposer Turkce output uretirse, prompt'daki dil zorunlulugunu guclendir.
 
 **Model secimi:** Decomposer icin DeepSeek V4 Flash onerilir — iki yoldan erisilebilir:
 - **opencode-go (lokal proxy):** MIT lisansli, 13B aktif, sifira yakin gecikme
