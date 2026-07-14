@@ -1,136 +1,140 @@
-model:
-  default: deepseek-v4-flash
-  max_tokens: 16384
-  provider: opencode-go
-providers:
-- name: opencode-go
-  model: deepseek-v4-flash
-  base_url: http://127.0.0.1:19998/v1
-- name: Pollinations
-  model: deepseek
-  base_url: http://127.0.0.1:19999/v1
-- name: opencode-zen
-  model: deepseek-v4-flash-free
-  base_url: https://opencode.ai/zen/v1
-- name: Groq
-  model: groq-llama-4-scout
-  base_url: https://api.groq.com/openai/v1
-- name: Mistral
-  model: mistral-large
-  base_url: https://api.mistral.ai/v1
-- name: Secure-Local
-  model: qwen-secure
-  base_url: http://localhost:11434/v1
-fallback_providers: '[{"model":"deepseek","provider":"Pollinations"},{"model":"deepseek-v4-flash-free","provider":"opencode-zen"}]'
-credential_pool_strategies: {}
-toolsets: '["kanban","hermes-cli"]'
+TELEGRAM_HOME_CHANNEL: '6306976553'
+_config_version: 23
 agent:
-  max_turns: 90
-  gateway_timeout: 1800
-  restart_drain_timeout: 10
   api_max_retries: 3
-  service_tier: ''
-  tool_use_enforcement: auto
-  task_completion_guidance: true
-  environment_probe: true
-  environment_hint: ''
-  gateway_timeout_warning: 900
   clarify_timeout: 600
-  gateway_notify_interval: 180
-  gateway_auto_continue_freshness: 3600
-  image_input_mode: auto
-  disabled_toolsets: []
   coding_context: auto
+  disabled_toolsets: []
+  environment_hint: ''
+  environment_probe: true
+  gateway_auto_continue_freshness: 3600
+  gateway_notify_interval: 180
+  gateway_timeout: 1800
+  gateway_timeout_warning: 900
+  image_input_mode: auto
+  max_turns: 90
   reasoning_effort: ''
-terminal:
-  backend: local
-  modal_mode: auto
-  cwd: .
-  timeout: 300
-  env_passthrough: []
-  shell_init_files: []
-  auto_source_bashrc: true
-  docker_image: nikolaik/python-nodejs:python3.11-nodejs20
-  docker_forward_env: []
-  docker_env: {}
-  singularity_image: docker://nikolaik/python-nodejs:python3.11-nodejs20
-  modal_image: nikolaik/python-nodejs:python3.11-nodejs20
-  daytona_image: nikolaik/python-nodejs:python3.11-nodejs20
-  container_cpu: 1
-  container_memory: 5120
-  container_disk: 51200
-  container_persistent: true
-  docker_volumes: []
-  docker_mount_cwd_to_workspace: false
-  docker_extra_args: []
-  docker_run_as_host_user: false
-  persistent_shell: true
-  vercel_runtime: node24
-web:
-  backend: ''
-  search_backend: searxng
-  extract_backend: firecrawl
-browser:
-  inactivity_timeout: 600
-  command_timeout: 30
-  record_sessions: false
-  allow_private_urls: false
-  engine: auto
-  auto_local_for_private_urls: true
-  cdp_url: ''
-  dialog_policy: must_respond
-  dialog_timeout_s: 300
-  camofox:
-    managed_persistence: false
-    user_id: ''
-    session_key: ''
-    adopt_existing_tab: false
-    rewrite_loopback_urls: false
-    loopback_host_alias: host.docker.internal
-checkpoints:
-  enabled: true
-  max_snapshots: 20
-  max_total_size_mb: 500
-  max_file_size_mb: 10
-  auto_prune: true
-  retention_days: 7
-  delete_orphans: true
-  min_interval_hours: 24
-file_read_max_chars: 100000
-tool_output:
-  max_bytes: 50000
-  max_lines: 2000
-  max_line_length: 2000
-tool_loop_guardrails:
-  warnings_enabled: true
-  hard_stop_enabled: false
-  warn_after:
-    exact_failure: 2
-    same_tool_failure: 3
-    idempotent_no_progress: 2
-  hard_stop_after:
-    exact_failure: 5
-    same_tool_failure: 8
-    idempotent_no_progress: 5
-compression:
-  enabled: true
-  threshold: 0.7
-  target_ratio: 0.2
-  protect_last_n: 20
-  hygiene_hard_message_limit: 400
-  protect_first_n: 3
-  abort_on_summary_failure: false
-  codex_gpt55_autoraise: true
-  model: deepseek-v4-flash-free
-  provider: opencode-zen
-prompt_caching:
-  cache_ttl: 5m
-openrouter:
-  response_cache: true
-  response_cache_ttl: 300
-  min_coding_score: 0.65
+  restart_drain_timeout: 10
+  service_tier: ''
+  task_completion_guidance: true
+  tool_use_enforcement: auto
+api:
+  api_key: hermes-voice-local-key-1781484283
+approvals:
+  cron_mode: deny
+  destructive_slash_confirm: true
+  mcp_reload_confirm: true
+  mode: smart
+  timeout: 60
+auxiliary:
+  approval:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 30
+  compression:
+    api_key: ''
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 120
+  curator:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 600
+  kanban_decomposer:
+    api_key: ''
+    base_url: ''
+    extra_body: {}
+    model: deepseek-ai/deepseek-v4-flash
+    provider: custom:NVIDIA
+    timeout: 180
+  mcp:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 30
+  profile_describer:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: https://opencode.ai/zen/v1
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 60
+  session_search:
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    max_concurrency: 3
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 30
+  skills_hub:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 30
+  title_generation:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 30
+  triage_specifier:
+    api_key: ''
+    api_key_env: OPENCODE_ZEN_API_KEY
+    base_url: ''
+    extra_body: {}
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+    timeout: 120
+  tts_audio_tags:
+    api_key: ''
+    base_url: ''
+    extra_body: {}
+    model: ''
+    provider: auto
+    timeout: 30
+  vision:
+    api_key: ${ZENMUX_API_KEY}
+    api_key_env: ZENMUX_API_KEY
+    base_url: https://zenmux.ai/api/v1
+    download_timeout: 30
+    extra_body: {}
+    model: qwen/qwen3.7-plus
+    provider: custom:Zenmux
+    timeout: 180
+  web_extract:
+    api_key: ${ZENMUX_API_KEY}
+    api_key_env: ZENMUX_API_KEY
+    base_url: https://zenmux.ai/api/v1
+    extra_body: {}
+    model: google/gemini-3.1-flash-lite
+    provider: custom:Zenmux
+    timeout: 360
+auxiliary_models:
+  compression:
+    api_key_env: OPENCODE_ZEN_API_KEY
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
 bedrock:
-  region: ''
   discovery:
     enabled: true
     provider_filter: []
@@ -140,328 +144,35 @@ bedrock:
     guardrail_version: ''
     stream_processing_mode: async
     trace: disabled
-auxiliary:
-  vision:
-    provider: custom:Zenmux
-    model: qwen/qwen3.7-plus
-    base_url: https://zenmux.ai/api/v1
-    api_key: ${ZENMUX_API_KEY}
-    timeout: 120
-    extra_body: {}
-    download_timeout: 30
-    api_key_env: ZENMUX_API_KEY
-  web_extract:
-    provider: custom:Zenmux
-    model: google/gemini-3.1-flash-lite
-    base_url: https://zenmux.ai/api/v1
-    api_key: ${ZENMUX_API_KEY}
-    timeout: 360
-    extra_body: {}
-    api_key_env: ZENMUX_API_KEY
-  compression:
-    provider: auto
-    model: ''
-    base_url: ''
-    api_key: ''
-    timeout: 120
-    extra_body: {}
-  skills_hub:
-    provider: opencode-zen
-    model: deepseek-v4-flash-free
-    base_url: ''
-    api_key: ''
-    timeout: 30
-    extra_body: {}
-    api_key_env: OPENCODE_ZEN_API_KEY
-  approval:
-    provider: pollinations
-    model: openai-fast
-    base_url: http://127.0.0.1:19999/v1
-    api_key: ${POLLINATIONS_API_KEY}
-    timeout: 30
-    extra_body: {}
-    api_key_env: POLLINATIONS_API_KEY
-  mcp:
-    provider: pollinations
-    model: openai-fast
-    base_url: ''
-    api_key: ${POLLINATIONS_API_KEY}
-    timeout: 30
-    extra_body: {}
-    api_key_env: POLLINATIONS_API_KEY
-  title_generation:
-    provider: opencode-zen
-    model: deepseek-v4-flash-free
-    base_url: ''
-    api_key: ''
-    timeout: 30
-    extra_body: {}
-    api_key_env: OPENCODE_ZEN_API_KEY
-  triage_specifier:
-    provider: opencode-zen
-    model: deepseek-v4-flash-free
-    base_url: ''
-    api_key: ''
-    timeout: 120
-    extra_body: {}
-    api_key_env: OPENCODE_ZEN_API_KEY
-  kanban_decomposer:
-    provider: auto
-    model: ''
-    base_url: ''
-    api_key: ''
-    timeout: 180
-    extra_body: {}
-  profile_describer:
-    provider: opencode-zen
-    model: deepseek-v4-flash-free
-    base_url: https://opencode.ai/zen/v1
-    api_key: ''
-    timeout: 60
-    extra_body: {}
-    api_key_env: OPENCODE_ZEN_API_KEY
-  curator:
-    provider: pollinations
-    model: openai-fast
-    base_url: http://127.0.0.1:19999/v1
-    api_key: ${POLLINATIONS_API_KEY}
-    timeout: 600
-    extra_body: {}
-    api_key_env: POLLINATIONS_API_KEY
-  session_search:
-    api_key_env: POLLINATIONS_API_KEY
-    base_url: http://127.0.0.1:19999/v1
-    extra_body: {}
-    max_concurrency: 3
-    model: openai-fast
-    provider: pollinations
-    timeout: 30
-  tts_audio_tags:
-    api_key: ''
-    base_url: ''
-    extra_body: {}
-    model: ''
-    provider: auto
-    timeout: 30
-display:
-  compact: false
-  personality: kawaii
-  resume_display: full
-  resume_exchanges: 10
-  resume_max_user_chars: 300
-  resume_max_assistant_chars: 200
-  resume_max_assistant_lines: 3
-  resume_skip_tool_only: true
-  busy_input_mode: interrupt
-  interface: cli
-  tui_auto_resume_recent: false
-  tui_agents_nudge: true
-  bell_on_complete: false
-  show_reasoning: false
-  streaming: false
-  timestamps: false
-  final_response_markdown: strip
-  persistent_output: true
-  persistent_output_max_lines: 200
-  inline_diffs: true
-  file_mutation_verifier: true
-  turn_completion_explainer: true
-  show_cost: false
-  skin: default
-  language: en
-  tui_status_indicator: kaomoji
-  user_message_preview:
-    first_lines: 2
-    last_lines: 2
-  interim_assistant_messages: false
-  tool_progress_command: false
-  tool_progress_overrides: {}
-  tool_preview_length: 0
-  ephemeral_system_ttl: 0
-  platforms:
-    telegram:
-      streaming: false
-    discord:
-      streaming: false
-  runtime_footer:
-    enabled: false
-    fields:
-    - model
-    - context_pct
-    - cwd
-  copy_shortcut: auto
-  runtime_metadata_footer: true
-dashboard:
-  theme: default
-  show_token_analytics: false
-  oauth:
-    client_id: ''
-    portal_url: ''
-  basic_auth:
-    username: ''
-    password_hash: ''
-    password: ''
-    secret: ''
-    session_ttl_seconds: 0
-  public_url: ''
-privacy:
-  redact_pii: false
-tts:
-  provider: openai
-  edge:
-    voice: en-US-AriaNeural
-  elevenlabs:
-    voice_id: pNInz6obpgDQGcFmaJgB
-    model_id: eleven_multilingual_v2
-  openai:
-    model: elevenlabs
-    voice: bella
-    base_url: http://127.0.0.1:19999/v1
-    speed: 1.0
-  xai:
-    voice_id: eve
-    language: en
-    sample_rate: 24000
-    bit_rate: 128000
-  mistral:
-    model: voxtral-mini-tts-2603
-    voice_id: c69964a6-ab8b-4f8a-9465-ec0925096ec8
-  neutts:
-    ref_audio: ''
-    ref_text: ''
-    model: neuphonic/neutts-air-q4-gguf
-    device: cpu
-  piper:
-    voice: en_US-lessac-medium
-  gemini:
-    audio_tags: false
-    model: gemini-2.5-flash-preview-tts
-    persona_prompt_file: ''
-    voice: Kore
-stt:
+  region: ''
+browser:
+  allow_private_urls: false
+  auto_local_for_private_urls: true
+  camofox:
+    adopt_existing_tab: false
+    loopback_host_alias: host.docker.internal
+    managed_persistence: false
+    rewrite_loopback_urls: false
+    session_key: ''
+    user_id: ''
+  cdp_url: ''
+  command_timeout: 30
+  dialog_policy: must_respond
+  dialog_timeout_s: 300
+  engine: auto
+  inactivity_timeout: 600
+  record_sessions: false
+checkpoints:
+  auto_prune: true
+  delete_orphans: true
   enabled: true
-  provider: local
-  local:
-    model: small
-    language: ''
-  openai:
-    model: whisper-1
-  mistral:
-    model: voxtral-mini-latest
-  elevenlabs:
-    model_id: scribe_v2
-    language_code: ''
-    tag_audio_events: false
-    diarize: false
-voice:
-  record_key: ctrl+b
-  max_recording_seconds: 120
-  auto_tts: false
-  beep_enabled: true
-  silence_threshold: 200
-  silence_duration: 3.0
-human_delay:
-  mode: 'off'
-  min_ms: 800
-  max_ms: 2500
-context:
-  engine: compressor
-memory:
-  memory_enabled: true
-  user_profile_enabled: true
-  memory_char_limit: 2200
-  user_char_limit: 1375
-  provider: ''
-  write_approval: false
-delegation:
-  model: north-mini-code-free
-  provider: opencode-zen
-  base_url: ''
-  api_key: ''
-  api_mode: chat_completions
-  inherit_mcp_toolsets: true
-  max_iterations: 50
-  child_timeout_seconds: 600
-  reasoning_effort: ''
-  max_concurrent_children: 6
-  max_spawn_depth: 1
-  orchestrator_enabled: true
-  subagent_auto_approve: true
-prefill_messages_file: ''
-goals:
-  max_turns: 20
-skills:
-  external_dirs: []
-  template_vars: true
-  inline_shell: false
-  inline_shell_timeout: 10
-  guard_agent_created: true
-  write_approval: false
-curator:
-  enabled: true
-  interval_hours: 168
-  min_idle_hours: 2
-  stale_after_days: 30
-  archive_after_days: 90
-  prune_builtins: true
-  backup:
-    enabled: true
-    keep: 5
-honcho: {}
-timezone: Europe/Istanbul
-slack:
-  require_mention: true
-  free_response_channels: ''
-  allowed_channels: ''
-  channel_prompts: {}
-discord:
-  require_mention: true
-  free_response_channels: ''
-  allowed_channels: ''
-  auto_thread: true
-  thread_require_mention: false
-  history_backfill: true
-  history_backfill_limit: 50
-  reactions: true
-  channel_prompts: {}
-  dm_role_auth_guild: ''
-  server_actions: ''
-  allow_any_attachment: false
-  max_attachment_bytes: 33554432
-  voice_fx:
-    enabled: false
-    ambient_enabled: true
-    ambient_path: ''
-    ambient_gain: 0.18
-    duck_gain: 0.06
-    speech_gain: 1.0
-    ack_enabled: true
-    ack_phrases:
-    - Let me look into that.
-    - One moment.
-    - Checking on that now.
-    - Give me a sec.
-    - On it.
-whatsapp: {}
-telegram:
-  reactions: false
-  channel_prompts: {}
-  allowed_chats: ''
-mattermost:
-  require_mention: true
-  free_response_channels: ''
-  allowed_channels: ''
-  channel_prompts: {}
-matrix:
-  require_mention: true
-  free_response_rooms: ''
-  allowed_rooms: ''
-approvals:
-  mode: smart
-  timeout: 60
-  cron_mode: deny
-  mcp_reload_confirm: true
-  destructive_slash_confirm: true
+  max_file_size_mb: 10
+  max_snapshots: 20
+  max_total_size_mb: 500
+  min_interval_hours: 24
+  retention_days: 7
+code_execution:
+  mode: project
 command_allowlist:
 - script execution via heredoc
 - script execution via -e/-c flag
@@ -472,6 +183,418 @@ command_allowlist:
 - disk copy
 - stop/restart system service
 - systemctl --user
+compression:
+  abort_on_summary_failure: false
+  codex_gpt55_autoraise: true
+  enabled: true
+  hygiene_hard_message_limit: 400
+  model: deepseek-v4-flash-free
+  protect_first_n: 3
+  protect_last_n: 20
+  provider: opencode-zen
+  target_ratio: 0.2
+  threshold: 0.7
+context:
+  engine: compressor
+credential_pool_strategies: {}
+cron:
+  max_parallel_jobs: null
+  wrap_response: false
+curator:
+  archive_after_days: 90
+  backup:
+    enabled: true
+    keep: 5
+  enabled: true
+  interval_hours: 168
+  min_idle_hours: 2
+  prune_builtins: true
+  stale_after_days: 30
+custom_providers:
+- api_key_env: OPENCODE_GO_API_KEY
+  api_mode: chat_completions
+  base_url: http://127.0.0.1:19998/v1
+  models:
+    deepseek-v4-flash: deepseek-v4-flash
+    deepseek-v4-pro: deepseek-v4-pro
+    glm-5: glm-5
+    glm-5.1: glm-5.1
+    kimi-k2.5: kimi-k2.5
+    kimi-k2.6: kimi-k2.6
+    minimax-m2.5: minimax-m2.5
+    minimax-m2.7: minimax-m2.7
+    minimax-m3: minimax-m3
+    qwen3.7-max: qwen3.7-max
+  name: opencode-go
+- api_key_env: POLLINATIONS_API_KEY
+  base_url: http://127.0.0.1:19999/v1
+  models:
+    deepseek: deepseek
+    deepseek-pro: deepseek-pro
+    gemma: gemma
+    llama: llama
+    mistral: mistral
+    mistral-4: mistral-4
+    mistral-large: mistral-large
+    mistral-small-3.2: mistral-small-3.2
+    nova: nova
+    nova-fast: nova-fast
+    openai-fast: openai-fast
+    openai-large: openai-large
+    qwen-coder: qwen-coder
+    qwen-vision: qwen-vision
+    qwen-vision-pro: qwen-vision-pro
+  name: Pollinations
+- api_key_env: MISTRAL_API_KEY
+  base_url: https://api.mistral.ai/v1
+  models:
+    mistral-large: mistral-large
+    mistral-medium: mistral-medium
+    mistral-small: mistral-small
+  name: Mistral
+- api_key_env: OPENCODE_ZEN_API_KEY
+  api_mode: chat_completions
+  base_url: https://opencode.ai/zen/v1
+  models:
+    big-pickle: big-pickle
+    deepseek-v4-flash-free: deepseek-v4-flash-free
+    mimo-v2.5-free: mimo-v2.5-free
+    nemotron-3-ultra-free: nemotron-3-ultra-free
+    north-mini-code-free: north-mini-code-free
+  name: opencode-zen
+- api_key_env: GROQ_API_KEY
+  api_mode: chat_completions
+  base_url: https://api.groq.com/openai/v1
+  models:
+    groq-instant: llama-3.1-8b-instant
+    groq-llama-4-scout: llama-4-scout-17b-16e-instruct
+  name: Groq
+- api_mode: chat_completions
+  base_url: http://localhost:11434/v1
+  models:
+    qwen-secure: qwen3.5:0.8b
+  name: Secure-Local
+- api_key_env: LITEROUTER_API_KEY
+  api_mode: chat_completions
+  base_url: http://127.0.0.1:19997/v1
+  models: {}
+  name: LiteRouterProxy
+- api_key_env: ZENMUX_API_KEY
+  api_mode: chat_completions
+  base_url: https://zenmux.ai/api/v1
+  models:
+    google/gemini-3.1-flash-lite: google/gemini-3.1-flash-lite
+    qwen/qwen3.7-plus: qwen/qwen3.7-plus
+  name: Zenmux
+- api_key_env: NVIDIA_API_KEY
+  api_mode: chat_completions
+  base_url: https://integrate.api.nvidia.com/v1
+  models:
+    deepseek-ai/deepseek-v4-flash: deepseek-ai/deepseek-v4-flash
+    deepseek-ai/deepseek-v4-pro: deepseek-ai/deepseek-v4-pro
+    nvidia-llama-3.3-70b: meta/llama-3.3-70b-instruct
+    nvidia-nemotron-70b-free: nvidia/llama-3.1-nemotron-70b-instruct
+    mistral-nemotron: mistralai/mistral-nemotron
+    minimax-m3: minimaxai/minimax-m3
+    nvidia/nemotron-3-ultra-550b-a55b: nvidia/nemotron-3-ultra-550b-a55b
+    z-ai/glm-5.2: z-ai/glm-5.2
+  name: NVIDIA
+dashboard:
+  basic_auth:
+    password: ''
+    password_hash: ''
+    secret: ''
+    session_ttl_seconds: 0
+    username: ''
+  oauth:
+    client_id: ''
+    portal_url: ''
+  public_url: ''
+  show_token_analytics: false
+  theme: default
+delegation:
+  api_key: ''
+  api_mode: chat_completions
+  base_url: ''
+  child_timeout_seconds: 600
+  inherit_mcp_toolsets: true
+  max_concurrent_children: 6
+  max_iterations: 50
+  max_spawn_depth: 1
+  model: north-mini-code-free
+  orchestrator_enabled: true
+  provider: opencode-zen
+  reasoning_effort: ''
+  subagent_auto_approve: true
+discord:
+  allow_any_attachment: false
+  allowed_channels: ''
+  auto_thread: true
+  channel_prompts: {}
+  dm_role_auth_guild: ''
+  free_response_channels: ''
+  history_backfill: true
+  history_backfill_limit: 50
+  max_attachment_bytes: 33554432
+  reactions: true
+  require_mention: true
+  server_actions: ''
+  thread_require_mention: false
+  voice_fx:
+    ack_enabled: true
+    ack_phrases:
+    - Let me look into that.
+    - One moment.
+    - Checking on that now.
+    - Give me a sec.
+    - On it.
+    ambient_enabled: true
+    ambient_gain: 0.18
+    ambient_path: ''
+    duck_gain: 0.06
+    enabled: false
+    speech_gain: 1.0
+display:
+  bell_on_complete: false
+  busy_input_mode: interrupt
+  compact: false
+  copy_shortcut: auto
+  ephemeral_system_ttl: 0
+  file_mutation_verifier: true
+  final_response_markdown: strip
+  inline_diffs: true
+  interface: cli
+  interim_assistant_messages: false
+  language: en
+  persistent_output: true
+  persistent_output_max_lines: 200
+  personality: kawaii
+  platforms:
+    discord:
+      streaming: false
+    telegram:
+      streaming: false
+  resume_display: full
+  resume_exchanges: 10
+  resume_max_assistant_chars: 200
+  resume_max_assistant_lines: 3
+  resume_max_user_chars: 300
+  resume_skip_tool_only: true
+  runtime_footer:
+    enabled: false
+    fields:
+    - model
+    - context_pct
+    - cwd
+  runtime_metadata_footer: true
+  show_cost: false
+  show_reasoning: false
+  skin: default
+  streaming: false
+  timestamps: false
+  tool_preview_length: 0
+  tool_progress_command: false
+  tool_progress_overrides: {}
+  tui_agents_nudge: true
+  tui_auto_resume_recent: false
+  tui_status_indicator: kaomoji
+  turn_completion_explainer: true
+  user_message_preview:
+    first_lines: 2
+    last_lines: 2
+engine: ''
+fallback_providers: '[{"model":"deepseek-v4-flash-free","provider":"opencode-zen"},{"model":"nvidia-llama-3.3-70b","provider":"custom:NVIDIA"}]'
+file_read_max_chars: 100000
+gateway:
+  media_delivery_allow_dirs: []
+  strict: false
+  trust_recent_files: true
+  trust_recent_files_seconds: 600
+goals:
+  max_turns: 20
+guard_agent_created: false
+honcho: {}
+hooks: {}
+hooks_auto_accept: false
+human_delay:
+  max_ms: 2500
+  min_ms: 800
+  mode: 'off'
+kanban:
+  auto_decompose: true
+  auto_decompose_per_tick: 1
+  default_assignee: ''
+  dispatch_in_gateway: true
+  dispatch_interval_seconds: 120
+  dispatch_stale_timeout_seconds: 14400
+  failure_limit: 3
+  max_in_progress_per_profile: null
+  orchestrator_profile: default
+  worker_log_backup_count: 1
+  worker_log_rotate_bytes: 2097152
+logging:
+  backup_count: 3
+  level: DEBUG
+  max_size_mb: 5
+  memory_monitor:
+    enabled: true
+    interval_seconds: 300
+lsp:
+  enabled: true
+  install_strategy: auto
+  servers: {}
+  wait_mode: document
+  wait_timeout: 5.0
+matrix:
+  allowed_rooms: ''
+  free_response_rooms: ''
+  require_mention: true
+mattermost:
+  allowed_channels: ''
+  channel_prompts: {}
+  free_response_channels: ''
+  require_mention: true
+max_concurrent_sessions: null
+mcp_servers:
+  codegraph:
+    args:
+    - serve
+    - --mcp
+    command: codegraph
+    connect_timeout: 60
+    enabled: true
+    timeout: 120
+  context-mode:
+    command: /home/ubuntu/.npm-global/bin/context-mode
+    enabled: true
+  local-secure:
+    args:
+    - /home/ubuntu/.hermes/tools/mcp_secure_server.py
+    command: python3
+    description: Local secure MCP server for sensitive data operations.
+    enabled: true
+  markitdown:
+    command: /home/ubuntu/.hermes/scripts/markitdown-wrapper.sh
+    enabled: true
+  notebooklm:
+    command: /home/ubuntu/.hermes/scripts/start-notebooklm-mcp-pro.sh
+    enabled: true
+  puppeteer:
+    args:
+    - -a
+    - /home/ubuntu/.npm-global/bin/mcp-server-puppeteer
+    command: xvfb-run
+    env:
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
+      PUPPETEER_HEADLESS: 'true'
+  sqlite:
+    args:
+    - mcp-server-sqlite
+    - --db-path
+    - /home/ubuntu/.hermes/data/vanitas.db
+    command: uvx
+  notebooklm_legacy:
+    command: /home/ubuntu/.hermes/scripts/start-notebooklm-mcp-legacy.sh
+    enabled: true
+memory:
+  memory_char_limit: 2200
+  memory_enabled: true
+  provider: ''
+  user_char_limit: 1375
+  user_profile_enabled: true
+  write_approval: false
+model:
+  default: deepseek-v4-flash
+  max_tokens: 16384
+  provider: opencode-go
+model_aliases:
+  bedava:
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+  bedava-deep:
+    model: nemotron-3-ultra-free
+    provider: opencode-zen
+  bedava-kod:
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+  derin:
+    model: deepseek-v4-flash-free
+    provider: opencode-zen
+  groq:
+    model: groq-llama-4-scout
+    provider: Groq
+  groq-hizli:
+    model: groq-instant
+    provider: Groq
+  nvidia-free:
+    model: deepseek-ai/deepseek-v4-flash
+    provider: NVIDIA
+  qwen:
+    model: qwen3.7-max
+    provider: opencode-go
+  qwen-arti:
+    model: qwen3.7-plus
+    provider: opencode-go
+  varsayilan:
+    model: deepseek-v4-flash
+    provider: opencode-go
+model_catalog:
+  enabled: true
+  providers: {}
+  ttl_hours: 24
+  url: https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
+network:
+  force_ipv4: false
+onboarding:
+  profile_build: ask
+  seen:
+    busy_input_prompt: true
+    tool_progress_prompt: true
+openrouter:
+  min_coding_score: 0.65
+  response_cache: true
+  response_cache_ttl: 300
+paste_collapse_char_threshold: 2000
+paste_collapse_threshold: 5
+paste_collapse_threshold_fallback: 5
+personalities: {}
+platform_toolsets:
+  cli:
+  - hermes-cli
+  - mcp-codegraph
+  telegram:
+  - hermes-telegram
+plugins:
+  disabled: []
+  enabled:
+  - browser/browserbase
+  - disk-cleanup
+  - google_meet
+  - web/firecrawl
+  - web/tavily
+prefill_messages_file: ''
+privacy:
+  redact_pii: false
+profile_describer:
+  model: deepseek-v4-flash-free
+prompt_caching:
+  cache_ttl: 5m
+providers:
+- base_url: http://127.0.0.1:19998/v1
+  model: deepseek-v4-flash
+  name: opencode-go
+- base_url: https://opencode.ai/zen/v1
+  model: deepseek-v4-flash-free
+  name: opencode-zen
+- base_url: https://api.groq.com/openai/v1
+  model: groq-llama-4-scout
+  name: Groq
+- base_url: https://api.mistral.ai/v1
+  model: mistral-large
+  name: Mistral
+- base_url: https://integrate.api.nvidia.com/v1
+  model: deepseek-ai/deepseek-v4-flash
+  name: NVIDIA
 quick_commands:
   dashboard-restart:
     command: ~/.hermes/scripts/infra.sh dashboard-restart
@@ -518,8 +641,8 @@ quick_commands:
   linkedin-durum:
     target: /linkedin
     type: alias
-  pollen:
-    command: ~/.hermes/cron/pollinations_check.sh
+  uptime:
+    command: uptime -p
     type: exec
   restart:
     target: /gateway restart
@@ -532,21 +655,25 @@ quick_commands:
     command: python3 /home/ubuntu/.hermes/scripts/yt_transcript.py
     description: 'Get YouTube transcript. Usage: /transcript VIDEO_ID [lang]'
     type: exec
-  uptime:
-    command: uptime -p
-    type: exec
-hooks: {}
-hooks_auto_accept: false
-personalities: {}
+secrets:
+  bitwarden:
+    access_token_env: BWS_ACCESS_TOKEN
+    auto_install: true
+    cache_ttl_seconds: 300
+    enabled: true
+    override_existing: true
+    project_id: 2b375eb2-293e-4774-b5e5-b46601543563
+    server_url: https://vault.bitwarden.com
 security:
+  acked_advisories: []
+  allow_lazy_installs: true
   allow_private_urls: false
   redact_secrets: true
   tirith_enabled: true
+  tirith_fail_open: true
   tirith_path: tirith
   tirith_timeout: 5
-  tirith_fail_open: true
   website_blocklist:
-    enabled: true
     domains:
     - '*.xyz'
     - '*.top'
@@ -568,266 +695,148 @@ security:
     - iplogger.com
     - 2no.co
     - ipgrab.org
+    enabled: true
     shared_files: []
-  acked_advisories: []
-  allow_lazy_installs: true
-cron:
-  wrap_response: false
-  max_parallel_jobs: null
-kanban:
-  dispatch_in_gateway: true
-  dispatch_interval_seconds: 120
-  failure_limit: 3
-  worker_log_rotate_bytes: 2097152
-  worker_log_backup_count: 1
-  orchestrator_profile: default
-  default_assignee: ''
-  max_in_progress_per_profile: null
-  auto_decompose: true
-  auto_decompose_per_tick: 1
-  dispatch_stale_timeout_seconds: 14400
-code_execution:
-  mode: project
+sessions:
+  auto_prune: true
+  min_interval_hours: 24
+  retention_days: 90
+  vacuum_after_prune: true
+  write_json_snapshots: false
+skills:
+  external_dirs: []
+  guard_agent_created: true
+  inline_shell: false
+  inline_shell_timeout: 10
+  template_vars: true
+  write_approval: false
+slack:
+  allowed_channels: ''
+  channel_prompts: {}
+  free_response_channels: ''
+  require_mention: true
+streaming:
+  buffer_threshold: 24
+  cursor: " \u2589"
+  edit_interval: 0.8
+  enabled: false
+  fresh_final_after_seconds: 60.0
+  transport: auto
+stt:
+  elevenlabs:
+    diarize: false
+    language_code: ''
+    model_id: scribe_v2
+    tag_audio_events: false
+  enabled: true
+  local:
+    language: ''
+    model: small
+  mistral:
+    model: voxtral-mini-latest
+  openai:
+    model: whisper-1
+  provider: local
+telegram:
+  allowed_chats: ''
+  channel_prompts: {}
+  reactions: false
+terminal:
+  auto_source_bashrc: true
+  backend: local
+  container_cpu: 1
+  container_disk: 51200
+  container_memory: 5120
+  container_persistent: true
+  cwd: .
+  daytona_image: nikolaik/python-nodejs:python3.11-nodejs20
+  docker_env: {}
+  docker_extra_args: []
+  docker_forward_env: []
+  docker_image: nikolaik/python-nodejs:python3.11-nodejs20
+  docker_mount_cwd_to_workspace: false
+  docker_run_as_host_user: false
+  docker_volumes: []
+  env_passthrough: []
+  modal_image: nikolaik/python-nodejs:python3.11-nodejs20
+  modal_mode: auto
+  persistent_shell: true
+  shell_init_files: []
+  singularity_image: docker://nikolaik/python-nodejs:python3.11-nodejs20
+  timeout: 300
+  vercel_runtime: node24
+timezone: Europe/Istanbul
+tool_loop_guardrails:
+  hard_stop_after:
+    exact_failure: 5
+    idempotent_no_progress: 5
+    same_tool_failure: 8
+  hard_stop_enabled: false
+  warn_after:
+    exact_failure: 2
+    idempotent_no_progress: 2
+    same_tool_failure: 3
+  warnings_enabled: true
+tool_output:
+  max_bytes: 50000
+  max_line_length: 2000
+  max_lines: 2000
 tools:
   tool_search:
     enabled: auto
-    threshold_pct: 10
-    search_default_limit: 5
     max_search_limit: 20
-logging:
-  level: DEBUG
-  max_size_mb: 5
-  backup_count: 3
-  memory_monitor:
-    enabled: true
-    interval_seconds: 300
-model_catalog:
-  enabled: true
-  url: https://hermes-agent.nousresearch.com/docs/api/model-catalog.json
-  ttl_hours: 24
-  providers: {}
-network:
-  force_ipv4: false
-gateway:
-  strict: false
-  media_delivery_allow_dirs: []
-  trust_recent_files: true
-  trust_recent_files_seconds: 600
-streaming:
-  enabled: false
-  transport: auto
-  edit_interval: 0.8
-  buffer_threshold: 24
-  cursor: ' ▉'
-  fresh_final_after_seconds: 60.0
-sessions:
-  auto_prune: true
-  retention_days: 90
-  vacuum_after_prune: true
-  min_interval_hours: 24
-  write_json_snapshots: false
-onboarding:
-  seen:
-    busy_input_prompt: true
-    tool_progress_prompt: true
-  profile_build: ask
+    search_default_limit: 5
+    threshold_pct: 10
+toolsets: '["kanban","hermes-cli"]'
+tts:
+  edge:
+    voice: en-US-AriaNeural
+  elevenlabs:
+    model_id: eleven_multilingual_v2
+    voice_id: pNInz6obpgDQGcFmaJgB
+  gemini:
+    audio_tags: false
+    model: gemini-2.5-flash-preview-tts
+    persona_prompt_file: ''
+    voice: Kore
+  mistral:
+    model: voxtral-mini-tts-2603
+    voice_id: c69964a6-ab8b-4f8a-9465-ec0925096ec8
+  neutts:
+    device: cpu
+    model: neuphonic/neutts-air-q4-gguf
+    ref_audio: ''
+    ref_text: ''
+  openai:
+    base_url: http://127.0.0.1:19999/v1
+    model: elevenlabs
+    speed: 1.0
+    voice: bella
+  piper:
+    voice: en_US-lessac-medium
+  provider: openai
+  xai:
+    bit_rate: 128000
+    language: en
+    sample_rate: 24000
+    voice_id: eve
 updates:
-  pre_update_backup: true
   backup_keep: 10
   non_interactive_local_changes: stash
-lsp:
-  enabled: true
-  wait_mode: document
-  wait_timeout: 5.0
-  install_strategy: auto
-  servers: {}
+  pre_update_backup: true
+voice:
+  auto_tts: false
+  beep_enabled: true
+  max_recording_seconds: 120
+  record_key: ctrl+b
+  silence_duration: 3.0
+  silence_threshold: 200
+web:
+  backend: ''
+  extract_backend: firecrawl
+  search_backend: searxng
+whatsapp: {}
 x_search:
   model: grok-4.20-reasoning
-  timeout_seconds: 180
   retries: 2
-secrets:
-  bitwarden:
-    enabled: true
-    access_token_env: BWS_ACCESS_TOKEN
-    project_id: 2b375eb2-293e-4774-b5e5-b46601543563
-    cache_ttl_seconds: 300
-    override_existing: true
-    auto_install: true
-    server_url: https://vault.bitwarden.com
-paste_collapse_threshold: 5
-paste_collapse_threshold_fallback: 5
-paste_collapse_char_threshold: 2000
-_config_version: 23
-TELEGRAM_HOME_CHANNEL: '6306976553'
-api:
-  api_key: hermes-voice-local-key-1781484283
-auxiliary_models:
-  compression:
-    api_key_env: OPENCODE_ZEN_API_KEY
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-custom_providers:
-- api_key_env: OPENCODE_GO_API_KEY
-  api_mode: chat_completions
-  base_url: http://127.0.0.1:19998/v1
-  models:
-    deepseek-v4-flash: deepseek-v4-flash
-    deepseek-v4-pro: deepseek-v4-pro
-    glm-5: glm-5
-    glm-5.1: glm-5.1
-    kimi-k2.5: kimi-k2.5
-    kimi-k2.6: kimi-k2.6
-    minimax-m2.5: minimax-m2.5
-    minimax-m2.7: minimax-m2.7
-    minimax-m3: minimax-m3
-    qwen3.7-max: qwen3.7-max
-  name: opencode-go
-- api_key_env: POLLINATIONS_API_KEY
-  base_url: http://127.0.0.1:19999/v1
-  models:
-    deepseek: deepseek
-    deepseek-pro: deepseek-pro
-    gemma: gemma
-    llama: llama
-    mistral: mistral
-    mistral-4: mistral-4
-    mistral-large: mistral-large
-    nova: nova
-    nova-fast: nova-fast
-    openai-fast: openai-fast
-    openai-large: openai-large
-    qwen-coder: qwen-coder
-    qwen-vision: qwen-vision
-    qwen-vision-pro: qwen-vision-pro
-    mistral-small-3.2: mistral-small-3.2
-  name: Pollinations
-- api_key_env: MISTRAL_API_KEY
-  base_url: https://api.mistral.ai/v1
-  models:
-    mistral-large: mistral-large
-    mistral-medium: mistral-medium
-    mistral-small: mistral-small
-  name: Mistral
-- api_key_env: OPENCODE_ZEN_API_KEY
-  api_mode: chat_completions
-  base_url: https://opencode.ai/zen/v1
-  models:
-    big-pickle: big-pickle
-    deepseek-v4-flash-free: deepseek-v4-flash-free
-    mimo-v2.5-free: mimo-v2.5-free
-    nemotron-3-ultra-free: nemotron-3-ultra-free
-    north-mini-code-free: north-mini-code-free
-  name: opencode-zen
-- api_key_env: GROQ_API_KEY
-  api_mode: chat_completions
-  base_url: https://api.groq.com/openai/v1
-  models:
-    groq-llama-4-scout: llama-4-scout-17b-16e-instruct
-    groq-instant: llama-3.1-8b-instant
-  name: Groq
-- api_mode: chat_completions
-  base_url: http://localhost:11434/v1
-  models:
-    qwen-secure: qwen3.5:0.8b
-  name: Secure-Local
-- name: LiteRouterProxy
-  base_url: http://127.0.0.1:19997/v1
-  api_mode: chat_completions
-  api_key_env: LITEROUTER_API_KEY
-  models: {}
-- name: Zenmux
-  api_mode: chat_completions
-  api_key_env: ZENMUX_API_KEY
-  base_url: https://zenmux.ai/api/v1
-  models:
-    qwen/qwen3.7-plus: qwen/qwen3.7-plus
-    google/gemini-3.1-flash-lite: google/gemini-3.1-flash-lite
-engine: ''
-guard_agent_created: false
-max_concurrent_sessions: null
-mcp_servers:
-  codegraph:
-    args:
-    - serve
-    - --mcp
-    command: codegraph
-    connect_timeout: 60
-    enabled: true
-    timeout: 120
-  context-mode:
-    command: /home/ubuntu/.npm-global/bin/context-mode
-    enabled: true
-  local-secure:
-    args:
-    - /home/ubuntu/.hermes/tools/mcp_secure_server.py
-    command: python3
-    description: Local secure MCP server for sensitive data operations.
-    enabled: true
-  pollinations:
-    command: /home/ubuntu/.npm-global/bin/pollinations-mcp
-    env:
-      POLLINATIONS_API_KEY: sk_2qC...4Tsc
-  puppeteer:
-    args:
-    - -a
-    - /home/ubuntu/.npm-global/bin/mcp-server-puppeteer
-    command: xvfb-run
-    env:
-      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
-      PUPPETEER_HEADLESS: 'true'
-  sqlite:
-    args:
-    - mcp-server-sqlite
-    - --db-path
-    - /home/ubuntu/.hermes/data/vanitas.db
-    command: uvx
-  markitdown:
-    command: /home/ubuntu/.hermes/scripts/markitdown-wrapper.sh
-    enabled: true
-model_aliases:
-  bedava:
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-  bedava-deep:
-    model: nemotron-3-ultra-free
-    provider: opencode-zen
-  bedava-kod:
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-  derin:
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-  guvenli:
-    model: qwen3.5:0.8b
-    provider: Secure-Local
-  hizli:
-    model: openai-fast
-    provider: pollinations
-  mini:
-    model: gpt-5.4-mini
-    provider: pollinations
-  groq:
-    model: groq-llama-4-scout
-    provider: Groq
-  groq-hizli:
-    model: groq-instant
-    provider: Groq
-  varsayilan:
-    model: deepseek-v4-flash
-    provider: opencode-go
-platform_toolsets:
-  cli:
-  - hermes-cli
-  - mcp-codegraph
-  telegram:
-  - hermes-telegram
-plugins:
-  disabled: []
-  enabled:
-  - browser/browserbase
-  - disk-cleanup
-  - google_meet
-  - web/firecrawl
-  - web/tavily
-profile_describer:
-  model: deepseek-v4-flash-free
+  timeout_seconds: 180

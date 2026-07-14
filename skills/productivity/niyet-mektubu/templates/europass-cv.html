@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: A4; margin: 1.8cm 1.5cm 1.5cm 1.5cm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+    font-size: 10pt; line-height: 1.35; color: #222;
+  }
+  .section-header {
+    background-color: #2b5797; color: #fff;
+    font-size: 10pt; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; padding: 4px 8px;
+    margin: 14px 0 6px 0;
+  }
+  .section-header:first-of-type { margin-top: 0; }
+  .personal-name {
+    font-size: 16pt; font-weight: 700; color: #2b5797; margin-bottom: 2px;
+  }
+  .personal-details { width: 100%; border-collapse: collapse; margin-top: 2px; }
+  .personal-details td {
+    padding: 1px 4px 1px 0; vertical-align: top;
+    font-size: 9pt; color: #444; border: none;
+  }
+  .personal-details td:first-child {
+    width: 100px; font-weight: 600; color: #2b5797;
+  }
+  .divider { border: none; border-top: 1px solid #ddd; margin: 4px 0; }
+  .entry-date {
+    font-size: 9pt; color: #888; font-style: italic; margin-bottom: 1px;
+  }
+  .entry-title {
+    font-size: 10pt; font-weight: 700; color: #222; margin-bottom: 1px;
+  }
+  .entry-org {
+    font-size: 9pt; color: #555; font-style: italic; margin-bottom: 3px;
+  }
+  ul { list-style: none; padding: 0; margin: 0 0 6px 0; }
+  ul li {
+    font-size: 9pt; color: #444; margin-bottom: 1px;
+    padding-left: 12px; position: relative; line-height: 1.35;
+  }
+  ul li::before {
+    content: "•"; position: absolute; left: 0; color: #2b5797;
+  }
+  .entry-block { margin-bottom: 2px; }
+  .skill-section { margin-bottom: 6px; }
+  .skill-section .skill-header {
+    font-weight: 700; font-size: 9pt; color: #2b5797; margin-bottom: 2px;
+  }
+  .lang-table { width: 100%; border-collapse: collapse; margin: 4px 0; font-size: 9pt; }
+  .lang-table th {
+    background: #e8edf4; color: #2b5797; font-weight: 600;
+    padding: 3px 6px; border: 1px solid #ccc; text-align: center; font-size: 8pt;
+  }
+  .lang-table td {
+    padding: 2px 6px; border: 1px solid #ddd; text-align: center; color: #444;
+  }
+  .lang-table td:first-child { text-align: left; font-weight: 600; }
+  .lang-table .lang-label-row td {
+    background: #f5f7fa; font-weight: 600; font-size: 8pt; color: #555;
+  }
+  .box {
+    background: #f9f9f9; border: 1px solid #e0e0e0;
+    padding: 6px 10px; margin-bottom: 6px;
+  }
+  .box .box-header {
+    font-weight: 700; font-size: 9pt; color: #2b5797; margin-bottom: 3px;
+  }
+</style>
+</head>
+<body>
+  <div class="personal-name">FIRSTNAME LASTNAME</div>
+  <hr class="divider">
+  <table class="personal-details">
+    <tr><td>Address</td><td>City, Country</td></tr>
+    <tr><td>Phone</td><td>+XX XXX XXX XX XX</td></tr>
+    <tr><td>Email</td><td>email@example.com</td></tr>
+    <tr><td>Nationality</td><td>Turkish</td></tr>
+  </table>
+
+  <div class="section-header">Work Experience</div>
+  <!-- Copy entry-block for each job, most recent first -->
+
+  <div class="section-header">Education and Training</div>
+  <!-- Copy entry-block for each degree -->
+
+  <div class="section-header">Personal Skills</div>
+  <!-- Language table + skill boxes -->
+
+  <div style="text-align:center; font-size:7.5pt; color:#aaa; margin-top:4px; border-top:1px solid #ddd; padding-top:6px;">
+    Last updated: MONTH YEAR
+  </div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+# LinkedIn Post Otomasyonu - Haber Kaynakları
+# Bu dosya Vanitas tarafından yönetilir.
+# Yeni kaynak eklemek için: Vanitas'a "şu siteyi ekle: [URL]" deyin.
+
+news_sources:
+  - name: "Psychology Today"
+    url: "https://www.psychologytoday.com/us"
+    language: "en"
+    category: "international"
+    added_date: "2026-05-21"
+    active: true
+    
+  - name: "Psychology Times TR"
+    url: "https://psychologytimes.com.tr/"
+    language: "tr"
+    category: "turkish"
+    added_date: "2026-05-21"
+    active: true
+
+# Kullanım:
+# - active: true → Bu kaynak otomatik aramalarda kullanılır
+# - active: false → Kaynak pasif, aramalarda kullanılmaz
+# - Kullanıcı yeni site eklediğinde Vanitas bu dosyayı günceller

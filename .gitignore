@@ -32,9 +32,28 @@ data/
 google_oauth_pending.json
 google_oauth_last_url.txt
 
+# Scripts with hardcoded secrets — use BWS instead
+scripts/linkedin_api.py
+scripts/refresh_linkedin_token.py
+skills/linkedin-post/linkedin/scripts/linkedin_api.py
+
 # Temp
 tmp/
 /tmp/
 
 # Browser config
 .config/
+
+# Browser cache profiles (auto-generated, too large for git)
+**/chrome_profile_notebooklm/
+
+# Binary reference files (PDFs, XSDs — not source code)
+*.pdf
+*.xsd
+
+# Skill-generated artifacts
+**/GPUCache/
+**/GraphiteDawnCache/
+**/DawnWebGPUCache/
+**/DawnGraphiteCache/
+**/BrowserMetrics/

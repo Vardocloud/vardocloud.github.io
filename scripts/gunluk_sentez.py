@@ -31,9 +31,10 @@ MEMORY_DIR = WIKI_HOME / "vanitas-memory"
 LOG_FILE = WIKI_HOME / "log.md"
 SCHEMA_FILE = WIKI_HOME / "SCHEMA.md"
 
-POLLINATIONS_API_KEY = os.environ.get("POLLINATIONS_API_KEY", "")
-POLLINATIONS_BASE_URL = "http://127.0.0.1:19999/v1"
-MODEL = "deepseek"
+# Use free opencode-zen API instead of paid Pollinations
+POLLINATIONS_API_KEY = os.environ.get("OPENCODE_ZEN_API_KEY", "")
+POLLINATIONS_BASE_URL = "https://opencode.ai/zen/v1"
+MODEL = "deepseek-v4-flash-free"
 
 # Directories to scan for new unprocessed content
 WATCH_DIRS = [

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-11T04:02:14.968534",
+  "timestamp": "2026-07-14T04:01:53.679331",
   "working_models": [
     "deepseek-v4-flash",
     "deepseek-v4-pro",
@@ -24,8 +24,7 @@
     "gemma (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
-    "gpt-5.4-mini (PROTECTED)",
-    "gpt-5.4-mini (PROTECTED)",
+    "minimaxai/minimax-m3 (strike 2/3)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",

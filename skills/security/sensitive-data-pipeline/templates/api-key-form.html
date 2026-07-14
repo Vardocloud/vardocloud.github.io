@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔑 API Key — Secure Pipeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0d1117; color: #c9d1d9; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 12px; padding: 2rem; max-width: 480px; width: 100%; }
+  h2 { margin-bottom: 0.5rem; font-size: 1.4rem; color: #f0f6fc; display: flex; align-items: center; gap: 8px; }
+  .desc { color: #8b949e; font-size: 0.9rem; margin-bottom: 1.5rem; line-height: 1.5; }
+  label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: #8b949e; font-weight: 500; }
+  input[type="password"] { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 1rem; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; letter-spacing: 0.06em; }
+  input[type="password"]:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 2px rgba(88,166,255,0.3); }
+  .btn { width: 100%; padding: 10px 16px; background: #238636; border: 1px solid rgba(240,246,252,0.1); border-radius: 6px; color: #fff; font-size: 1rem; font-weight: 500; cursor: pointer; margin-top: 1rem; }
+  .btn:hover { background: #2ea043; }
+  .btn:active { transform: scale(0.98); }
+  .output-box { margin-top: 1rem; display: none; }
+  .output-box.visible { display: block; }
+  textarea { width: 100%; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: #c9d1d9; font-size: 0.78rem; font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; resize: none; height: 70px; word-break: break-all; }
+  .copy-btn { background: #1f6feb; border: 1px solid rgba(240,246,252,0.1); color: #fff; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; margin-top: 8px; width: 100%; }
+  .copy-btn:hover { background: #388bfd; }
+  .copy-btn.copied { background: #238636; }
+  .status { margin-top: 0.8rem; font-size: 0.85rem; color: #8b949e; text-align: center; min-height: 1.3em; }
+  .status.ok { color: #3fb950; }
+  .status.err { color: #f85149; }
+  .note { margin-top: 1.2rem; padding: 10px 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; font-size: 0.78rem; color: #8b949e; line-height: 1.5; }
+  .clear-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; margin-top: 8px; width: 100%; }
+  .clear-btn:hover { background: #21262d; color: #c9d1d9; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🔑 API Key Girişi</h2>
+  <p class="desc">API key'inizi girin. Vanitas'a <strong>base64 kod</strong> olarak iletilecek — anahtar hiçbir AI modeli tarafından görülmez.</p>
+
+  <label for="apiKey">API Key</label>
+  <input type="password" id="apiKey" placeholder="sk-..." autofocus>
+
+  <button class="btn" onclick="encodeKey()">🔐 Kodu Al</button>
+
+  <div class="output-box" id="outputBox">
+    <label for="output">Base64 Kod (Vanitas'a yapıştır)</label>
+    <textarea id="output" readonly></textarea>
+    <button class="copy-btn" id="copyBtn" onclick="copyCode()">📋 Kopyala</button>
+    <button class="clear-btn" onclick="resetForm()">🔄 Temizle ve Yeni Key</button>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="note">
+    <strong>⛓️ Secure Pipeline:</strong> Bu sayfa hiçbir yere veri göndermez. Key'iniz tarayıcınızda base64'e dönüşür, sadece kod Vanitas'a ulaşır. Kod çözme işlemi <strong>lokal AI</strong> ile yapılır — hiçbir dış API key'inizi görmez.
+  </div>
+</div>
+
+<script>
+function encodeKey() {
+  const key = document.getElementById('apiKey').value.trim();
+  const status = document.getElementById('status');
+  const outputBox = document.getElementById('outputBox');
+
+  if (!key) {
+    status.textContent = '❌ Lütfen bir API key girin.';
+    status.className = 'status err';
+    return;
+  }
+
+  const encoded = btoa(unescape(encodeURIComponent(key)));
+  const result = 'VANITAS_SECURE::' + encoded;
+
+  document.getElementById('output').value = result;
+  outputBox.classList.add('visible');
+  document.getElementById('apiKey').value = '';
+  status.textContent = '✅ Kod üretildi! Kopyala → Vanitas'a yapıştır.';
+  status.className = 'status ok';
+}
+
+function copyCode() {
+  const output = document.getElementById('output');
+  output.select();
+  output.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(output.value).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✅ Kopyalandı!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Kopyala';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    document.execCommand('copy');
+  });
+}
+
+function resetForm() {
+  document.getElementById('apiKey').value = '';
+  document.getElementById('apiKey').focus();
+  document.getElementById('output').value = '';
+  document.getElementById('outputBox').classList.remove('visible');
+  document.getElementById('status').textContent = '';
+  document.getElementById('status').className = 'status';
+  const btn = document.getElementById('copyBtn');
+  btn.textContent = '📋 Kopyala';
+  btn.classList.remove('copied');
+}
+</script>
+</body>
+</html>

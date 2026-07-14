@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Güvenli Giriş</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+.card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; max-width: 420px; width: 100%; }
+h1 { font-size: 20px; color: #1a202c; margin-bottom: 8px; }
+p { color: #4a5568; font-size: 14px; margin-bottom: 24px; line-height: 1.5; }
+label { display: block; font-size: 13px; font-weight: 600; color: #2d3748; margin-bottom: 6px; }
+input { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; margin-bottom: 16px; transition: border-color 0.2s; }
+input:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
+button { width: 100%; padding: 12px; background: #48bb78; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+button:hover { background: #38a169; }
+.code-box { margin-top: 20px; background: #1a202c; color: #a0aec0; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all; display: none; max-height: 80px; overflow-y: auto; user-select: all; }
+.code-box.show { display: block; }
+.copy-btn { margin-top: 8px; background: #4299e1; display: none; }
+.copy-btn.show { display: block; }
+.copy-btn:hover { background: #3182ce; }
+.safety { background: #fffbeb; border: 1px solid #f6e05e; border-radius: 8px; padding: 12px; font-size: 12px; color: #744210; margin-bottom: 20px; line-height: 1.5; }
+.safety strong { display: block; margin-bottom: 4px; }
+.status { margin-top: 12px; font-size: 13px; color: #718096; display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🔐 Güvenli Giriş</h1>
+<p>E-posta + şifre gir, base64 kod üret. Vanitas lokal AI ile çözer, formu doldurur.</p>
+<div class="safety"><strong>🔒 Güvenlik</strong> Saf JavaScript. Hiçbir yere veri göndermez.</div>
+<form id="secureForm">
+<label for="email">📧 E-posta</label>
+<input type="email" id="email" placeholder="ornek@email.com" required>
+<label for="password">🔑 Şifre</label>
+<input type="password" id="password" placeholder="••••••••" required autocomplete="off">
+<button type="submit">🔐 Kod Üret</button>
+</form>
+<div class="code-box" id="codeBox"></div>
+<button class="copy-btn" id="copyBtn" onclick="copyCode()">📋 Kopyala</button>
+<div class="status" id="status"></div>
+</div>
+<script>
+document.getElementById('secureForm').addEventListener('submit', function(e) {
+e.preventDefault();
+const email = document.getElementById('email').value.trim();
+const password = document.getElementById('password').value;
+if (!email || !password) return;
+const combined = email + '|||' + password;
+const encoded = btoa(unescape(encodeURIComponent(combined)));
+const code = 'VANITAS_SECURE::' + encoded;
+const codeBox = document.getElementById('codeBox');
+codeBox.textContent = code;
+codeBox.classList.add('show');
+document.getElementById('copyBtn').classList.add('show');
+document.getElementById('email').value = '';
+document.getElementById('password').value = '';
+document.getElementById('status').textContent = '✅ Kod üretildi! Kopyala ve Vanitas\'a at.';
+document.getElementById('status').style.display = 'block';
+});
+function copyCode() {
+const code = document.getElementById('codeBox').textContent;
+navigator.clipboard.writeText(code).then(() => {
+document.getElementById('copyBtn').textContent = '✅ Kopyalandı!';
+setTimeout(() => { document.getElementById('copyBtn').textContent = '📋 Kopyala'; }, 2000);
+});
+}
+</script>
+</div>
+</body>
+</html>

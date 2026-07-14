@@ -37,6 +37,11 @@ REKLAM_KELIMELER = [
     r'davet et', r'çevrenizi davet', r'toplama', r'ense karartma',
 ]
 
+# Filtrelenecek coin'ler (bildirimlerde gösterilmez, min. yatırım eşiği vs.)
+FILTRENECEK_COINLER = [
+    r'\bvoid\b', r'\bvoid\b',  # min $150 yatırım — Edel için uygun değil
+]
+
 # Birikim fikri / drop fırsatı / ucuz yatırım için anahtar kelimeler
 BIRIKIM_KELIMELERI = [
     r'direnç', r'destek', r'hedef', r'alım', r'düşüş',
@@ -151,6 +156,15 @@ def reklam_mi(mesaj):
     # Eğer sadece @mention varsa ve analiz yoksa reklam olabilir
     if re.search(r'@\w+', mesaj.get('metin', '')) and len(metin) < 150:
         return True
+    return False
+
+
+def filtrelenmis_coin_mi(mesaj):
+    """Filtrelenen coin'lerden biri mesajda geçiyor mu?"""
+    metin = mesaj.get('metin', '').lower()
+    for kelime in FILTRENECEK_COINLER:
+        if re.search(kelime, metin, re.IGNORECASE):
+            return True
     return False
 
 
@@ -304,6 +318,9 @@ def filtrele_ve_raporla(veri):
             reklam_sayisi += 1
             continue
         
+        if filtrelenmis_coin_mi(msg):
+            continue
+        
         kategori = kategorize_et(msg)
         
         if birikim_fikri_mi(msg) or kategori['drop_mu'] or kategori['ucuz_mu']:
@@ -350,8 +367,9 @@ def bugunun_ozeti(veri):
     
     for msg in bugun_mesaj:
         reklam = " [REKLAM]" if reklam_mi(msg) else ""
-        birikim = " [BİRİKİM FİKRİ]" if birikim_fikri_mi(msg) else ""
-        print(f"\n[{msg['tarih'][:16]}][{msg['views']} görüntü]{reklam}{birikim}")
+        filtrelenmis = " [FİLTRELENMİŞ]" if (not reklam and filtrelenmis_coin_mi(msg)) else ""
+        birikim = " [BİRİKİM FİKRİ]" if (not reklam and not filtrelenmis and birikim_fikri_mi(msg)) else ""
+        print(f"\n[{msg['tarih'][:16]}][{msg['views']} görüntü]{reklam}{filtrelenmis}{birikim}")
         print(f"  {msg['metin'][:200]}")
         if len(msg['metin']) > 200:
             print(f"  ...({len(msg['metin'])} karakter)")

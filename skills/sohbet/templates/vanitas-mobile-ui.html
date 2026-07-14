@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Vanitas</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f; color: #e0d8f0;
+            height: 100dvh; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+        .character-zone {
+            flex: 0 0 42%; position: relative;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            background: radial-gradient(ellipse at center, #1a1025 0%, #0a0a0f 70%);
+        }
+        .character-zone img {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+            filter: drop-shadow(0 0 30px rgba(120, 80, 180, 0.3));
+            animation: float 4s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        .sparkle {
+            position: absolute; width: 4px; height: 4px;
+            background: #c8a0f0; border-radius: 50%;
+            animation: spark 2s ease-in-out infinite; opacity: 0;
+        }
+        @keyframes spark {
+            0%, 100% { opacity: 0; transform: scale(0); }
+            50% { opacity: 0.8; transform: scale(1); }
+        }
+        .chat-zone {
+            flex: 1; display: flex; flex-direction: column;
+            background: linear-gradient(180deg, #0e0c14 0%, #0d0b12 100%);
+            border-top: 1px solid rgba(120, 80, 180, 0.2);
+        }
+        .messages {
+            flex: 1; overflow-y: auto; padding: 12px 14px;
+            display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth;
+        }
+        .messages::-webkit-scrollbar { width: 3px; }
+        .messages::-webkit-scrollbar-thumb { background: rgba(120,80,180,0.3); border-radius: 3px; }
+        .msg {
+            max-width: 85%; padding: 10px 14px; border-radius: 16px;
+            font-size: 15px; line-height: 1.45;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg.vanitas {
+            align-self: flex-start; background: rgba(60, 30, 90, 0.5);
+            border: 1px solid rgba(120, 80, 180, 0.25);
+            border-bottom-left-radius: 4px; color: #e0d8f0;
+        }
+        .msg.user {
+            align-self: flex-end; background: rgba(100, 60, 150, 0.35);
+            border: 1px solid rgba(140, 100, 200, 0.2);
+            border-bottom-right-radius: 4px; color: #f0e8ff;
+        }
+        .msg .time { font-size: 10px; opacity: 0.4; margin-top: 3px; text-align: right; }
+        .typing-indicator { align-self: flex-start; padding: 10px 16px; display: none; }
+        .typing-indicator.active { display: flex; gap: 4px; }
+        .typing-indicator .dot {
+            width: 7px; height: 7px; background: rgba(160,120,220,0.6);
+            border-radius: 50%; animation: bounce 1.4s infinite;
+        }
+        .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-6px); }
+        }
+        .input-zone {
+            display: flex; padding: 10px 12px; gap: 8px;
+            background: rgba(10, 8, 18, 0.8);
+            border-top: 1px solid rgba(120, 80, 180, 0.15);
+        }
+        .input-zone input {
+            flex: 1; padding: 12px 16px;
+            background: rgba(30, 20, 50, 0.6);
+            border: 1px solid rgba(120, 80, 180, 0.3);
+            border-radius: 24px; color: #e0d8f0; font-size: 15px; outline: none;
+        }
+        .input-zone input:focus { border-color: rgba(160, 120, 220, 0.6); }
+        .input-zone input::placeholder { color: rgba(180,160,210,0.35); }
+        .input-zone button {
+            width: 44px; height: 44px;
+            background: rgba(100, 50, 160, 0.5);
+            border: 1px solid rgba(140, 100, 200, 0.3);
+            border-radius: 50%; color: #d0c0f0; font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .input-zone button:active { background: rgba(140,80,200,0.6); transform: scale(0.95); }
+    </style>
+</head>
+<body>
+    <div class="character-zone">
+        <div class="sparkle" style="top:15%;left:20%;animation-delay:0s"></div>
+        <div class="sparkle" style="top:25%;right:22%;animation-delay:0.7s"></div>
+        <div class="sparkle" style="top:50%;left:15%;animation-delay:1.4s"></div>
+        <div class="sparkle" style="bottom:20%;right:18%;animation-delay:0.3s"></div>
+        <div class="sparkle" style="top:10%;right:35%;animation-delay:1.0s"></div>
+        <img src="character.jpg" alt="Vanitas">
+    </div>
+    <div class="chat-zone">
+        <div class="messages" id="messages">
+            <div class="msg vanitas">
+                Seninleyim. Ne anlatmak istersin?
+                <div class="time">şimdi</div>
+            </div>
+        </div>
+        <div class="typing-indicator" id="typing">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="input-zone">
+            <input type="text" id="input" placeholder="Bir şey yaz..." autocomplete="off">
+            <button id="send">↑</button>
+        </div>
+    </div>
+    <script>
+        const messagesEl = document.getElementById('messages');
+        const inputEl = document.getElementById('input');
+        const sendBtn = document.getElementById('send');
+        const typingEl = document.getElementById('typing');
+        const API_URL = 'http://HERMES_IP:8642/v1/chat/completions';
+        const API_KEY = 'API_SERVER_KEY';
+        let conversation = [];
+
+        function addMsg(text, role) {
+            const now = new Date();
+            const time = now.getHours().toString().padStart(2,'0') + ':'
+                       + now.getMinutes().toString().padStart(2,'0');
+            const div = document.createElement('div');
+            div.className = 'msg ' + role;
+            div.innerHTML = text.replace(/\n/g,'<br>') + `<div class="time">${time}</div>`;
+            messagesEl.appendChild(div);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        async function send() {
+            const text = inputEl.value.trim();
+            if (!text) return;
+            inputEl.value = '';
+            addMsg(text, 'user');
+            typingEl.classList.add('active');
+            conversation.push({ role: 'user', content: text });
+            try {
+                const resp = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(API_KEY ? { 'Authorization': 'Bearer ' + API_KEY } : {})
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-v4-pro',
+                        messages: conversation.slice(-20),
+                        stream: false
+                    })
+                });
+                const data = await resp.json();
+                const reply = data.choices?.[0]?.message?.content || '...';
+                conversation.push({ role: 'assistant', content: reply });
+                addMsg(reply, 'vanitas');
+            } catch(e) {
+                addMsg('Bağlantı koptu 😔 Tekrar dene.', 'vanitas');
+            }
+            typingEl.classList.remove('active');
+        }
+
+        sendBtn.addEventListener('click', send);
+        inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
+    </script>
+</body>
+</html>

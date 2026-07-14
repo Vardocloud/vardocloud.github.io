@@ -1,0 +1,1931 @@
+{
+  "jobs": [
+    {
+      "id": "evening_precheck",
+      "name": "evening_precheck",
+      "prompt": "\u0130yi ak\u015famlar Edel! G\u00fcn\u00fcn nas\u0131l ge\u00e7ti? Takvimden yar\u0131n\u0131n etkinliklerine bak, varsa hat\u0131rlatma olu\u015ftur. Bug\u00fcn \u00f6\u011frendiklerin veya wiki g\u00fcncellemelerin varsa k\u0131saca payla\u015f. Sohbet tonunda, s\u0131cak ve do\u011fal ol.",
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 21 * * *",
+        "display": "0 21 * * *"
+      },
+      "repeat": null,
+      "deliver": "telegram:-1003917030255:1223",
+      "skills": [
+        "sohbet",
+        "google-workspace",
+        "llm-wiki"
+      ],
+      "enabled": true,
+      "schedule_display": "0 21 * * *",
+      "state": "scheduled",
+      "skill": "sohbet",
+      "next_run_at": "2026-07-03T21:00:00+03:00",
+      "last_run_at": "2026-07-02T21:02:56.592109+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "model": "deepseek-v4-flash",
+      "provider": "custom:opencode-go",
+      "paused_at": null,
+      "paused_reason": null
+    },
+    {
+      "id": "morning_greeting",
+      "name": "morning_greeting",
+      "prompt": "G\u00fcnayd\u0131n Edel! Bug\u00fcn nas\u0131l hissediyorsun? Takvimden bug\u00fcn\u00fcn etkinliklerine bak, varsa hat\u0131rlat. Wiki...",
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 7 * * *",
+        "display": "0 7 * * *"
+      },
+      "repeat": null,
+      "deliver": "telegram:-1003917030255:1223",
+      "enabled": true,
+      "schedule_display": "0 7 * * *",
+      "state": "scheduled",
+      "skill": "sohbet",
+      "next_run_at": "2026-07-04T07:00:00+03:00",
+      "last_run_at": "2026-07-02T07:00:33.267876+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "model": null,
+      "provider": null,
+      "paused_at": null,
+      "paused_reason": null,
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "file",
+        "search"
+      ],
+      "no_agent": true,
+      "script": "morning_greeting.sh"
+    },
+    {
+      "id": "272dc0178605",
+      "name": "linkedin_sabah",
+      "prompt": "# LinkedIn G\u00fcnl\u00fck Post \u2014 Kuyruk Sistemi\nVakit: Sabah (09:00) veya Ak\u015fam (20:30)\n\nlinkedin skill'ini y\u00fckle ve references/turkcapar-writing-samples.md dosyas\u0131ndaki yaz\u0131 \u00f6rneklerini incele.\n\n\n## NOTEBOOKLM KULLANIMI (Metin Yaz\u0131m\u0131)\nPost metnini yazmak i\u00e7in do\u011frudan kendi LLM'inizi kullanmay\u0131n. Bunun yerine:\n1. NotebookLM MCP'yi kullanarak metin \u00fcretimi yap\u0131n\n2. `notebooklm_query` veya `studio_create` ara\u00e7lar\u0131n\u0131 kullanarak post i\u00e7eri\u011fini NotebookLM \u00fczerinden olu\u015fturun\n3. Not: NotebookLM sadece MET\u0130N i\u00e7indir. G\u00f6rsel \u00fcretimi i\u00e7in hala pollinations-mcp generateImage kullan\u0131n\n4. NotebookLM'den gelen metni al\u0131p post olarak d\u00fczenleyin\n\n## G\u00d6RSEL \u00dcRET\u0130M (Pollinations - DE\u011e\u0130\u015eMED\u0130)\nG\u00f6rsel \u00fcretimi i\u00e7in pollinations-mcp generateImage kullanmaya devam edin.\n\n## G\u00d6REV: Kuyruktan s\u0131radaki postu al ve haz\u0131rla\n\n1. **Kuyru\u011fu oku**: `~/.hermes/data/linkedin_queue.json` dosyas\u0131ndaki `queue` dizisinden **status=\"pending\"** olan ilk kayd\u0131 bul.\n\n2. **Post metnini yaz**: O kayd\u0131n `draft` alan\u0131ndaki tasla\u011f\u0131 kullan. Hakan T\u00fcrk\u00e7apar stilinde yaz:\n   - S\u0131cak, samimi, sohbet eder gibi\n   - Akademik altyap\u0131l\u0131 ama herkesin anlayaca\u011f\u0131 g\u00fcnl\u00fck dil\n   - Soruyla a\u00e7, \"birlikte d\u00fc\u015f\u00fcnelim\" havas\u0131\n   - KISA paragraflar (maks 1-2 c\u00fcmle)\n   - 500-750 karakter\n   - Seminere giri\u015f (tarih, isim, panelistler) + i\u00e7inde konu\u015fulan spesifik detaylar + sonu\u00e7 mesaj\u0131 mutlaka olsun\n   - Emoji kullanma, soru sorma (CTA yasak)\n   - Referans i\u00e7in: skill references/turkcapar-writing-samples.md dosyas\u0131ndaki \u00f6rnekleri \u00f6rnek al\n\n3. **Hashtag ekle**: Post sonuna ayr\u0131 sat\u0131rda 3-4 hashtag ekle. Konuyla ilgili olanlardan se\u00e7: #Psikoloji #YapayZeka #RuhSa\u011fl\u0131\u011f\u0131 #DijitalSa\u011fl\u0131k #AI #MentalHealth (i\u00e7eri\u011fe g\u00f6re uygun olanlar\u0131 se\u00e7)\n\n4. **G\u00f6rsel \u00fcret**: Post i\u00e7eri\u011finin ANA F\u0130KR\u0130N\u0130 \u00e7\u0131kar, ona uygun prompt yaz.\n   - Pollinations generateImage KULLAN (generateImageUrl de\u011fil)\n   - Model=kontext, width=1200, height=628\n   - Seed rastgele (1-999999)\n   - \"no text no letters no words no watermarks\" ZORUNLU\n   - \"minimalist professional clean composition\" ekle\n   - SOYUT/SEMBOL\u0130K yakla\u015f, insan fig\u00fcr\u00fc kullanma\n   - Post i\u00e7eri\u011fiyle uyumlu renk paleti se\u00e7\n   - Base64 \u00e7\u0131kt\u0131y\u0131 /tmp/linkedin_gorsel.jpg olarak kaydet\n\n5. **Ar\u015five kaydet**: `~/.hermes/data/linkedin_posts_archive.json` dosyas\u0131na postu `pending_approval` olarak ekle.\n\n6. **Kuyru\u011fu g\u00fcncelle**: \u0130\u015flenen kayd\u0131n status'unu `\"pending_approval\"` olarak de\u011fi\u015ftir.\n\n7. **Edel'e g\u00f6ster**: Post metnini (hashtag'lerle birlikte) + g\u00f6rseli MEDIA:/tmp/linkedin_gorsel.jpg yoluyla sun. \"Onaylarsan payla\u015f\u0131r\u0131m\" de ve onay bekle (ASLA onays\u0131z payla\u015fma).\n\nKR\u0130T\u0130K: Queue'da pending kay\u0131t yoksa \"[SILENT]\" \u00e7\u0131kt\u0131s\u0131 ver ve hi\u00e7bir \u015fey yapma.",
+      "skills": [
+        "linkedin"
+      ],
+      "skill": "linkedin",
+      "model": "gpt-5.4-mini",
+      "provider": "custom:Pollinations",
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9,20 * * *",
+        "display": "0 9,20 * * *"
+      },
+      "schedule_display": "0 9,20 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 50
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-23T02:22:06.978683+03:00",
+      "next_run_at": "2026-07-03T20:00:00+03:00",
+      "last_run_at": "2026-07-02T20:02:05.997077+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:14",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "file",
+        "search"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "79aa6f693b23",
+      "name": "linkedin_aksam",
+      "prompt": "# LinkedIn Ak\u015fam Postu \u2014 Kuyruk Sistemi\n\nlinkedin skill'ini y\u00fckle ve references/turkcapar-writing-samples.md dosyas\u0131ndaki yaz\u0131 \u00f6rneklerini incele.\n\n\n## NOTEBOOKLM KULLANIMI (Metin Yaz\u0131m\u0131)\nPost metnini yazmak i\u00e7in do\u011frudan kendi LLM'inizi kullanmay\u0131n. Bunun yerine:\n1. NotebookLM MCP'yi kullanarak metin \u00fcretimi yap\u0131n\n2. `notebooklm_query` veya `studio_create` ara\u00e7lar\u0131n\u0131 kullanarak post i\u00e7eri\u011fini NotebookLM \u00fczerinden olu\u015fturun\n3. Not: NotebookLM sadece MET\u0130N i\u00e7indir. G\u00f6rsel \u00fcretimi i\u00e7in hala pollinations-mcp generateImage kullan\u0131n\n4. NotebookLM'den gelen metni al\u0131p post olarak d\u00fczenleyin\n\n## G\u00d6RSEL \u00dcRET\u0130M (Pollinations - DE\u011e\u0130\u015eMED\u0130)\nG\u00f6rsel \u00fcretimi i\u00e7in pollinations-mcp generateImage kullanmaya devam edin.\n\n## G\u00d6REV: Kuyruktan s\u0131radaki postu al ve haz\u0131rla\n\n1. **Kuyru\u011fu oku**: `~/.hermes/data/linkedin_queue.json` dosyas\u0131ndaki `queue` dizisinden **status=\"pending\"** olan ilk kayd\u0131 bul.\n\n2. **Post metnini yaz**: O kayd\u0131n `draft` alan\u0131ndaki tasla\u011f\u0131 kullan. Hakan T\u00fcrk\u00e7apar stilinde yaz:\n   - S\u0131cak, samimi, sohbet eder gibi\n   - Akademik altyap\u0131l\u0131 ama herkesin anlayaca\u011f\u0131 g\u00fcnl\u00fck dil\n   - Soruyla a\u00e7, \"birlikte d\u00fc\u015f\u00fcnelim\" havas\u0131\n   - KISA paragraflar (maks 1-2 c\u00fcmle)\n   - 500-750 karakter\n   - Seminere giri\u015f (tarih, isim, panelistler) + i\u00e7inde konu\u015fulan spesifik detaylar + sonu\u00e7 mesaj\u0131 mutlaka olsun\n   - Emoji kullanma, soru sorma (CTA yasak)\n   - Referans i\u00e7in: skill references/turkcapar-writing-samples.md dosyas\u0131ndaki \u00f6rnekleri \u00f6rnek al\n\n3. **Hashtag ekle**: Post sonuna ayr\u0131 sat\u0131rda 3-4 hashtag ekle. Konuyla ilgili olanlardan se\u00e7: #Psikoloji #YapayZeka #RuhSa\u011fl\u0131\u011f\u0131 #DijitalSa\u011fl\u0131k #AI #MentalHealth (i\u00e7eri\u011fe g\u00f6re uygun olanlar\u0131 se\u00e7)\n\n4. **G\u00f6rsel \u00fcret**: Post i\u00e7eri\u011finin ANA F\u0130KR\u0130N\u0130 \u00e7\u0131kar, ona uygun prompt yaz.\n   - Pollinations generateImage KULLAN (generateImageUrl de\u011fil)\n   - Model=kontext, width=1200, height=628\n   - Seed rastgele (1-999999)\n   - \"no text no letters no words no watermarks\" ZORUNLU\n   - \"minimalist professional clean composition\" ekle\n   - SOYUT/SEMBOL\u0130K yakla\u015f, insan fig\u00fcr\u00fc kullanma\n   - Post i\u00e7eri\u011fiyle uyumlu renk paleti se\u00e7\n   - Base64 \u00e7\u0131kt\u0131y\u0131 /tmp/linkedin_gorsel.jpg olarak kaydet\n\n5. **Ar\u015five kaydet**: `~/.hermes/data/linkedin_posts_archive.json` dosyas\u0131na postu `pending_approval` olarak ekle.\n\n6. **Kuyru\u011fu g\u00fcncelle**: \u0130\u015flenen kayd\u0131n status'unu `\"pending_approval\"` olarak de\u011fi\u015ftir.\n\n7. **Edel'e g\u00f6ster**: Post metnini (hashtag'lerle birlikte) + g\u00f6rseli MEDIA:/tmp/linkedin_gorsel.jpg yoluyla sun. \"Onaylarsan payla\u015f\u0131r\u0131m\" de ve onay bekle (ASLA onays\u0131z payla\u015fma).\n\nKR\u0130T\u0130K: Queue'da pending kay\u0131t yoksa \"[SILENT]\" \u00e7\u0131kt\u0131s\u0131 ver ve hi\u00e7bir \u015fey yapma.",
+      "skills": [
+        "linkedin"
+      ],
+      "skill": "linkedin",
+      "model": "gpt-5.4-mini",
+      "provider": "custom:Pollinations",
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 20 * * *",
+        "display": "30 20 * * *"
+      },
+      "schedule_display": "30 20 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 35
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-23T02:22:07.983171+03:00",
+      "next_run_at": "2026-06-30T20:30:00+03:00",
+      "last_run_at": "2026-06-29T20:33:01.072652+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:14",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "file",
+        "search"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "315b9755cd5b",
+      "name": "DailyStatus",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "daily-summary.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9 * * *",
+        "display": "0 9 * * *"
+      },
+      "schedule_display": "0 9 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 31
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-25T02:44:19.120887+03:00",
+      "next_run_at": "2026-07-04T09:00:00+03:00",
+      "last_run_at": "2026-07-02T09:00:55.402178+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": null,
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "f9ddbe495a13",
+      "name": "Vanitas 8-Boyutlu R\u00fcya",
+      "prompt": "Vanitas \u00f6\u011frenme g\u00fcnl\u00fc\u011f\u00fcn\u00fc g\u00fcncelle. A\u015fa\u011f\u0131daki ad\u0131mlar\u0131 TEK TEK uygula:\n\n1. session_search() ile \"Edel\" i\u00e7eren son 2 oturumu bul (son 24 saat).\n2. Her oturumdaki son 5-8 mesaj\u0131 analiz et.\n3. CQS de\u011ferlendirmesi yap:\n   - S (6 kriter): moderator gibi mi? tek soru mu? a\u00e7\u0131k u\u00e7lu mu? ba\u011flam var m\u0131? ara\u015ft\u0131rma referans\u0131 var m\u0131?\n   - E (4 sinyal): Edel detayl\u0131 cevap verdi mi? takip sorusu sordu mu? ki\u015fisel bilgi payla\u015ft\u0131 m\u0131? 3+ tur s\u00fcrd\u00fc m\u00fc?\n   - F: Edel'in \ud83d\udc4d veya \"g\u00fczel\"/\"yapma\" gibi a\u00e7\u0131k geri bildirimleri\n4. Bulgular\u0131 DOSYAYA YAZ: /home/ubuntu/.hermes/skills/sohbet/references/ogrenme.md\n   - \"Son De\u011ferlendirme\" b\u00f6l\u00fcm\u00fcn\u00fc g\u00fcncelle\n   - Yeni d\u00fczeltme varsa ekle\n   - Pattern varsa ekle\n   - \u00c7ekirdek Kurallar tablosuna DOKUNMA\n   - ESK\u0130 i\u00e7eri\u011fi KORU, \u00fczerine ekle\n\nKR\u0130T\u0130K: Sonucu sadece mesaj olarak g\u00f6nderme \u2014 dosyay\u0131 ger\u00e7ekten DE\u011e\u0130\u015eT\u0130R. terminal arac\u0131n\u0131 kullan. E\u011fer son 24 saatte konu\u015fma yoksa ogrenme.md'e \"De\u011ferlendirilecek yeni konu\u015fma yok (TARIH)\" yaz.",
+      "skills": [
+        "sohbet"
+      ],
+      "skill": "sohbet",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "script": "vanitas_dream.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 4 * * *",
+        "display": "0 4 * * *"
+      },
+      "schedule_display": "0 4 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 32
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-27T22:19:08.373205+03:00",
+      "next_run_at": "2026-07-04T04:00:00+03:00",
+      "last_run_at": "2026-07-02T04:01:24.386266+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "6eaf85acebc0",
+      "name": "\ud83d\udfe2 Yar\u0131 G\u00fcvenlik (G\u00fcnl\u00fck)",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "script": "daily_security.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * *",
+        "display": "0 6 * * *"
+      },
+      "schedule_display": "0 6 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 28
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-28T18:33:57.996846+03:00",
+      "next_run_at": "2026-07-04T06:00:00+03:00",
+      "last_run_at": "2026-07-02T06:00:22.602408+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "095fa7d69603",
+      "name": "\ud83d\udd34 Tam G\u00fcvenlik (Haftal\u0131k)",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "script": "weekly_security.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 7 * * 0",
+        "display": "0 7 * * 0"
+      },
+      "schedule_display": "0 7 * * 0",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-28T18:54:10.455738+03:00",
+      "next_run_at": "2026-07-05T07:00:00+03:00",
+      "last_run_at": "2026-06-30T20:26:32.878626+03:00",
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "50002951d6bc",
+      "name": "skool-daily-check",
+      "prompt": "# Skool Gunluk Icerik Kontrolu \u2014 Script + Agent\n\n## ADIM 1: Python Script ile Tara\npython3 ~/.hermes/scripts/skool_scraper.py calistir.\n\n- Cikti \"[SILENT]\" ise sessizce bitir, hicbir sey yapma.\n- Cikti JSON array ise gelen yeni post'lari degerlendir ve rapor hazirla.\n- Script hata verirse (exit 1) asagidaki yontemle browser ile dene.\n\n## ADIM 2 (Fallback): Browser ile Manuel Tara\nScript calismazsa:\n\n### Giris Yontemi\nOnce sifreyle login dene:\n1. browser_navigate(\"https://www.skool.com/login\")\n2. Email: isimgorulsunn@gmail.com, sifre gir + LOG IN\n3. Login basariliysa direkt Yapay Zekadan Gelire'ye git\n\n### Taranacak Kanallar\n1. **Yapay Zekadan Gelire** (Umut Aktu): https://www.skool.com/u-gpt-ile-yapay-zekadan-gelire-4122\n   - Yeni post'lari tara, icerigini cek, Vanitas icin degerlendir\n2. **AI Automation Society** (Nate Herk): https://www.skool.com/ai-automation-society\n   - Public feed, login gerekmez \u2014 web_extract ile tara\n\n### Login Sorunu\n- Sifre calismazsa \"Log in with a code\" dene + Gmail'den kodu oku\n- Login basarisiz olursa sadece AI Automation Society'yi tarayip raporla\n\n### Tekrar Isleme Onle\n~/.hermes/data/skool_cache.json dosyasindaki processed_urls'e bak.\nDaha once islenmis URL'leri atla.\n\n## ADIM 3: Rapor\nYeni post bulunduysa kisa Turkce rapor hazirla:\n- Hangi kanaldan\n- Konu basligi\n- 2-3 cumle ozet\n\n## Sessiz Kalma Kurali\nYeni post yoksa sessizce bitir.",
+      "skills": [
+        "warp-proxy"
+      ],
+      "skill": "warp-proxy",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "15 9 * * *",
+        "display": "15 9 * * *"
+      },
+      "schedule_display": "15 9 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 29
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-29T02:10:20.031677+03:00",
+      "next_run_at": "2026-07-04T09:15:00+03:00",
+      "last_run_at": "2026-07-02T09:30:52.060648+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:17",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "browser",
+        "file",
+        "search"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "d4e5348f059f",
+      "name": "APA G\u00fcnl\u00fck \u0130\u00e7erik Kontrol\u00fc",
+      "prompt": "# APA Bilgi Pipeline v5.0 \u2014 \u00c7ok Kanall\u0131 Tarama + NotebookLM Podcast\n\nsohbet, llm-wiki, google-workspace, notebooklm-pipeline skill'lerini y\u00fckle.\n\n## D\u0130L KURALI (KR\u0130T\u0130K)\n- Wiki i\u00e7erikleri: \u0130ngilizce yaz.\n- Sohbet/bildirim/\u00f6zet/rapor: T\u00fcrk\u00e7e, sohbet tonunda, samimi, do\u011fal. Akademik jargonu sadele\u015ftir.\n- \"Yani...\" ile ba\u011fla, anla\u015f\u0131l\u0131r olsun.\n\n## G\u00d6REV TANIMI\nAPA'dan gelen t\u00fcm i\u00e7eri\u011fi tara, kategorize et, anla\u015f\u0131l\u0131r dille raporla, NotebookLM'e kaydet ve podcast olu\u015ftur.\n\n## ADIM 1 \u2014 TARA (\u00c7ok Kanall\u0131)\n\n### Kanal A: Gmail\nGmail'de apa.org domaininden son 7 g\u00fcnl\u00fck mailleri \u00e7ek. \u015eu b\u00fcltenleri ay\u0131rt et:\n- Editor's Choice, Science Spotlight, Practice Update, Media Watch\n- Six Things, CE Roundup, Advocacy\n- APA Membership, CE promosyon \u2192 ATLA\n\n### Kanal B: APA Monitor & Press Releases\nMonitor dergisindeki yeni makaleleri ve apa.org/news/press-releases'teki son haberleri kontrol et. ~/wiki/apa-articles/index.md ile duplicate kontrol\u00fc yap.\n\n### Kanal C: Speaking of Psychology Podcast\nAPA'n\u0131n resmi podcast'ini kontrol et (apa.org/news/podcast). Yeni b\u00f6l\u00fcm varsa: ba\u015fl\u0131k, konu\u015fmac\u0131, ana konu, \u00f6ne \u00e7\u0131kan arg\u00fcman.\n\n### Kanal D: APA Events\napa.org/events'teki \u00fccretsiz etkinlikleri tara. Essential Science Conversations serisi APA \u00fcyelerine \u00fccretsiz.\n\n### Kanal E: Division \u0130\u00e7erikleri (Varsa)\nDivision 12 (Klinik Psikoloji) ve Division 29 (Psikoterapi) \u00f6zel i\u00e7eriklerine bak.\n\n## ADIM 2 \u2014 KATEGOR\u0130ZE ET & \u0130\u00c7ER\u0130K \u00c7IKAR\n\nHer makaleyi \u015fu kategorilerden birine yerle\u015ftir:\n\n\ud83e\udde0 KL\u0130N\u0130K PRAT\u0130K \u2014 Tedavi protokolleri, terapi y\u00f6ntemleri, vaka \u00e7al\u0131\u015fmalar\u0131, klinik rehberler\n\ud83e\udd16 AI \u00d7 PS\u0130KOLOJ\u0130 \u2014 AI de\u011ferlendirme ara\u00e7lar\u0131, dijital terapi, yapay zeka eti\u011fi\n\ud83d\udcc8 KAR\u0130YER & GEL\u0130\u015e\u0130M \u2014 CE f\u0131rsatlar\u0131, sertifikalar, psikolog haklar\u0131, kariyer kaynaklar\u0131\n\ud83d\udd2c ARA\u015eTIRMA \u2014 Yeni \u00e7al\u0131\u015fmalar, meta-analizler, g\u00fcncel bulgular\n\ud83d\udcc5 ETK\u0130NL\u0130K \u2014 Webinar, seminer, konferans (\u00fccretsiz/\u00fccretli belirt)\n\nHer i\u00e7erik t\u00fcr\u00fcne g\u00f6re \u015fu formatta \u00e7\u0131kar:\n\n### Bilimsel Makale / Ara\u015ft\u0131rma (\ud83d\udd2c veya \ud83e\udde0)\n1. **Ne anlat\u0131yor?** \u2014 Yaz\u0131n\u0131n temel sorusu, neyi ara\u015ft\u0131rm\u0131\u015f (1-2 c\u00fcmle)\n2. **Ne diyor?** \u2014 Temel bulgular, varsa \u00e7arp\u0131c\u0131 veri\n3. **Bunun anlam\u0131 ne?** \u2014 Klinik/pratik \u00e7\u0131kar\u0131m, \"Yani...\"\n4. **Kaynak** \u2014 Yazar/lar, dergi, y\u0131l\n\nUzunluk: makale uzunlu\u011funa g\u00f6re esne. 3 sayfal\u0131k bir derlemeyi 3 c\u00fcmlede anlatmaya \u00e7al\u0131\u015fma. K\u0131sa haber \u2192 3-5 c\u00fcmle. Normal makale \u2192 5-10 c\u00fcmle (2 paragraf). Uzun derleme \u2192 10-15 c\u00fcmle (3-4 paragraf).\n\n### Podcast (\ud83c\udfa7)\n- Kim anlatm\u0131\u015f? \u2192 Ne diyor? \u2192 Neden dinlemeli? (3-5 c\u00fcmle)\n\n### Etkinlik (\ud83d\udcc5)\n- Tarih, konu, konu\u015fmac\u0131lar, \u00fccretsiz mi, kay\u0131t linki\n\n## ADIM 3 \u2014 NOTEBOOKLM'E KAYDET\n\nNotebook ID: c44469fe-a69a-4a86-8dd8-756c2f365109 (\"APA Bilgi\")\n\nHer yeni i\u00e7erik i\u00e7in:\n1. \u00d6nce mevcut kaynaklar\u0131 kontrol et (notebook_get ile) \u2014 duplicate ekleme\n2. Source olarak ekle: url (web sayfas\u0131) veya text (e-posta i\u00e7eri\u011fi)\n3. Her source'un ba\u015fl\u0131\u011f\u0131na kategorisini ekle: \"[\ud83e\udde0 Klinik] veya [\ud83e\udd16 AI] veya [\ud83d\udcc8 Kariyer] \u015feklinde\n\nE\u011fer NotebookLM source ekleme ba\u015far\u0131s\u0131z olursa \u2192 ge\u00e7, hata y\u00fcz\u00fcnden t\u00fcm cron'u durdurma.\n\n## ADIM 4 \u2014 RAPOR (Anla\u015f\u0131l\u0131r T\u00fcrk\u00e7e)\n\n\u015eu formatta sun:\n\n```\n\ud83e\udde0 APA G\u00dcNL\u00dcK \u2014 [TAR\u0130H]\n\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\n\n\ud83d\udccb KATEGOR\u0130 1: [Klinik Pratik / AI\u00d7Psikoloji / vs.]\n\n\u2776 [Makale Ba\u015fl\u0131\u011f\u0131]\nNe anlat\u0131yor? \u2192 ...\nNe diyor? \u2192 ...\nBunun anlam\u0131 ne? \u2192 Yani ...\n\ud83d\udcce Kaynak: [Yazar, Dergi, Y\u0131l]\n\n\u2777 [\u0130kinci makale]\n...\n\n\ud83d\udccb KATEGOR\u0130 2: ...\n\n\ud83c\udfa7 Speaking of Psychology: [B\u00f6l\u00fcm ba\u015fl\u0131\u011f\u0131]\n...\n\n\ud83d\udcc5 \u00d6NE \u00c7IKAN ETK\u0130NL\u0130K: ...\n\n\ud83d\udccc \u00d6ZET: Bu g\u00fcn APA'da \u00f6ne \u00e7\u0131kan konu: [bir c\u00fcmle]\n```\n\n## ADIM 5 \u2014 PODCAST OLU\u015eTUR\n\nHer g\u00fcn NotebookLM'deki APA notebook'unda yeni source'lar varsa:\n1. Audio Overview olu\u015ftur (studio_create, artifact_type=\"audio\")\n2. studio_status ile bekle, haz\u0131r olunca indir (download_artifact)\n3. MP3'\u00fc /tmp/apa-podcast-YYYY-MM-DD.mp3 olarak kaydet\n4. Raporun sonuna ekle: \ud83c\udf99\ufe0f **G\u00fcn\u00fcn APA Podcast'i:** [MEDIA:/tmp/apa-podcast-....mp3]\n5. Podcast'i dinlemen i\u00e7in ayr\u0131ca 1-2 c\u00fcmle \u00f6neri yaz\n\nNot: Hi\u00e7 yeni i\u00e7erik yoksa podcast olu\u015fturma, sadece [SILENT] d\u00f6n.\n\n## ADIM 6 \u2014 WIKI KAYDI (\u00d6\u011eRENME)\n- Makaleler: ~/wiki/apa-articles/YYYY-MM-DD-<slug>.md (\u0130ngilizce, yap\u0131land\u0131r\u0131lm\u0131\u015f)\n- Etkinlikler: ~/wiki/apa-etkinlikler/ (\u0130ngilizce)\n- \u00d6nce ~/wiki/apa-articles/index.md'yi kontrol et, duplicate'leri atla\n- Ben de \u00f6\u011freneyim diye: wiki dosyas\u0131na \"Key Takeaways\" ve \"Clinical Relevance\" b\u00f6l\u00fcmleri ekle\n\n## KISITLAR\n- \u00dccretli etkinlik ASLA kaydedilmez\n- Promosyon/\u00fcyelik mailleri atlan\u0131r\n- Hi\u00e7bir \u015fey yoksa [SILENT] \u2014 sadece yeni i\u00e7erik varsa rapor + podcast g\u00f6nder\n- NotebookLM source ekleme ba\u015far\u0131s\u0131z olursa podcast'i atla, sadece rapor g\u00f6nder\n- Cron \u00e7\u0131kt\u0131s\u0131nda gereksiz detay olmas\u0131n \u2014 \u00f6z ve anla\u015f\u0131l\u0131r",
+      "skills": [
+        "sohbet",
+        "llm-wiki",
+        "google-workspace",
+        "notebooklm-pipeline"
+      ],
+      "skill": "sohbet",
+      "model": "deepseek-v3.2:free",
+      "provider": "custom:LiteRouterProxy",
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 11,18 * * *",
+        "display": "0 11,18 * * *"
+      },
+      "schedule_display": "0 11,18 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 82
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-29T04:27:59.738120+03:00",
+      "next_run_at": "2026-07-04T11:00:00+03:00",
+      "last_run_at": "2026-07-03T18:03:02.977039+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:13",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "c9bdd33a3a21",
+      "name": "Bardo Lead: Instagram Analiz",
+      "prompt": "instagram skill'ini y\u00fckle.\n\nBardo Lead Analizi (KVKK uyumlu - sadece hesap d\u00fczeyinde):\n\n1. @bardopsikoloji hesab\u0131na gelen son 24 saatteki etkile\u015fimleri kontrol et\n2. \u0130zmir'deki 3 rakip psikolog hesab\u0131n\u0131 incele (isimleri kaydet)\n3. En \u00e7ok etkile\u015fim alan i\u00e7erik t\u00fcr\u00fcn\u00fc belirle (Reels? Karusel? Hikaye?)\n4. Bu hafta i\u00e7in 3 i\u00e7erik fikri + en iyi payla\u015f\u0131m saati \u00f6ner\n5. Sonu\u00e7lar\u0131 k\u0131sa bir Telegram mesaj\u0131 olarak g\u00f6nder\n\n\u00d6NEML\u0130: Bireysel kullan\u0131c\u0131 verisi toplama. Sadece hesap ve i\u00e7erik d\u00fczeyinde analiz yap.\nCRITICAL: Output must be in Turkish only. Never use Chinese, Japanese, Korean, or other non-Latin characters. If unsure about a Turkish word, use a simpler alternative.",
+      "skills": [
+        "instagram"
+      ],
+      "skill": "instagram",
+      "model": "glm-5.1",
+      "provider": "custom:opencode-go",
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "45 9 * * 1-5",
+        "display": "45 9 * * 1-5"
+      },
+      "schedule_display": "45 9 * * 1-5",
+      "repeat": {
+        "times": null,
+        "completed": 21
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-07-03T14:59:08.366089+03:00",
+      "paused_reason": null,
+      "created_at": "2026-05-29T17:52:38.911449+03:00",
+      "next_run_at": "2026-07-06T09:45:00+03:00",
+      "last_run_at": "2026-07-03T11:38:18.163100+03:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: HTTP 429: Monthly usage limit reached. Resets in 17 days. To continue using this model now, enable usage from your available balance: https://opencode.ai/workspace/wrk_01KVJ8M50WPTQZ6QW0KXKQG5YT/go",
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:18",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "web",
+        "browser",
+        "terminal",
+        "file"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "f3d44fe0cdcd",
+      "name": "Token Canl\u0131 Tutma (G\u00fcnl\u00fck Refresh)",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "refresh_google_token.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 3 * * *",
+        "display": "0 3 * * *"
+      },
+      "schedule_display": "0 3 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 28
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-29T18:13:21.837236+03:00",
+      "next_run_at": "2026-07-04T03:00:00+03:00",
+      "last_run_at": "2026-07-02T03:00:57.170525+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "edc42cc1cc5e",
+      "name": "Watchdog",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "watchdog.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/5 * * * *",
+        "display": "*/5 * * * *"
+      },
+      "schedule_display": "*/5 * * * *",
+      "repeat": {
+        "times": null,
+        "completed": 13277
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-30T03:22:11.244478+03:00",
+      "next_run_at": "2026-07-03T18:10:00+03:00",
+      "last_run_at": "2026-07-03T18:05:58.377472+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "96e08b06d005",
+      "name": "Chromium Cleanup (30dk)",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "chromium-cleanup.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "*/15 * * * *",
+        "display": "*/15 * * * *"
+      },
+      "schedule_display": "*/15 * * * *",
+      "repeat": {
+        "times": null,
+        "completed": 2670
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-30T03:37:14.646150+03:00",
+      "next_run_at": "2026-07-03T18:15:00+03:00",
+      "last_run_at": "2026-07-03T18:00:58.169218+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "ce2dfc29da0b",
+      "name": "\ud83e\udde0 Konu\u015fma De\u011ferlendirme",
+      "prompt": "konusma_degerlendirici.py beti\u011fini \u00e7al\u0131\u015ft\u0131r. \u00c7\u0131kt\u0131y\u0131 oldu\u011fu gibi Edel'e ilet.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "konusma_degerlendirici.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 10 * * *",
+        "display": "0 10 * * *"
+      },
+      "schedule_display": "0 10 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 28
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-05-31T04:02:25.880279+03:00",
+      "next_run_at": "2026-07-04T10:00:00+03:00",
+      "last_run_at": "2026-07-03T11:38:28.311210+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:17",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "6306976553",
+        "chat_name": "Edel Reister",
+        "thread_id": null
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "c9b6a8ad85d1",
+      "name": "WARP G\u00fcnl\u00fck Restart",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "warp-daily-restart.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 3 * * *",
+        "display": "0 3 * * *"
+      },
+      "schedule_display": "0 3 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 24
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-02T08:42:11.300325+03:00",
+      "next_run_at": "2026-07-04T03:00:00+03:00",
+      "last_run_at": "2026-07-02T03:00:52.079497+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "12"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "e7458e949c41",
+      "name": "IG Takip Kontrol",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "ig_takip_kontrol.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "interval",
+        "minutes": 30,
+        "display": "every 30m"
+      },
+      "schedule_display": "every 30m",
+      "repeat": {
+        "times": null,
+        "completed": 1132
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-02T22:18:48.196264+03:00",
+      "next_run_at": "2026-07-03T18:15:55.861021+03:00",
+      "last_run_at": "2026-07-03T17:45:55.861021+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:16",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "16"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "3ef33fe37449",
+      "name": "\ud83e\udde0 G\u00fcnl\u00fck Sentez",
+      "script": "gunluk_sentez.py",
+      "no_agent": true,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 23 * * *",
+        "display": "0 23 * * *"
+      },
+      "schedule_display": "0 23 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 26
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-05T01:53:27.761879+03:00",
+      "next_run_at": "2026-07-03T23:00:00+03:00",
+      "last_run_at": "2026-07-02T23:01:28.731316+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "13"
+      }
+    },
+    {
+      "id": "model-watchdog-daily",
+      "name": "Model Watchdog",
+      "enabled": true,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 4 * * *",
+        "display": "0 4 * * *"
+      },
+      "schedule_display": "0 4 * * *",
+      "script": "model-watchdog.py",
+      "no_agent": true,
+      "prompt": "Run model-watchdog.py to check and update model availability.",
+      "state": "scheduled",
+      "created_at": "2026-06-06T01:40:00+03:00",
+      "next_run_at": "2026-07-04T04:00:00+03:00",
+      "deliver": "telegram:-1003917030255:12",
+      "skills": [],
+      "skill": null,
+      "last_run_at": "2026-07-02T04:02:03.247630+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "paused_at": null,
+      "paused_reason": null
+    },
+    {
+      "id": "93582f1545d2",
+      "name": "Bundle G\u00fcndem \u0130\u015fleme",
+      "prompt": "# Bundle G\u00fcndem \u0130\u015fleme v3 \u2014 Ak\u0131ll\u0131 Haber Filtreleme + 5N1K Anlat\u0131m\n\n## Kapsam ve A\u011f\u0131rl\u0131k\nT\u00fcm kategorileri tara ama **a\u011f\u0131rl\u0131\u011f\u0131 teknoloji ve bilim haberlerine ver**.\nEkonomiden minimum say\u0131da haber ekle (1-2 tane).\nG\u00fcndem haberlerini \u00e7ok az ekle veya m\u00fcmk\u00fcnse atla.\nMagazin, spor gibi kategorileri atla.\nYa\u015fam kategorisinden arada bir haber ekleyebilirsin (seyrek, her seferde de\u011fil).\n**Hedef:** Toplam 8-10 haberin en az 6's\u0131 bilim ve teknoloji olsun.\n\n## Anlat\u0131m Format\u0131 \u2014 5N1K\nHer haberi **5N1K (Ne? Kim? Nerede? Ne Zaman? Nas\u0131l? Neden?)** yap\u0131s\u0131na g\u00f6re anlat.\nK\u0131sa ve \u00f6z ol \u2014 uzun paragraflara girme.\n\nFormat:\n```\n**\ud83e\udde0 Bilim / \ud83d\udcf1 Teknoloji / \ud83d\udcca Ekonomi / \ud83c\udf3f Ya\u015fam \u2014 [Haber Ba\u015fl\u0131\u011f\u0131]**\n\n[5N1K yap\u0131s\u0131nda 3-4 c\u00fcmlelik k\u0131sa anlat\u0131m. Ne oldu? Kim yapt\u0131? Nerede/Nas\u0131l? Neden \u00f6nemli?]\n\n\ud83d\udcce [Kaynak Ad\u0131]\n```\n\n\u00d6rnek:\n```\n**\ud83e\udde0 Bilim \u2014 Beynin odak filtresi ke\u015ffedildi**\n\nNorve\u00e7li ara\u015ft\u0131rmac\u0131lar fare beyninde dikkat da\u011f\u0131t\u0131c\u0131lar\u0131 filtreleyen n\u00f6ron grubu buldu. Devre d\u0131\u015f\u0131 b\u0131rak\u0131l\u0131nca odaklanma kayboldu. DEHB gibi dikkat bozukluklar\u0131na yeni tedavi y\u00f6ntemleri geli\u015ftirilebilir.\n\n\ud83d\udcce BBC News\n```\n\n## Deduplication (KR\u0130T\u0130K \u2014 Tekrar \u00d6nleme)\n- Her \u00e7al\u0131\u015ft\u0131\u011f\u0131nda i\u015flenen haber ba\u015fl\u0131klar\u0131n\u0131 takip et.\n- Daha \u00f6nce g\u00f6nderilmi\u015f bir haberi KES\u0130NL\u0130KLE tekrar g\u00f6nderme.\n- ~/wiki/news/processed_titles.md dosyas\u0131n\u0131 kullan: varsa oku, yoksa olu\u015ftur.\n- \u0130\u015flenen her yeni haber ba\u015fl\u0131\u011f\u0131n\u0131 bu dosyaya ekle.\n- Ba\u015fl\u0131k benzerli\u011fi i\u00e7in fuzzy match kullan (\u00e7ok benzer ba\u015fl\u0131klar\u0131 da tekrar olarak i\u015faretle).\n\n## Bilgi \u00c7\u0131kar\u0131m\u0131 ve Wiki'ye Kaydetme\nHer haberden \u015fu bilgileri \u00e7\u0131kar:\n1. **Temel bilgi**: Haberin \u00f6z\u00fc (2-3 c\u00fcmle)\n2. **Veri/\u0130statistik**: Haberde ge\u00e7en say\u0131sal veriler, ara\u015ft\u0131rma sonu\u00e7lar\u0131\n3. **Anlaml\u0131 \u00e7\u0131kar\u0131m**: Bu haber neden \u00f6nemli, ne \u00f6\u011freniyoruz?\n\n\u00c7\u0131kar\u0131lan bilgileri ~/wiki/news/ alt\u0131nda ilgili kategori klas\u00f6r\u00fcne kaydet (\u00f6r: ~/wiki/news/tech/, ~/wiki/news/science/, ~/wiki/news/economy/).\n\n## \u00c7\u0131kt\u0131 Format\u0131 (Haberler thread'ine)\nSohbet tonunda, 5N1K yap\u0131s\u0131nda haberleri sun:\n- Kategorisine g\u00f6re ba\u015fl\u0131k emojisi (\ud83d\udcf1 teknoloji, \ud83d\udd2c bilim, \ud83d\udcca ekonomi, \ud83c\udf3f ya\u015fam)\n- Her haber i\u00e7in 5N1K anlat\u0131m\u0131 (3-4 c\u00fcmle, k\u0131sa ve \u00f6z)\n- Her haberin alt\u0131na \ud83d\udcce kaynak linki ekle\n- Toplam 8-10 haber g\u00f6nder (en az 6's\u0131 bilim + teknoloji)\n- Haberleri kategorilerine g\u00f6re grupla\n\n## \u00d6nemli\n- Bu job her \u00e7al\u0131\u015ft\u0131\u011f\u0131nda yeni ve farkl\u0131 haberler g\u00f6nder \u2014 tekrar yok.\n- 5N1K yap\u0131s\u0131n\u0131 kullan ama resmi olma \u2014 sohbet dili koru.\n- Her haberin kayna\u011f\u0131n\u0131 \ud83d\udcce ile belirt ki merak eden okusun.",
+      "skills": [
+        "sohbet",
+        "llm-wiki"
+      ],
+      "skill": "sohbet",
+      "model": "glm-5.1",
+      "provider": "custom:opencode-go",
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 11 * * *",
+        "display": "0 11 * * *"
+      },
+      "schedule_display": "0 11 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 51
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-06T18:21:26.618964+03:00",
+      "next_run_at": "2026-07-04T11:00:00+03:00",
+      "last_run_at": "2026-07-03T11:38:36.101103+03:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: HTTP 429: Monthly usage limit reached. Resets in 17 days. To continue using this model now, enable usage from your available balance: https://opencode.ai/workspace/wrk_01KVJ8M50WPTQZ6QW0KXKQG5YT/go",
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:3379",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "2920"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "e8cb75a82a56",
+      "name": "NotebookLM Cookie Auto-Refresh",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "nlm-auth-refresh.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 */12 * * *",
+        "display": "0 */12 * * *"
+      },
+      "schedule_display": "0 */12 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 36
+      },
+      "enabled": false,
+      "state": "paused",
+      "paused_at": "2026-07-01T02:28:43.529242+03:00",
+      "paused_reason": null,
+      "created_at": "2026-06-08T14:43:30.818165+03:00",
+      "next_run_at": "2026-07-01T12:00:00+03:00",
+      "last_run_at": "2026-07-01T00:01:06.948645+03:00",
+      "last_status": "error",
+      "last_error": "Script exited with code 1\nstderr:\n/home/ubuntu/.hermes/scripts/nlm-auth-refresh.sh: line 23: /home/ubuntu/.nlm/auth_check.log: No such file or directory\n/home/ubuntu/.hermes/scripts/nlm-auth-refresh.sh: line 33: /home/ubuntu/.nlm/auth_check.log: No such file or directory",
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "2920"
+      },
+      "enabled_toolsets": [
+        "terminal"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "name": "LinkedIn Token Refresh",
+      "prompt": "",
+      "script": "refresh_linkedin_token.sh",
+      "no_agent": true,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 4 1,20 * *",
+        "display": "0 4 1,20 * *"
+      },
+      "schedule_display": "0 4 1,20 * *",
+      "repeat": {
+        "times": null,
+        "completed": 5
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "created_at": "2026-06-11T11:05:33.316091+00:00",
+      "deliver": "local",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "context_from": null,
+      "origin": null,
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null,
+      "paused_at": null,
+      "paused_reason": null,
+      "last_run_at": "2026-07-01T04:01:01.176598+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "next_run_at": "2026-07-20T04:00:00+03:00",
+      "id": "linkedin-token-refresh"
+    },
+    {
+      "id": "3dde511e5563",
+      "name": "Upwork Session Refresh (12h Backup)",
+      "prompt": "Run the Upwork session refresh script. Execute: cd /home/ubuntu/.hermes && /home/ubuntu/.local/bin/proxychains4 -q -f /home/ubuntu/.local/etc/proxychains.conf node upw_session_refresh.cjs 2>&1. Check cookie count, expiry status, and session validity.\n\nSILENT RULE: If session is VALID and no errors \u2014 respond with exactly \"[SILENT]\" (nothing else). Only provide a full report if BLOCKED or ERROR occurs.",
+      "skills": [],
+      "skill": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 */12 * * *",
+        "display": "0 */12 * * *"
+      },
+      "repeat": {
+        "times": null,
+        "completed": 28
+      },
+      "deliver": "origin",
+      "enabled": false,
+      "no_agent": false,
+      "context_from": null,
+      "schedule_display": "0 */12 * * *",
+      "state": "paused",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-13T18:11:57.491759+03:00",
+      "next_run_at": "2026-07-01T00:00:00+03:00",
+      "last_run_at": "2026-06-30T12:08:57.651527+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "1"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "model": null,
+      "provider": null
+    },
+    {
+      "id": "cfb2a93e2677",
+      "name": "Upwork Cookie Refresh (4h)",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "script": "upwork_refresh.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 */4 * * *",
+        "display": "0 */4 * * *"
+      },
+      "schedule_display": "0 */4 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 92
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-13T18:17:00.953379+03:00",
+      "next_run_at": "2026-07-03T20:00:00+03:00",
+      "last_run_at": "2026-07-03T16:01:07.584696+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "1"
+      },
+      "enabled_toolsets": null,
+      "workdir": null
+    },
+    {
+      "id": "f4ae649eb68f",
+      "name": "Gmail kontrol \u2014 okunmam\u0131\u015f mailler",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "gmail_check.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "interval",
+        "minutes": 180,
+        "display": "every 180m"
+      },
+      "schedule_display": "every 180m",
+      "repeat": {
+        "times": null,
+        "completed": 58
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-24T14:33:13.596651+03:00",
+      "next_run_at": "2026-07-03T20:37:59.053229+03:00",
+      "last_run_at": "2026-07-03T17:37:59.053229+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "15"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "nb_keepalive_2h",
+      "name": "\ud83d\udd10 NotebookLM Auth Keep-Alive (1h)",
+      "prompt": "NotebookLM session keep-alive. Auth valid: refresh cookies. Auth expired: CDP+BWS auto-login.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "script": "nb_keepalive.py",
+      "no_agent": true,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 * * * *",
+        "display": "0 * * * *"
+      },
+      "schedule_display": "0 * * * *",
+      "enabled": true,
+      "state": "scheduled",
+      "deliver": "local",
+      "last_error": null,
+      "next_run_at": "2026-07-03T19:00:00+03:00",
+      "last_run_at": "2026-07-03T18:01:14.898106+03:00",
+      "last_status": "ok",
+      "last_delivery_error": null
+    },
+    {
+      "id": "214dc3d8cda6",
+      "name": "Instagram Cookie Refresh (Weekly)",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "instagram_cookie_refresh.sh",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 10 * * *",
+        "display": "0 10 * * *"
+      },
+      "schedule_display": "0 10 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 7
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-25T13:21:08.633382+03:00",
+      "next_run_at": "2026-07-04T10:00:00+03:00",
+      "last_run_at": "2026-07-03T11:37:57.502648+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "18"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "40448623b352",
+      "name": "\ud83e\udde0 Skool Community \u0130stihbarat\u0131",
+      "prompt": "# \ud83e\udde0 Skool Community \u0130stihbarat\u0131 \u2014 G\u00fcnl\u00fck Rapor\n\nskool-community-monitor, llm-wiki, sohbet, google-workspace skill'lerini y\u00fckle.\n\n## G\u00d6REV\n\u00dcye olunan T\u00dcM Skool community'lerini tara. Yeni post'lar\u0131 i\u015fle, video/dosya varsa i\u015fle. Vanitas'\u0131n geli\u015fimi i\u00e7in bilgi topla.\n\n## HEDEF TOPLULUKLAR (\u00fcyelik do\u011frula, sadece KATILDI olanlar\u0131 tara)\n\n### 1. AI Automation Society (Nate Herk) \u2014 Public feed, login gerekmez\n- URL: https://www.skool.com/ai-automation-society\n- Public feed \u2014 \u00f6nce web_extract ile feed'den post linklerini \u00e7ek\n- \u0130lgin\u00e7 post'lar\u0131 tek tek web_extract ile tam i\u00e7erik \u00e7ek\n- Login'siz \u00e7al\u0131\u015f\u0131r\n\n### 2. Yapay Zek\u00e2dan Gelire (Umut Aktu) \u2014 Login gerekli\n- URL: https://www.skool.com/u-gpt-ile-yapay-zekadan-gelire-4122\n- \u00d6NCE Skool'a \u015fifreyle login ol: browser_navigate(\"https://www.skool.com/login\") \u2192 email + \u015fifre gir \u2192 LOG IN t\u0131kla\n- \u015eifre: isimgorulsunn@gmail.com / 41y%#Y8#Htts*kx3*amf5YJNU37^mn\n- Login ba\u015far\u0131l\u0131ysa do\u011frudan community URL'ine git\n- browser_console ile t\u00fcm post linklerini \u00e7ek, processed_urls'te olmayanlar\u0131 i\u015fle\n- Post i\u00e7inde video/dosya linki varsa i\u00e7eri\u011fi \u00e7ek\n\n### 3. AI Money Lab \u2014 EXITED (Edel \u00e7\u0131kt\u0131, atla)\n\n## TEKRAR \u0130\u015eLEMEY\u0130 \u00d6NLE (ZORUNLU)\n- \u0130\u015flenen post'lar ~/.hermes/data/skool_processed.json dosyas\u0131nda tutulur.\n- Her yeni post'u i\u015flemeden \u00d6NCE URL'si processed_urls'te var m\u0131, ba\u015fl\u0131\u011fa denk wiki dosyas\u0131 var m\u0131 kontrol et.\n- \u0130kisinde de yoksa i\u015fle. Varsa ATLA.\n- \u0130\u015flenen her yeni post'un URL'sini processed_urls'e EKLE ve dosyay\u0131 g\u00fcncelle.\n\n## SESS\u0130Z KALMA KURALI (ZORUNLU)\n- Yeni i\u015flenen post SAYISI 0 ise \u2192 H\u0130\u00c7B\u0130R \u00c7IKTI VERME. Sessizce bitir.\n- Sadece en az 1 yeni i\u00e7erik i\u015flendiyse rapor haz\u0131rla.\n\n## \u00c7IKTI FORMATI\nSade T\u00fcrk\u00e7e, k\u0131sa c\u00fcmleler. Hangi topluluktan oldu\u011funu belirt. \u00dccretli i\u00e7erik varsa belirt.\n\n## 429 Rate Limit Kural\u0131\nweb_search/web_extract 429 al\u0131rsa: 60sn bekle, max 3 kez dene. H\u00e2l\u00e2 429: sessizce ge\u00e7, raporlama.\n\n## Login 600sn timeout stratejisi\n\u00d6NCE \u015fifreyle login dene (30-60sn). \u015eifre \u00e7al\u0131\u015fmazsa public feed'li toplulu\u011fu (AI Automation Society) \u00d6NCE login'siz tara. Login 120sn'yi ge\u00e7erse sadece public sonu\u00e7lar\u0131 raporla.",
+      "skills": [
+        "skool-community-monitor",
+        "llm-wiki",
+        "sohbet",
+        "google-workspace"
+      ],
+      "skill": "skool-community-monitor",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 10,18 * * *",
+        "display": "30 10,18 * * *"
+      },
+      "schedule_display": "30 10,18 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 10
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-27T13:10:32.528739+03:00",
+      "next_run_at": "2026-07-03T18:30:00+03:00",
+      "last_run_at": "2026-07-02T18:35:28.877014+03:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: HTTP 429: Rate limit exceeded. Please try again later.",
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "17"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "917fd839a746",
+      "name": "\ud83e\ude7a Cron Sa\u011fl\u0131k Monit\u00f6r\u00fc",
+      "prompt": "Run the cron health check script to detect any job failures or anomalies.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "cron-health-check.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "interval",
+        "minutes": 240,
+        "display": "every 240m"
+      },
+      "schedule_display": "every 240m",
+      "repeat": {
+        "times": null,
+        "completed": 28
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-27T13:44:19.906256+03:00",
+      "next_run_at": "2026-07-03T19:37:55.094951+03:00",
+      "last_run_at": "2026-07-03T15:37:55.094951+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "15"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "45a6f33e0d02",
+      "name": "linkedin_kuyruk_besle",
+      "prompt": "# LinkedIn Kuyruk Besleme \u2014 Yeni \u0130\u00e7erik Bul + Kuyru\u011fa Ekle\n\nlinkedin skill'ini y\u00fckle.\n\n## G\u00d6REV: Kuyrukta pending kay\u0131t say\u0131s\u0131n\u0131 kontrol et, azsa yeni kaynak bul\n\n1. **Kuyru\u011fu kontrol et**: `~/.hermes/data/linkedin_queue.json` dosyas\u0131n\u0131 oku. `status == \"pending\"` olan kay\u0131t say\u0131s\u0131 2'den azsa tam 2 kaynak bulup kuyru\u011fa ekle.\n\n2. **Yeni kaynak bul**: A\u015fa\u011f\u0131daki kaynaklardan psikoloji i\u00e7erikli, daha \u00f6nce i\u015flenmemi\u015f makaleler/etkinlikler ara:\n   - APA Monitor on Psychology (apa.org) \u2014 en g\u00fcncel say\u0131daki ilgin\u00e7 makaleler\n   - Science Daily - Mind & Brain (sciencedaily.com/news/mind_brain)\n   - Meadows Institute (meadowsinstitute.org) \u2014 AI ve mental health i\u00e7erikleri\n   - American Academy of Arts and Sciences (amacad.org) \u2014 AI ve mental health projesi\n\n3. **Duplicate kontrol\u00fc**: Buldu\u011fun kayna\u011f\u0131n URL'sini `~/.hermes/data/linkedin_posts_archive.json` ve `~/.hermes/data/linkedin_queue.json` ile kar\u015f\u0131la\u015ft\u0131r. Daha \u00f6nce i\u015flenmi\u015fse atla.\n\n4. **Kuyru\u011fa ekle**: Yeni kayna\u011f\u0131 kuyru\u011fa a\u015fa\u011f\u0131daki formatta ekle:\n   ```json\n   {\n     \"id\": \"benzersiz-id\",\n     \"source_title\": \"Makale ba\u015fl\u0131\u011f\u0131\",\n     \"source_url\": \"https://...\",\n     \"status\": \"pending\",\n     \"date_added\": \"bug\u00fcn\u00fcn-tarihi\",\n     \"draft\": \"6 katmanl\u0131 taslak (500-750 karakter, Hakan T\u00fcrk\u00e7apar stili)\"\n   }\n   ```\n\n5. Raporu \u00f6zetle: ka\u00e7 kaynak bulundu, hangi konular, kuyrukta toplam ka\u00e7 pending kay\u0131t var.\n\nKR\u0130T\u0130K: Kuyrukta zaten 2+ pending kay\u0131t varsa \"[SILENT]\" \u00e7\u0131kt\u0131s\u0131 ver ve hi\u00e7bir \u015fey yapma. Gereksiz yere kaynak ekleme.",
+      "skills": [
+        "linkedin"
+      ],
+      "skill": "linkedin",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8 * * *",
+        "display": "0 8 * * *"
+      },
+      "schedule_display": "0 8 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 4
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-27T16:02:28.519291+03:00",
+      "next_run_at": "2026-07-04T08:00:00+03:00",
+      "last_run_at": "2026-07-02T08:09:20.240448+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "14"
+      },
+      "enabled_toolsets": [
+        "web",
+        "terminal",
+        "file",
+        "search"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "3acdcd93e3b7",
+      "name": "\ud83d\udcc8 Ekonomi Zekas\u0131 \u2014 Sabah & Ak\u015fam B\u00fclteni",
+      "prompt": "# \ud83d\udcc8 Ekonomi Zekas\u0131 \u2014 Sabah & Ak\u015fam B\u00fclteni (v3.0 \u2014 YouTube Entegre)\n\nfinancial-intelligence, sohbet, kripto-teknik-analiz skill'lerini y\u00fckle.\n\n## G\u00d6REV\nG\u00fcnde 2 kere (08:00 sabah, 18:00 ak\u015fam) ekonomi b\u00fclteni haz\u0131rla. Haftai\u00e7i \u00e7al\u0131\u015f\u0131r.\n\n## VER\u0130 KAYNAKLARI (s\u0131ras\u0131yla)\n\n### a) YouTube Ekonomi Kanallar\u0131 \u2014 \u00d6NCEL\u0130KL\u0130\n\u00d6nce /home/ubuntu/.hermes/data/youtube/transcripts/ klas\u00f6r\u00fcn\u00fc kontrol et.\nSon 2 g\u00fcnde eklenmi\u015f transkript dosyalar\u0131n\u0131 oku (JSON format\u0131nda).\n\u00d6zellikle Yat\u0131r\u0131m 101 kanal\u0131n\u0131n videolar\u0131ndaki g\u00fcndem yorumlar\u0131n\u0131 de\u011ferlendir.\n\nYat\u0131r\u0131m 101'in analiz tarz\u0131: piyasa grafiklerinden \u00e7ok, makroekonomik kararlar\u0131n al\u0131nd\u0131\u011f\u0131 yerleri (k\u00fcrs\u00fcler, anla\u015fmalar, bakan a\u00e7\u0131klamalar\u0131) merkeze al\u0131r. \"\u00c7izgiler size gelece\u011fi g\u00f6stermez, kararlar \u00e7ok daha yukar\u0131da al\u0131n\u0131r\" yakla\u015f\u0131m\u0131yla g\u00fcndemi yorumlar.\n\nAyr\u0131ca \u015fu wiki sayfas\u0131n\u0131 kontrol et: ~/wiki/youtube/ \u2014 yeni video \u00f6zetleri varsa b\u00fcltende kullan.\n\n### b) K\u00fcresel Ekonomi\nweb_extract ile BBC Business sayfas\u0131n\u0131 tara.\n\n### c) T\u00fcrkiye Ekonomisi\nBloomberg HT + D\u00fcnya Gazetesi.\n\n### d) Google News\nweb_search ile 4 sorgu: BIST 100, T\u00fcrkiye ekonomisi, alt\u0131n fiyatlar\u0131, dolar kuru.\nSabah ek: Asya piyasalar\u0131 + ABD vadeli i\u015flemler.\nAk\u015fam ek: BIST kapan\u0131\u015f + emtia fiyatlar\u0131.\n\n### e) Makro Veri\npython3 /home/ubuntu/.hermes/scripts/makro_veri.py --json\n\n### f) Bitcoin Ar\u0131s\u0131 + Paper Trading\nSon durum i\u00e7in ilgili data dosyalar\u0131n\u0131 kontrol et.\n\n## YOUTUBE ENTEGRASYON KURALI\n- Yat\u0131r\u0131m 101'in yeni videosu varsa (son 2 g\u00fcn): videodaki \u00f6nemli yorumlar\u0131 b\u00fcltende \u00f6ne \u00e7\u0131kar\n- \"Yat\u0131r\u0131m 101'in yorumu:\" ba\u015fl\u0131\u011f\u0131yla ekle\n- Sadece g\u00fcndem yorumlar\u0131n\u0131 al, sponsorluk/\u00fcyelik bilgilerini atla\n- Di\u011fer YouTube kanallar\u0131 (Ceyhun Elgin, Kendine Milyoner, Borsadan Hisse) varsa onlar\u0131 da de\u011ferlendir\n\n## \u00c7IKTI FORMATI\n\ud83d\udcc8 EKONOM\u0130 ZEKASI \u2014 {SABAH/AK\u015eAM} B\u00dcLTEN\u0130\n{DD Month YYYY}\n\n\ud83d\udccd MAN\u015eET\nEn \u00f6nemli 1-2 geli\u015fme (max 3 c\u00fcmle)\n\n\ud83d\udcf0 HABERLER (max 4-5)\n[SEKT\u00d6R] Ba\u015fl\u0131k | 5N1K | Yat\u0131r\u0131m G\u00f6zl\u00fc\u011f\u00fc | \ud83d\udfe2/\ud83d\udd34/\u26aa | Beklenti\n\n\ud83c\udf99\ufe0f YATIRIM 101 YORUMU (varsa)\nAdam\u0131n g\u00fcndem hakk\u0131ndaki de\u011ferlendirmesi 2-3 c\u00fcmleyle\n\n\ud83d\udcca MAKRO PANEL\nBIST100, USD/TRY, Alt\u0131n, Bitcoin, vd.\n\n\ud83c\udfaf \u00d6NE \u00c7IKAN FIRSAT/R\u0130SK\n\u26a0\ufe0f Yat\u0131r\u0131m tavsiyesi de\u011fildir.\n\n## D\u0130L KURALLARI\n- K\u0131sa ve okunabilir\n- Emoji kullan: \ud83d\udcc8 \ud83d\udccb \ud83c\udfaf \u26a1 \ud83d\udcca \ud83d\udfe2 \ud83d\udd34 \u26aa\n- Her b\u00fcltenin sonuna \"\u26a0\ufe0f Yat\u0131r\u0131m tavsiyesi de\u011fildir\"\n- Haftasonu/tatil: \"Piyasalar kapal\u0131\" notu, b\u00fclten g\u00f6nderme",
+      "skills": [
+        "financial-intelligence",
+        "sohbet",
+        "kripto-teknik-analiz"
+      ],
+      "skill": "financial-intelligence",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 8,18 * * 1-5",
+        "display": "0 8,18 * * 1-5"
+      },
+      "schedule_display": "0 8,18 * * 1-5",
+      "repeat": {
+        "times": null,
+        "completed": 9
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-27T17:30:14.562763+03:00",
+      "next_run_at": "2026-07-06T08:00:00+03:00",
+      "last_run_at": "2026-07-02T18:04:41.193341+03:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: HTTP 429: Rate limit exceeded. Please try again later.",
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "15"
+      },
+      "enabled_toolsets": [
+        "web",
+        "terminal",
+        "file",
+        "search"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "dfb8eeacbada",
+      "name": "karusel_sabah",
+      "prompt": "\n\n## ON KONTROL: Kuyruk Durumu\nbash ~/.hermes/scripts/karusel_queue_check.sh calistir.\n- Cikti \"[SILENT]\" ise sessizce bitir, hicbir sey yapma.\n- Cikti \"[RUN]\" ise asagidaki akisi baslat.\n\n## 429 Rate Limit Kurali\nweb_search/web_extract 429 alirsa: 60sn bekle, max 3 kez dene. Hala 429: sessizce gec, raporlama.\n# Instagram Karusel \u2014 Sabah Postu (NotebookLM Studio + Graph API)\n\ninstagram ve sohbet skill'lerini y\u00fckle.\n\n## G\u00d6REV: Bardo Psikoloji i\u00e7in 1 karusel haz\u0131rla ve Edel'e onaya g\u00f6ster.\n\n### A\u015eAMA 1 \u2014 Kaynak Bul\n1. NotebookLM'deki psikoloji notebook'lar\u0131na sor: yeni bir karusel konusu \u00f6ner\n2. ~/wiki/ dizininde psikoloji i\u00e7eriklerini tara\n3. ~/.hermes/data/karusel_arsiv.json'dan duplicate kontrol\u00fc yap\n\n### A\u015eAMA 2 \u2014 NotebookLM Studio ile Slide Deck Olu\u015ftur\n1. Kaynaklar\u0131 uygun notebook'a y\u00fckle (veya yeni notebook olu\u015ftur)\n2. studio_create ile slide_deck olu\u015ftur:\n   - artifact_type: \"slide_deck\"\n   - slide_format: \"detailed_deck\"\n   - focus_prompt: \"Bardo Psikoloji i\u00e7in 7-9 slayt karusel. Slayt 1: hook/kapak. 2-3: konu tan\u0131m\u0131. 4-6: bilgiler+\u00f6rnekler. 7: g\u00fcnl\u00fck hayat. 8-9: \u00f6zet+kapan\u0131\u015f. T\u00fcrk\u00e7e, psikoloji\"\n   - confirm: True\n\n### A\u015eAMA 3 \u2014 PDF'ten G\u00f6rsellere \u00c7evir\nStudio haz\u0131r olunca (studio_status poll et):\n1. download_artifact ile PDF indir (slide_deck_format: \"pdf\")\n2. PyMuPDF ile her sayfay\u0131 200 DPI PNG'ye \u00e7evir\n3. ~/instagram_karusel/YYYYMMDD_sabah/ klas\u00f6r\u00fcne kaydet\n\n### A\u015eAMA 4 \u2014 G\u00f6rselleri Hostinge Y\u00fckle\nHer PNG'yi 0x0.st veya catbox.moe gibi bir hosting servisine y\u00fckle:\n```bash\ncurl -s -F \"fileToUpload=@slayt.png\" -F \"reqtype=fileupload\" https://catbox.moe/user/api.php\n# veya\ncurl -s -F \"file=@slayt.png\" https://0x0.st\n```\nURL'leri bir diziye kaydet.\n\n### A\u015eAMA 5 \u2014 Graph API ile Karusel Container Olu\u015ftur\nTOKEN=~/.hermes/instagram_graph_token.txt\nIG_ID=\"17841478124961208\"\n\n1. Her g\u00f6rsel i\u00e7in IMAGE container olu\u015ftur:\n   POST /v24.0/{IG_ID}/media?image_url={URL}&media_type=IMAGE&access_token={TOKEN}\n   \u2192 container ID'leri al\n\n2. T\u00fcm container'lar FINISHED olana kadar bekle (status_code kontrol\u00fc)\n\n3. CAROUSEL container olu\u015ftur:\n   POST /v24.0/{IG_ID}/media?media_type=CAROUSEL&children=[id1,id2,...]&caption={caption}&access_token={TOKEN}\n   \u2192 karusel container ID'si al\n\n### A\u015eAMA 6 \u2014 Ar\u015five Kaydet + Edel'e G\u00f6ster\n1. karusel_arsiv.json'a kaydet (status: pending_approval, carousel_container_id: ID)\n2. Her slayd\u0131 MEDIA: ile s\u0131rayla g\u00f6ster (g\u00f6rseller kal\u0131c\u0131 klas\u00f6rden)\n3. Caption + hashtag + container ID bilgisini ekle\n4. \u015eu mesajla g\u00f6nder: \"\ud83c\udfa8 Karusel haz\u0131r! Onayl\u0131yorsan 'yay\u0131nla' yaz, ben hemen yay\u0131nlayay\u0131m \ud83d\udc9b\"\n\nKR\u0130T\u0130K: Karusel container'\u0131n\u0131 olu\u015ftur AMA publish etme. Edel onaylas\u0131n, ben burada publish edeyim.",
+      "skills": [
+        "instagram",
+        "sohbet"
+      ],
+      "skill": "instagram",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 10 * * *",
+        "display": "0 10 * * *"
+      },
+      "schedule_display": "0 10 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 6
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-27T18:08:15.056105+03:00",
+      "next_run_at": "2026-07-04T10:00:00+03:00",
+      "last_run_at": "2026-07-03T11:38:24.301949+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "14"
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "file",
+        "search",
+        "browser"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "02d4d62338bc",
+      "name": "karusel_aksam",
+      "prompt": "\n\n## 429 Rate Limit Kurali\nweb_search/web_extract 429 alirsa: 60sn bekle, max 3 kez dene. Hala 429: sessizce gec, raporlama.\n# Instagram Karusel \u2014 Ak\u015fam Postu (NotebookLM Studio + Graph API)\n\ninstagram ve sohbet skill'lerini y\u00fckle.\n\n## G\u00d6REV: Bardo Psikoloji i\u00e7in 1 karusel haz\u0131rla ve Edel'e onaya g\u00f6ster.\n\n### A\u015eAMA 1 \u2014 Kaynak Bul\n1. NotebookLM'den psikoloji konusu \u00f6ner (sabahkinden farkl\u0131)\n2. ~/wiki/ dizininde tara\n3. karusel_arsiv.json'dan duplicate kontrol\u00fc\n\n### A\u015eAMA 2 \u2014 NotebookLM Studio Slide Deck\nStudio'dan slide_deck olu\u015ftur, PDF olarak indir.\n\n### A\u015eAMA 3 \u2014 PDF \u2192 PNG\nPyMuPDF ile her sayfay\u0131 PNG'ye \u00e7evir, ~/instagram_karusel/YYYYMMDD_aksam/ klas\u00f6r\u00fcne kaydet.\n\n### A\u015eAMA 4 \u2014 G\u00f6rselleri Hostinge Y\u00fckle\ncatbox.moe / 0x0.st ile her PNG'yi upload et, URL'lerini al.\n\n### A\u015eAMA 5 \u2014 Graph API Karusel Container\nTOKEN'dan okunur, IG_ID=\"17841478124961208\"\n1. Her g\u00f6rsel i\u00e7in IMAGE container olu\u015ftur \u2192 ID'leri al\n2. FINISHED olana kadar bekle\n3. CAROUSEL container olu\u015ftur (children=ID'ler + caption)\n\n### A\u015eAMA 6 \u2014 Ar\u015fiv + Onay\nkarusel_arsiv.json (status: pending_approval)\nEdel'e g\u00f6ster: g\u00f6rseller + caption + \"Onayl\u0131yorsan 'yay\u0131nla' yaz\"\n\nKR\u0130T\u0130K: Container olu\u015ftur ama publish etme. Edel onay\u0131 bekleniyor.",
+      "skills": [
+        "instagram",
+        "sohbet"
+      ],
+      "skill": "instagram",
+      "model": "deepseek-v4-flash-free",
+      "provider": "opencode-zen",
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 19 * * *",
+        "display": "0 19 * * *"
+      },
+      "schedule_display": "0 19 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 8
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-27T18:08:30.242886+03:00",
+      "next_run_at": "2026-07-03T19:00:00+03:00",
+      "last_run_at": "2026-07-02T19:04:52.217576+03:00",
+      "last_status": "error",
+      "last_error": "RuntimeError: HTTP 429: Rate limit exceeded. Please try again later.",
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "14"
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "file",
+        "search",
+        "browser"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "e1c65e7c0634",
+      "name": "Ayl\u0131k Model/Provider G\u00fcncelleme Taramas\u0131",
+      "prompt": "# Ayl\u0131k Model/Provider G\u00fcncelleme Taramas\u0131\n\nHer ay\u0131n 1'inde \u00e7al\u0131\u015f\u0131r. T\u00fcm provider'lar\u0131n model listelerini tara, de\u011fi\u015fiklik varsa EYLEM PLANI haz\u0131rlay\u0131p Home kanala g\u00f6nder.\n\n## Yap\u0131lacaklar:\n1. cd /home/ubuntu/.hermes && python3 scripts/model-watchdog.py\n2. T\u00dcM provider'lar\u0131n model listelerini tara:\n   - LiteRouter (literouter-ai): api.literouter.com/v1/models\n   - RouteWay: api.routeway.ai/v1/models\n   - Pollinations proxy: localhost:19999/v1/models\n3. Mevcut config.yaml'de kullan\u0131lan free modellerle kar\u015f\u0131la\u015ft\u0131r:\n   - KALDIRILAN free model var m\u0131? (\u00f6rne\u011fin deepseek-v3.2:free eskiden vard\u0131 \u015fimdi yok)\n   - YER\u0130NE ge\u00e7ebilecek free model var m\u0131?\n   - Config'de provider/model tan\u0131m\u0131nda g\u00fcncelleme gerekiyor mu?\n4. E\u011eER de\u011fi\u015fiklik varsa \u2192 Home kanala \u015eU FORMATTA G\u00d6NDER:\n\n   \u2500\u2500\u2500 EYLEM PLANI: [Tarih] \u2500\u2500\u2500\n   \n   **Tespit:** [hangi provider'da hangi model de\u011fi\u015fmi\u015f]\n   **Etkilenen Job'lar:** [job_id'leri ve isimleri]\n   **\u00d6nerilen \u00c7\u00f6z\u00fcm:** [ne yap\u0131lmal\u0131, hangi modelle de\u011fi\u015ftirilmeli]\n   **Config De\u011fi\u015fikli\u011fi:** [config'de hangi sat\u0131rlar g\u00fcncellenmeli]\n   \n   *Onay i\u00e7in Edel'e ilet.*\n\n5. DE\u011e\u0130\u015e\u0130KL\u0130K YOKSA \u2192 sessiz ge\u00e7, hi\u00e7bir \u015fey g\u00f6nderme.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 1 * *",
+        "display": "0 6 1 * *"
+      },
+      "schedule_display": "0 6 1 * *",
+      "repeat": {
+        "times": null,
+        "completed": 1
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-30T01:59:57.951121+03:00",
+      "next_run_at": "2026-08-01T06:00:00+03:00",
+      "last_run_at": "2026-07-01T06:06:13.367522+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "telegram:-1003917030255:12",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "1"
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "web",
+        "file"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "97f19be6f7c6",
+      "name": "Haftal\u0131k temp cleanup",
+      "base_url": null,
+      "script": "temp_cleanup.py",
+      "no_agent": true,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 6 * * 0",
+        "display": "0 6 * * 0"
+      },
+      "schedule_display": "0 6 * * 0",
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-30T03:43:34.270318+03:00",
+      "next_run_at": "2026-07-05T06:00:00+03:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "1"
+      }
+    },
+    {
+      "id": "56eaff0390a7",
+      "name": "Transkript Retry - APA+Miuul Seminerleri",
+      "prompt": "30 Haziran 2026'daki iki Zoom seminer kayd\u0131n\u0131n transkriptini al.\n\nG\u00d6REVLER:\n1. ffmpeg process'lerini kill et (pkill -f ffmpeg)\n2. Kay\u0131t dosyalar\u0131n\u0131 kontrol et:\n   - /home/ubuntu/recordings/seminer_kaydi.mp3 (APA: Mentoring as Networking)\n   - /home/ubuntu/recordings/seminer2_kaydi.mp3 (Miuul: \u0130K Analiti\u011fi S\u00f6yle\u015fisi)\n3. E\u011fer ffmpeg h\u00e2l\u00e2 \u00e7al\u0131\u015f\u0131yorsa (seminer bitmemi\u015fse), 30 dk sonra tekrar dene ve bildirim g\u00f6nder.\n4. ffmpeg \u00f6lm\u00fc\u015fse (seminer bitmi\u015fse):\n   a. Her MP3'\u00fc 20'\u015fer dakikal\u0131k chunk'lara b\u00f6l (ffmpeg -i input.mp3 -f segment -segment_time 1200 -c copy chunk_%%03d.mp3)\n   b. Her chunk'\u0131 Pollinations proxy'e (http://localhost:19999/v1/audio/transcriptions) whisper-1 modeli ile T\u00fcrk\u00e7e transkript et: curl -s -X POST http://localhost:19999/v1/audio/transcriptions -F \"file=@chunk.mp3\" -F \"model=whisper-1\" -F \"language=tr\"\n   c. T\u00fcm chunk metinlerini birle\u015ftir ve /home/ubuntu/recordings/transkript_apa.md ve /home/ubuntu/recordings/transkript_miuul.md olarak kaydet.\n5. Sonucu Edel'e bildir: transkript dosyalar\u0131n\u0131n yolu ve \u00f6zet bilgi (toplam s\u00fcre, chunk say\u0131s\u0131, karakter say\u0131s\u0131)\n\n\u00d6NEML\u0130: Pollinations proxy'e g\u00f6nderirken her chunk aras\u0131nda 2 saniye bekle (rate limiting). 25MB'dan b\u00fcy\u00fck chunk'lar\u0131 atla (proxy kabul etmez).",
+      "skills": [
+        "zoom-recording"
+      ],
+      "skill": "zoom-recording",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-06-30T23:15:18.633183+03:00",
+        "display": "once in 30m"
+      },
+      "schedule_display": "once in 30m",
+      "repeat": {
+        "times": 5,
+        "completed": 1
+      },
+      "enabled": false,
+      "state": "completed",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-06-30T22:45:18.633201+03:00",
+      "next_run_at": null,
+      "last_run_at": "2026-06-30T23:46:51.190873+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "16"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "9d515802f2b2",
+      "name": "Bitcoin Ar\u0131s\u0131 Tarama",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "bitcoin-arisi-tarayici.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 9 * * *",
+        "display": "0 9 * * *"
+      },
+      "schedule_display": "0 9 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 1
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-01T17:16:31.649824+03:00",
+      "next_run_at": "2026-07-04T09:00:00+03:00",
+      "last_run_at": "2026-07-02T09:00:56.274369+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "6025"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "67f6794f67f7",
+      "name": "Coin Listesi G\u00fcncelleme",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "coin-listesi.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 7 * * *",
+        "display": "0 7 * * *"
+      },
+      "schedule_display": "0 7 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 1
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-01T19:55:58.572779+03:00",
+      "next_run_at": "2026-07-04T07:00:00+03:00",
+      "last_run_at": "2026-07-02T07:00:32.683540+03:00",
+      "last_status": "error",
+      "last_error": "Script not found: /home/ubuntu/.hermes/scripts/python3 /home/ubuntu/.hermes/scripts/coin-listesi.py",
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "6025"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "8082276086de",
+      "name": "Paper Trading Kontrol",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "paper-trading.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 * * * *",
+        "display": "0 * * * *"
+      },
+      "schedule_display": "0 * * * *",
+      "repeat": {
+        "times": null,
+        "completed": 37
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-01T20:00:24.777148+03:00",
+      "next_run_at": "2026-07-03T19:00:00+03:00",
+      "last_run_at": "2026-07-03T18:00:59.037429+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "6025"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "9c1b114d1771",
+      "name": "Paper Trading 1 Hafta Sonu Raporu",
+      "prompt": "# Paper Trading 1 Haftal\u0131k Test Sonu Raporu \u2014 8 Temmuz 2026\n\nEdel'in 1 Temmuz'da ba\u015flatt\u0131\u011f\u0131 paper trading testinin s\u00fcresi doldu. Kapsaml\u0131 rapor haz\u0131rla.\n\n## 1. Paper Trading Portf\u00f6y Durumu\npython3 ~/.hermes/scripts/paper-trading.py --status\n- Ba\u015flang\u0131\u00e7: $500, x5 kald\u0131ra\u00e7, breakout stratejisi\n- Bakiye, a\u00e7\u0131k pozisyonlar, toplam i\u015flem, win rate\n- Haftal\u0131k net k\u00e2r/zarar\n\n## 2. BIST G\u00fcnl\u00fck Takip\npython3 ~/.hermes/scripts/bist-takip.py\n- BIST100 endeksi\n- Takip listesi: KCAER, THYAO, EREGL, AKBNK, ASELS, GARAN, SASA\n\n## 3. KOCAER (KCAER) Portf\u00f6y\npython3 ~/.hermes/scripts/borsa-simulasyonu.py --portfoy\n- 245 adet x 14.625 TL al\u0131\u015f\n- G\u00fcncel de\u011fer, k\u00e2r/zarar\n- KOCAER sat\u0131l\u0131p ger\u00e7ek paraya fon mu olu\u015fturulsun?\n\n## 4. Karar \u00d6nerisi\n- Paper trading ba\u015far\u0131l\u0131 m\u0131? ($500 ba\u015flang\u0131\u00e7, hedef pozitif getiri)\n- KOCAER elden \u00e7\u0131kar\u0131l\u0131p ~3700 TL (~$80) ile ger\u00e7ek i\u015flemlere ba\u015flanmal\u0131 m\u0131?\n- Yoksa devam m\u0131?\n\n## 5. Rapor Format\u0131\n\u00d6zet tablo: ba\u015flang\u0131\u00e7 vs \u015fimdi, k\u00e2r/zarar, net \u00f6neri.\n\n\u26a0\ufe0f Yat\u0131r\u0131m tavsiyesi de\u011fildir.",
+      "skills": [
+        "sohbet"
+      ],
+      "skill": "sohbet",
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-07-08T12:00:00+03:00",
+        "display": "once at 2026-07-08 12:00"
+      },
+      "schedule_display": "once at 2026-07-08 12:00",
+      "repeat": {
+        "times": 1,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-01T20:36:09.645043+03:00",
+      "next_run_at": "2026-07-08T12:00:00+03:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "6025"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "951b4536ee4f",
+      "name": "BIST G\u00fcnl\u00fck Takip",
+      "prompt": "",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "bist-takip.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 10 * * 1-5",
+        "display": "0 10 * * 1-5"
+      },
+      "schedule_display": "0 10 * * 1-5",
+      "repeat": {
+        "times": null,
+        "completed": 2
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-01T20:38:12.596335+03:00",
+      "next_run_at": "2026-07-06T10:00:00+03:00",
+      "last_run_at": "2026-07-03T11:38:03.616452+03:00",
+      "last_status": "ok",
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "6025"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "e0ab298fccc8",
+      "name": "YouTube Ekonomi Kanallar\u0131 Tarama",
+      "prompt": "YouTube ekonomi kanallar\u0131n\u0131 tara, son videolar\u0131 \u00e7ek, transkriptleri al, Ekonomi Zekas\u0131 b\u00fclteni i\u00e7in malzeme haz\u0131rla.",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "youtube_tarama.py",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "0 7 * * *",
+        "display": "0 7 * * *"
+      },
+      "schedule_display": "0 7 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 1
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-02T01:02:37.451444+03:00",
+      "next_run_at": "2026-07-04T07:00:00+03:00",
+      "last_run_at": "2026-07-02T07:00:31.820063+03:00",
+      "last_status": "error",
+      "last_error": "Script not found: /home/ubuntu/.hermes/scripts/python3 /home/ubuntu/.hermes/scripts/youtube_tarama.py",
+      "last_delivery_error": null,
+      "deliver": "local",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "17"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "eb8aa9f5ed25",
+      "name": "\ud83d\udee0\ufe0f Cron Otomatik Onar\u0131m",
+      "prompt": "# Cron Otomatik Onar\u0131m \u2014 G\u00fcnl\u00fck Bak\u0131m\n\nT\u00fcm cron job'lar\u0131n\u0131 tara. Son 24 saat i\u00e7inde hata alm\u0131\u015f (last_status=error) job'lar\u0131 bul.\n\n## Tan\u0131nan Hata Pattern'leri\n\n1. **\"Script not found\"** \u2014 script parametresine yanl\u0131\u015fl\u0131kla \"python3 /home/ubuntu/.hermes/scripts/dosya.py\" yaz\u0131lm\u0131\u015f (tam yol + python3 \u00f6n eki). D\u00fczelt: sadece dosya ad\u0131n\u0131 b\u0131rak (\u00f6rn. \"coin-listesi.py\"). cronjob update ile script parametresini g\u00fcncelle.\n\n## Yap\u0131lacaklar\n- Her hatal\u0131 job i\u00e7in: hatay\u0131 tan\u0131 \u2192 d\u00fczelt \u2192 cronjob update ile kaydet\n- D\u00fczelttiklerini \u00f6zet olarak bildir\n- D\u00fczeltemediklerini de belirt (sebebiyle birlikte)\n\n## Uyar\u0131\n- Job'lar\u0131 gereksiz yere de\u011fi\u015ftirme \u2014 sadece tan\u0131d\u0131\u011f\u0131n pattern'leri d\u00fczelt\n- Kendi job'\u0131n\u0131 (Cron Otomatik Onar\u0131m) asla de\u011fi\u015ftirme\n- Raporu k\u0131sa ve \u00f6z tut",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": null,
+      "no_agent": false,
+      "context_from": null,
+      "schedule": {
+        "kind": "cron",
+        "expr": "30 9 * * *",
+        "display": "30 9 * * *"
+      },
+      "schedule_display": "30 9 * * *",
+      "repeat": {
+        "times": null,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-02T13:54:31.747928+03:00",
+      "next_run_at": "2026-07-04T09:30:00+03:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "12"
+      },
+      "enabled_toolsets": [
+        "terminal",
+        "file"
+      ],
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "65c5e9810e73",
+      "name": "\u23fa Kamp\u00fcs 2.G\u00fcn - 19:00 Ge\u00e7i\u015f",
+      "prompt": "no-agent cron: Kamp\u00fcsten Sahaya 2. G\u00fcn 19:00 ge\u00e7i\u015fi",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "zoom_switch.sh seminer3_1900 01:05:00",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-07-03T19:00:00+03:00",
+        "display": "once at 2026-07-03 19:00"
+      },
+      "schedule_display": "once at 2026-07-03 19:00",
+      "repeat": {
+        "times": 1,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-03T17:31:26.631170+03:00",
+      "next_run_at": "2026-07-03T19:00:00+03:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "16"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    },
+    {
+      "id": "1492ac89750f",
+      "name": "\u23fa Kamp\u00fcs 2.G\u00fcn - 20:00 Ge\u00e7i\u015f",
+      "prompt": "no-agent cron: Kamp\u00fcsten Sahaya 2. G\u00fcn 20:00 ge\u00e7i\u015fi",
+      "skills": [],
+      "skill": null,
+      "model": null,
+      "provider": null,
+      "base_url": null,
+      "script": "zoom_switch.sh seminer4_2000 01:05:00",
+      "no_agent": true,
+      "context_from": null,
+      "schedule": {
+        "kind": "once",
+        "run_at": "2026-07-03T20:00:00+03:00",
+        "display": "once at 2026-07-03 20:00"
+      },
+      "schedule_display": "once at 2026-07-03 20:00",
+      "repeat": {
+        "times": 1,
+        "completed": 0
+      },
+      "enabled": true,
+      "state": "scheduled",
+      "paused_at": null,
+      "paused_reason": null,
+      "created_at": "2026-07-03T17:31:27.744973+03:00",
+      "next_run_at": "2026-07-03T20:00:00+03:00",
+      "last_run_at": null,
+      "last_status": null,
+      "last_error": null,
+      "last_delivery_error": null,
+      "deliver": "origin",
+      "origin": {
+        "platform": "telegram",
+        "chat_id": "-1003917030255",
+        "chat_name": "Edel & Vanitas",
+        "thread_id": "16"
+      },
+      "enabled_toolsets": null,
+      "workdir": null,
+      "profile": null
+    }
+  ],
+  "updated_at": "2026-07-03T18:05:58.396927+03:00"
+}

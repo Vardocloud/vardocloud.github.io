@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BW Token — Güvenli Giriş</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+.card { background: white; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); padding: 32px; max-width: 440px; width: 100%; }
+h1 { font-size: 20px; color: #1a202c; margin-bottom: 6px; }
+p { color: #4a5568; font-size: 14px; margin-bottom: 20px; line-height: 1.5; }
+.safety { background: #fffbeb; border: 1px solid #f6e05e; border-radius: 8px; padding: 12px; font-size: 12px; color: #744210; margin-bottom: 20px; line-height: 1.5; }
+.safety strong { display: block; margin-bottom: 4px; }
+label { display: block; font-size: 13px; font-weight: 600; color: #2d3748; margin-bottom: 6px; }
+input { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 15px; margin-bottom: 14px; transition: border-color 0.2s; }
+input:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.15); }
+button { width: 100%; padding: 12px; background: #48bb78; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+button:hover { background: #38a169; }
+.code-box { margin-top: 16px; background: #1a202c; color: #a0aec0; padding: 16px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 12px; word-break: break-all; display: none; user-select: all; }
+.code-box.show { display: block; }
+.hidden-input { display: none; }
+</style>
+</head>
+<body>
+<div class="card">
+<h1>🔐 Bitwarden Token</h1>
+<p>Bilgilerini gir, kodu kopyala, Vanitas'a at. O lokal AI ile çözer. Senin bilgilerin direkt olarak dışarı çıkmaz.</p>
+<div class="safety">
+<strong>🔒 Güvenlik</strong>
+Base64 kod üretilir — bu senin tarayıcında olur. Kodu Vanitas alınca lokal AI'sına (Qwen, server'da) gönderir. İnternete hiçbir şey sızmaz.
+</div>
+<form id="tokenForm">
+<label>client_id</label>
+<input type="text" id="cid" placeholder="organization.client_id" required>
+<label>client_secret</label>
+<input type="password" id="cs" placeholder="••••••••" required>
+<label>scope</label>
+<input type="text" id="scope" value="api" placeholder="api">
+<label>grant_type</label>
+<input type="text" id="grant" value="client_credentials" placeholder="client_credentials">
+<button type="submit">🔐 Kod Üret &amp; Kopyala</button>
+</form>
+<div class="code-box" id="codeBox"></div>
+</div>
+<script>
+document.getElementById('tokenForm').addEventListener('submit', function(e) {
+e.preventDefault();
+const cid = document.getElementById('cid').value.trim();
+const cs = document.getElementById('cs').value.trim();
+const scope = document.getElementById('scope').value.trim() || 'api';
+const grant = document.getElementById('grant').value.trim() || 'client_credentials';
+if (!cid || !cs) return;
+const data = JSON.stringify({client_id: cid, client_secret: cs, scope: scope, grant_type: grant});
+const encoded = btoa(unescape(encodeURIComponent(data)));
+const box = document.getElementById('codeBox');
+box.textContent = encoded;
+box.classList.add('show');
+navigator.clipboard.writeText(encoded).then(() => {
+box.textContent = '✅ Kopyalandı! Vanitas\'a yapıştır.';
+setTimeout(() => { box.textContent = encoded; }, 2000);
+});
+document.getElementById('cid').value = '';
+document.getElementById('cs').value = '';
+});
+</script>
+</body>
+</html>
