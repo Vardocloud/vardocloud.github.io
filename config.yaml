@@ -54,8 +54,8 @@ auxiliary:
     api_key: ''
     base_url: ''
     extra_body: {}
-    model: deepseek-ai/deepseek-v4-flash
-    provider: custom:NVIDIA
+    model: deepseek-v4-flash
+    provider: opencode-go
     timeout: 180
   mcp:
     api_key: ''
@@ -290,14 +290,105 @@ custom_providers:
   api_mode: chat_completions
   base_url: https://integrate.api.nvidia.com/v1
   models:
+    # ============================================================
+    # TIER 1 — En stabil, test edilmiş (GLM 5.2, Llama, Gemma)
+    # ============================================================
+    z-ai/glm-5.2: z-ai/glm-5.2
+    meta/llama-3.3-70b-instruct: meta/llama-3.3-70b-instruct
+    meta/llama-3.1-70b-instruct: meta/llama-3.1-70b-instruct
+    meta/llama-3.1-8b-instruct: meta/llama-3.1-8b-instruct
+    meta/llama-4-maverick-17b-128e-instruct: meta/llama-4-maverick-17b-128e-instruct
+    meta/llama2-70b: meta/llama2-70b
+    meta/codellama-70b: meta/codellama-70b
+    # NVIDIA Nemotron
+    nvidia/nemotron-3-ultra-550b-a55b: nvidia/nemotron-3-ultra-550b-a55b
+    nvidia/nemotron-3-super-120b-a12b: nvidia/nemotron-3-super-120b-a12b
+    nvidia/nemotron-3-nano-30b-a3b: nvidia/nemotron-3-nano-30b-a3b
+    nvidia/nemotron-3-nano-omni-30b-a3b-reasoning: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning
+    nvidia/nemotron-nano-3-30b-a3b: nvidia/nemotron-nano-3-30b-a3b
+    nvidia/nemotron-4-340b-instruct: nvidia/nemotron-4-340b-instruct
+    nvidia/nemotron-4-340b-reward: nvidia/nemotron-4-340b-reward
+    nvidia/nemotron-mini-4b-instruct: nvidia/nemotron-mini-4b-instruct
+    nvidia/nvidia-nemotron-nano-9b-v2: nvidia/nvidia-nemotron-nano-9b-v2
+    nvidia/llama-3.1-nemotron-51b-instruct: nvidia/llama-3.1-nemotron-51b-instruct
+    nvidia/llama-3.1-nemotron-70b-instruct: nvidia/llama-3.1-nemotron-70b-instruct
+    nvidia/llama-3.1-nemotron-nano-8b-v1: nvidia/llama-3.1-nemotron-nano-8b-v1
+    nvidia/llama-3.1-nemotron-ultra-253b-v1: nvidia/llama-3.1-nemotron-ultra-253b-v1
+    nvidia/llama-3.3-nemotron-super-49b-v1: nvidia/llama-3.3-nemotron-super-49b-v1
+    nvidia/llama-3.3-nemotron-super-49b-v1.5: nvidia/llama-3.3-nemotron-super-49b-v1.5
+    nvidia/llama3-chatqa-1.5-70b: nvidia/llama3-chatqa-1.5-70b
+    # Google Gemma
+    google/gemma-4-31b-it: google/gemma-4-31b-it
+    google/gemma-3-12b-it: google/gemma-3-12b-it
+    google/gemma-3-4b-it: google/gemma-3-4b-it
+    google/gemma-3n-e2b-it: google/gemma-3n-e2b-it
+    google/gemma-3n-e4b-it: google/gemma-3n-e4b-it
+    google/gemma-2-2b-it: google/gemma-2-2b-it
+    google/gemma-2b: google/gemma-2b
+    google/recurrentgemma-2b: google/recurrentgemma-2b
+    google/codegemma-1.1-7b: google/codegemma-1.1-7b
+    google/codegemma-7b: google/codegemma-7b
+    # Qwen
+    qwen/qwen3.5-397b-a17b: qwen/qwen3.5-397b-a17b
+    qwen/qwen3.5-122b-a10b: qwen/qwen3.5-122b-a10b
+    qwen/qwen3-next-80b-a3b-instruct: qwen/qwen3-next-80b-a3b-instruct
+    # Mistral
+    mistralai/mistral-large-3-675b-instruct-2512: mistralai/mistral-large-3-675b-instruct-2512
+    mistralai/mistral-large: mistralai/mistral-large
+    mistralai/mistral-large-2-instruct: mistralai/mistral-large-2-instruct
+    mistralai/mistral-medium-3.5-128b: mistralai/mistral-medium-3.5-128b
+    mistralai/mistral-small-4-119b-2603: mistralai/mistral-small-4-119b-2603
+    mistralai/mistral-nemotron: mistralai/mistral-nemotron
+    mistralai/mixtral-8x22b-v0.1: mistralai/mixtral-8x22b-v0.1
+    mistralai/mixtral-8x7b-instruct-v0.1: mistralai/mixtral-8x7b-instruct-v0.1
+    mistralai/mistral-7b-instruct-v0.3: mistralai/mistral-7b-instruct-v0.3
+    mistralai/codestral-22b-instruct-v0.1: mistralai/codestral-22b-instruct-v0.1
+    mistralai/ministral-14b-instruct-2512: mistralai/ministral-14b-instruct-2512
+    nv-mistralai/mistral-nemo-12b-instruct: nv-mistralai/mistral-nemo-12b-instruct
+    nvidia/mistral-nemo-minitron-8b-8k-instruct: nvidia/mistral-nemo-minitron-8b-8k-instruct
+    # ============================================================
+    # TIER 2 — Orta kararlılık
+    # ============================================================
+    stepfun-ai/step-3.7-flash: stepfun-ai/step-3.7-flash
+    stepfun-ai/step-3.5-flash: stepfun-ai/step-3.5-flash
+    moonshotai/kimi-k2.6: moonshotai/kimi-k2.6
+    bytedance/seed-oss-36b-instruct: bytedance/seed-oss-36b-instruct
+    01-ai/yi-large: 01-ai/yi-large
+    abacusai/dracarys-llama-3.1-70b-instruct: abacusai/dracarys-llama-3.1-70b-instruct
+    ai21labs/jamba-1.5-large-instruct: ai21labs/jamba-1.5-large-instruct
+    aisingapore/sea-lion-7b-instruct: aisingapore/sea-lion-7b-instruct
+    databricks/dbrx-instruct: databricks/dbrx-instruct
+    stockmark/stockmark-2-100b-instruct: stockmark/stockmark-2-100b-instruct
+    upstage/solar-10.7b-instruct: upstage/solar-10.7b-instruct
+    microsoft/phi-4-mini-instruct: microsoft/phi-4-mini-instruct
+    microsoft/phi-3.5-moe-instruct: microsoft/phi-3.5-moe-instruct
+    # IBM Granite
+    ibm/granite-34b-code-instruct: ibm/granite-34b-code-instruct
+    ibm/granite-8b-code-instruct: ibm/granite-8b-code-instruct
+    ibm/granite-3.0-8b-instruct: ibm/granite-3.0-8b-instruct
+    ibm/granite-3.0-3b-a800m-instruct: ibm/granite-3.0-3b-a800m-instruct
+    # Writer Palmyra (domain-specific)
+    writer/palmyra-creative-122b: writer/palmyra-creative-122b
+    writer/palmyra-fin-70b-32k: writer/palmyra-fin-70b-32k
+    writer/palmyra-med-70b: writer/palmyra-med-70b
+    writer/palmyra-med-70b-32k: writer/palmyra-med-70b-32k
+    sarvamai/sarvam-m: sarvamai/sarvam-m
+    zyphra/zamba2-7b-instruct: zyphra/zamba2-7b-instruct
+    nvidia/ising-calibration-1-35b-a3b: nvidia/ising-calibration-1-35b-a3b
+    nvidia/nemotron-nano-12b-v2-vl: nvidia/nemotron-nano-12b-v2-vl
+    openai/gpt-oss-120b: openai/gpt-oss-120b
+    openai/gpt-oss-20b: openai/gpt-oss-20b
+    meta/llama-3.2-3b-instruct: meta/llama-3.2-3b-instruct
+    meta/llama-3.2-1b-instruct: meta/llama-3.2-1b-instruct
+    bigcode/starcoder2-15b: bigcode/starcoder2-15b
+    # ============================================================
+    # TIER 3 — Worker limiti / rate-limit riski
+    # ============================================================
+    deepseek-ai/deepseek-coder-6.7b-instruct: deepseek-ai/deepseek-coder-6.7b-instruct
     deepseek-ai/deepseek-v4-flash: deepseek-ai/deepseek-v4-flash
     deepseek-ai/deepseek-v4-pro: deepseek-ai/deepseek-v4-pro
-    nvidia-llama-3.3-70b: meta/llama-3.3-70b-instruct
-    nvidia-nemotron-70b-free: nvidia/llama-3.1-nemotron-70b-instruct
-    mistral-nemotron: mistralai/mistral-nemotron
-    minimax-m3: minimaxai/minimax-m3
-    nvidia/nemotron-3-ultra-550b-a55b: nvidia/nemotron-3-ultra-550b-a55b
-    z-ai/glm-5.2: z-ai/glm-5.2
+    minimaxai/minimax-m3: minimaxai/minimax-m3
+    minimaxai/minimax-m2.7: minimaxai/minimax-m2.7
   name: NVIDIA
 dashboard:
   basic_auth:
@@ -403,7 +494,7 @@ display:
     first_lines: 2
     last_lines: 2
 engine: ''
-fallback_providers: '[{"model":"deepseek-v4-flash-free","provider":"opencode-zen"},{"model":"nvidia-llama-3.3-70b","provider":"custom:NVIDIA"}]'
+fallback_providers: '[{"model":"deepseek-v4-flash-free","provider":"opencode-zen"}]'
 file_read_max_chars: 100000
 gateway:
   media_delivery_allow_dirs: []
@@ -526,8 +617,60 @@ model_aliases:
   groq-hizli:
     model: groq-instant
     provider: Groq
-  nvidia-free:
+  # NVIDIA Free Endpoint — en stabil ilk sırada
+  nvidia-free-glm52:
+    model: z-ai/glm-5.2
+    provider: NVIDIA
+  nvidia-free-llama33:
+    model: meta/llama-3.3-70b-instruct
+    provider: NVIDIA
+  nvidia-free-nemotron-ultra:
+    model: nvidia/nemotron-3-ultra-550b-a55b
+    provider: NVIDIA
+  nvidia-free-nemotron-super:
+    model: nvidia/nemotron-3-super-120b-a12b
+    provider: NVIDIA
+  nvidia-free-gemma4:
+    model: google/gemma-4-31b-it
+    provider: NVIDIA
+  nvidia-free-mistral-small:
+    model: mistralai/mistral-small-4-119b-2603
+    provider: NVIDIA
+  nvidia-free-mistral-medium:
+    model: mistralai/mistral-medium-3.5-128b
+    provider: NVIDIA
+  nvidia-free-mistral-large:
+    model: mistralai/mistral-large-3-675b-instruct-2512
+    provider: NVIDIA
+  nvidia-free-qwen35:
+    model: qwen/qwen3.5-122b-a10b
+    provider: NVIDIA
+  nvidia-free-step37:
+    model: stepfun-ai/step-3.7-flash
+    provider: NVIDIA
+  nvidia-free-gemma312:
+    model: google/gemma-3-12b-it
+    provider: NVIDIA
+  nvidia-free-nemotron70:
+    model: nvidia/llama-3.1-nemotron-70b-instruct
+    provider: NVIDIA
+  nvidia-free-m3:
+    model: minimaxai/minimax-m3
+    provider: NVIDIA
+  nvidia-free-m27:
+    model: minimaxai/minimax-m2.7
+    provider: NVIDIA
+  nvidia-free-step35:
+    model: stepfun-ai/step-3.5-flash
+    provider: NVIDIA
+  nvidia-free-gemma34:
+    model: google/gemma-3-4b-it
+    provider: NVIDIA
+  nvidia-free-deepseek-flash:
     model: deepseek-ai/deepseek-v4-flash
+    provider: NVIDIA
+  nvidia-free-deepseek-pro:
+    model: deepseek-ai/deepseek-v4-pro
     provider: NVIDIA
   qwen:
     model: qwen3.7-max
@@ -592,9 +735,6 @@ providers:
 - base_url: https://api.mistral.ai/v1
   model: mistral-large
   name: Mistral
-- base_url: https://integrate.api.nvidia.com/v1
-  model: deepseek-ai/deepseek-v4-flash
-  name: NVIDIA
 quick_commands:
   dashboard-restart:
     command: ~/.hermes/scripts/infra.sh dashboard-restart

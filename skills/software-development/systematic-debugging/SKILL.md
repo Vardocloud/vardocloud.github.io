@@ -1,7 +1,7 @@
 ---
 name: systematic-debugging
 description: "4-phase root cause debugging: understand bugs before fixing."
-version: 1.1.0
+version: 1.2.0
 author: Hermes Agent (adapted from obra/superpowers)
 license: MIT
 platforms: [linux, macos, windows]
@@ -131,6 +131,48 @@ git diff
 # Changes in specific file
 git log -p --follow src/problematic_file.py | head -100
 ```
+
+### 3b. Network/DNS Isolation — Service Endpoint Unreachable
+
+**WHEN a remote service/API endpoint fails to respond (curl: Empty reply / 000 / timeout):**
+
+**BEFORE switching providers or blaming WARP/proxy, isolate the failure domain:**
+
+```bash
+# 1. Test the MAIN domain — does the service itself exist?
+curl -s -o /dev/null -w "%{http_code}" https://service-provider.com
+# → 200/302 = domain is alive, failure is subdomain-specific
+# → 000 = domain itself unreachable (DNS or connectivity failure)
+
+# 2. Test a KNOWN-GOOD domain — is general connectivity intact?
+curl -s -o /dev/null -w "%{http_code}" https://google.com
+# → 200/302 = general internet works, failure is service-specific
+# → 000 = no internet (DNS, proxy, or gateway issue)
+
+# 3. Test DNS resolution directly
+getent hosts api-specific.service-provider.com
+# → prints IP = DNS works for this subdomain
+# → prints nothing / "Name or service not known" = DNS failure for this subdomain
+
+# 4. Verbose curl for connection details
+curl -v --max-time 10 https://api-specific.service-provider.com 2>&1 | tail -20
+# "Could not resolve host" = DNS failure
+# "Connection refused" / "Connection timed out" = network/firewall
+# Empty reply / 000 = server not responding on that path
+```
+
+**Diagnosis guide:**
+
+| curl code | `getent hosts` | Diagnosis |
+|-----------|----------------|-----------|
+| 200/302 | IP returned | Working — nothing to debug |
+| 000 | **NO** IP | **DNS failure for this subdomain only** — Docker internal resolver, ISP block, or DNS record removed |
+| 000 | IP returned | **Connectivity failure** — firewall, proxy, VPN, or service down |
+| 000 all domains | NO IP all | **Systemic DNS failure** — /etc/resolv.conf, Docker DNS, or network interface |
+
+**Common Docker/WSL pattern:** `api-inference.huggingface.co` fails (000, DNS) while `huggingface.co` works (200). This is a **subdomain-level DNS quirk**, not a general connectivity problem — Docker internal DNS (127.0.0.11) may not forward certain subdomains, or the service's DNS records may have changed.
+
+**Action:** Always test at least 2-3 domains/subdomains to distinguish DNS failure from connectivity failure before assuming proxy/WARP/VPN is the issue.
 
 ### 4. Gather Evidence in Multi-Component Systems
 

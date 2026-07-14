@@ -67,19 +67,89 @@ BASH_ENV=$HOME/.bashrc
 
 Add this to wherever Hermes reads environment variables (e.g., Hermes `.env` file or systemd service environment).
 
+## Container Restart — Binary Exists but "Command Not Found"
+
+After a Docker container restart, tools may appear "silently deleted" when they are actually intact but PATH is misconfigured.
+
+### Post-Restart Diagnostic Sequence
+
+```bash
+# 1. Check container uptime (when did it restart?)
+ps -p 1 -o etime=
+
+# 2. Check PATH
+echo "$PATH"
+
+# 3. Check if ~/.hermes/bin is in PATH
+echo "$PATH" | tr ':' '\n' | grep -q '\.hermes/bin' && echo "IN PATH" || echo "NOT IN PATH"
+
+# 4. Locate binaries directly (they may still exist on disk)
+ls -la /home/ubuntu/.hermes/bin/bw 2>/dev/null   # Bitwarden CLI
+ls -la /home/ubuntu/.hermes/bin/bws 2>/dev/null   # Bitwarden Secrets
+ls -la /home/ubuntu/.hermes/bin/cloudflared 2>/dev/null
+
+# 5. Check if key background services survived the restart
+ps aux | grep "bw serve"               # Bitwarden server (port 8087)
+ps aux | grep "hermes-gateway"         # Hermes gateway
+
+# 6. Verify Hermes-loaded secrets (PEXELS, GROQ, NVIDIA, etc.)
+hermes --version  # Shows "applied N secrets" with key names
+env | grep "PEXELS_API_KEY"   # Confirm specific keys are loaded
+```
+
+### Common Patterns
+
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| `bw`/`bws` not found, but binary in `~/.hermes/bin/` | `~/.hermes/bin` not in PATH after restart | Add to `.bashrc` before the non-interactive guard |
+| Key background process (bw-serve) alive | Container restart preserved the process | PATH issue only — binaries intact |
+| Key background process dead | Full container restart or entrypoint failure | Check entrypoint.sh logs |
+| `hermes --version` shows secrets | Bitwarden session is valid | Only PATH missing — use full path |
+
+### The `~/.hermes/bin` Binary Directory
+
+Hermes stores custom CLI binaries in `~/.hermes/bin/`. This directory should ALWAYS be in PATH:
+
+```bash
+# Must be placed BEFORE the non-interactive guard in ~/.bashrc
+export PATH="$HOME/.hermes/bin:$PATH"
+```
+
+Typical contents:
+```
+~/.hermes/bin/
+├── bw            (116MB) — Bitwarden CLI
+├── bws           (12MB)  — Bitwarden Secrets Manager
+├── cloudflared   (39MB)  — Cloudflare Tunnel
+└── tirith        (22MB)  — (custom tool)
+```
+
+### Verify PATH on Next Shell Start
+
+After fixing `.bashrc`, test with a non-interactive shell (Hermes mode):
+```bash
+bash -c 'which bw && which bws'
+```
+
 ## Verification
 
 ```bash
 # Test from Hermes terminal — should find any installed CLI tool
 bash -c 'which opencode && opencode --version'
 bash -c 'which <tool> && <tool> --version'
+
+# Also verify ~/.hermes/bin tools
+bash -c 'which bw && bw --version 2>&1 | head -3'
+bash -c 'which bws && bws --version 2>&1'
 ```
 
 ## When to Use
 
 Use this checklist when any CLI tool is found "command not found" from Hermes terminal but works in an SSH or Docker exec session:
 
-1. Verify the tool is installed: `npm list -g <package>` or `pip list \| grep <tool>`
-2. Check if PATH is the issue: `bash -c 'echo "$PATH"'` (compare with SSH session)
-3. Apply the two-layer fix above
-4. Verify: `bash -c 'which <tool>'`
+1. **Check if container restarted recently:** `ps -p 1 -o etime=` — if uptime < today, PATH may be the issue
+2. Verify the tool is installed on disk: `ls -la ~/.hermes/bin/<tool>` or `npm list -g <package>` or `pip list \| grep <tool>`
+3. Check if PATH is the issue: `bash -c 'echo "$PATH"'` (compare with SSH session)
+4. Check `~/.hermes/bin` presence in PATH: `echo "$PATH" | tr ':' '\n' | grep '\.hermes/bin'`
+5. Apply the two-layer fix above
+6. Verify: `bash -c 'which <tool>'`

@@ -22,6 +22,47 @@ metadata:
 
 **Önemli:** Provider durumları değişir. Cron job atamadan önce test et.
 
+## ⚠️ Free Tier Tuzakları ve Rate Limit Katmanları
+
+Free provider'ların çoğunda **birden fazla rate limit katmanı** vardır. Bunları karıştırmak "provider çalışmıyor" yanılgısına yol açar.
+
+### NVIDIA Free Tier — 3 Ayrı Limit (RPM / Worker Queue / Credits)
+
+| Limit Türü | Değer | Hata Kodu | Ne Zaman? | Geçici mi? |
+|---|---|---|---|---|
+| **RPM (per account)** | ~40 request/dk | `429 Too Many Requests` | Hesap bazında | ✅ Evet, 1dk bekle |
+| **Worker queue (per model)** | Model başı 32-48 | **`503 ResourceExhausted`** | O modelin worker'ı dolu | ✅ **Evet, retry ile düzelir** |
+| **Inference credits** | 1.000 (5.000 talep) | `402 Payment Required` | Kredi bittiğinde | ❌ Hayır, kredi yüklemek gerek |
+
+**"Worker local total request limit reached (X/48)" hatası:**
+- Bu **kalıcı bir kota değil**, geçici bir sunucu yükü
+- GitHub'da doğrulanmış: "transient rate-limit error (server overload), not a permanent quota/billing error"
+- Worker işledikçe kuyruk boşalır, yeni request kabul eder
+- **Exponential backoff ile retry edilebilir** — 1-2sn sonra tekrar dene
+- Popüler modellerde (DeepSeek V4 Flash) bu sürekli dolu olabilir
+
+**Provider değiştirmeden ÖNCE yapılması gerekenler:**
+1. Hedef modelin free tier limitlerini test et (RPM tetikleniyor mu? Worker limiti ne?)
+2. Kritik bir görevi (decomposer, cron) yeni provider'a geçirmeden ÖNCE limit testi yap
+3. Yedek/fallback provider hazır olsun — free tier limitleri her an değişebilir
+
+**Hata: yapma!** Yeni bir provider/model buldun diye hemen kritik bir task'ı ona atama. Önce:
+1. Free tier limitlerini test et (RPM, worker queue, credits)
+2. Modelin dil kalitesini gerçek prompt ile doğrula
+3. En az 5 ardışık test yap (stabilite kontrolü)
+4. Yedek/fallback provider hazır olsun
+Yoksa kullanıcı "Nvidia providerı kullanarak ne yaptık ki? Kotası dolmuş." der.
+
+### Hermes Config — YAML Bozulma Riski
+
+Config dosyasında değişiklik yaparken DİKKAT:
+- `sed -i /^pattern:/a\ newline` gibi global sed komutları YAML'ı bozabilir (match eden HER provider'a satır ekler)
+- Bozuk YAML üzerinde `hermes config set` çalıştırılırsa config tamamen silinebilir (73 byte'a düşer)
+- Hermes, config değişikliği öncesi `.corrupt.TIMESTAMP.bak` yedeklemesi yapar — bu yedek her zaman YAML'ın SON SAĞLAM halini içerir
+- Config kurtarma adımları: (1) en son `.corrupt.TIMESTAMP.bak`'ı bul, (2) YAML'ı doğrula, (3) spurious satırları temizle, (4) hedef config'e kopyala
+
+**Config düzenleme altın kuralı:** YAML dosyasında sed ile global değişiklik yapma. Ya `hermes config set` kullan (tek bir key değiştirir) ya da Python ile hedef satırı bulup değiştir.
+
 ## 🎯 Dil Bilincine Göre Model Seçimi
 
 ### ✅ Türkçesi Kanıtlanmış
@@ -99,7 +140,8 @@ Test edilmiş modeller:
 
 | Model | Türkçe Kalitesi | Durum | Not |
 |-------|-----------------|-------|-----|
-| `minimaxai/minimax-m3` | ⭐ En iyi | ✅ Kullan | LinkedIn/post için en doğal |
+| `minimaxai/minimax-m3` | ⭐ En iyi | ✅ Kullan — %80 stabil | LinkedIn/post için en doğal, arada 500 düşürür |
+| `z-ai/glm-5.2` | ✅ İyi | ✅ **En stabil (%100)** | 20/20 burst test başarılı, ~2s ortalama |
 | `mistralai/ministral-14b-instruct-2512` | ✅ İyi | ✅ Yedek | |
 | `meta/llama-3.3-70b-instruct` | ✅ İyi | ✅ Kullanılabilir | Config'de `nvidia-llama-3.3-70b` alias'ı ile map'li. Çalışıyor (bazen yavaş yanıt) |
 | `mistralai/mixtral-8x7b-instruct-v0.1` | ⚠️ Karışık | ⚠️ Dene | Gramer hataları olabiliyor |
@@ -137,7 +179,8 @@ cronjob(action='update', job_id='JOB_ID',
 - Key: `.env` dosyasında `NVIDIA_API_KEY` env var'ında tutulur
 - **Endpoint:** `https://integrate.api.nvidia.com/v1`
 - **Catalog:** `curl -s https://integrate.api.nvidia.com/v1/models` ile 121+ model listelenir
-- **Config alias ekleme:** config.yaml'da NVIDIA provider'ının `models:` listesine `minimax-m3: minimaxai/minimax-m3` gibi satır eklenir
+- **Aylık API aboneliği YOK** — NVIDIA NIM'in aylık/aylık bir ücret planı yoktur. Sadece iki seçenek: (1) Free tier (40 RPM, 1K kredi, kart gerekmez), (2) AI Enterprise $4,500/GPU/yıl (self-host, production). Arada "ChatGPT Plus benzeri $20/ay" bir ürünü bulunmaz.
+- **Config model alias ekleme:** config.yaml'da `model_aliases` altına NVIDIA modelleri için alias eklenebilir. Mevcut aliaslar: `nvidia-glm52`, `nvidia-llama`, `nvidia-m3`, `nvidia-free`
 - **Bilinen çalışan free modeller:**
   - `minimaxai/minimax-m3` — Türkçe en iyisi (TEST EDİLDİ: HTTP 200, stop)
   - `mistralai/ministral-14b-instruct-2512` — Türkçe iyi (TEST EDİLDİ)
@@ -150,13 +193,12 @@ cronjob(action='update', job_id='JOB_ID',
   - `google/gemma-3-4b-it` — 404
   - `moonshotai/kimi-k2.6`, `01-ai/yi-large`, `writer/palmyra-creative-122b`, `ibm/granite-3.0-8b-instruct` — 404
 - **Katalogda var, completion test edilmedi:**
-  - `deepseek-ai/deepseek-v4-flash` — NVIDIA free tier kataloğunda mevcut. Decomposition (text-only) için ideal aday: MIT lisansı, 13B aktif, güçlü reasoning. Completion testi yapılıp doğrulanmalı. Önceki test "503 ResourceExhausted" dönmüştü — free tier kotası dolmuş olabilir. Farklı zamanda tekrar dene.
+  - `deepseek-ai/deepseek-v4-flash` — NVIDIA free tier kataloğunda mevcut. Decomposition (text-only) için ideal aday: MIT lisansı, 13B aktif, güçlü reasoning. TEST EDİLDİ: "503 ResourceExhausted — Worker local total request limit reached (48/48)". Bu geçici bir worker overload'ı, kalıcı bir limit değil. Farklı zamanda tekrar dene. Diğer NVIDIA modelleri (GLM 5.2, llama-3.3-70b, minimax-m3) çalışıyor.
   - `deepseek-ai/deepseek-v4-pro` — NVIDIA kataloğunda var, muhtemelen ücretli.
 - **Timeout veren (ücretli/kısıtlı olabilir):**
   - `meta/llama-3.1-70b-instruct`, `meta/llama-4-maverick-17b-128e-instruct`
   - `qwen/qwen3-next-80b-a3b-instruct`, `qwen/qwen3.5-122b-a10b`
   - `microsoft/phi-4-mini-instruct`, `google/gemma-4-31b-it`
-  - `z-ai/glm-5.2`
 
 ## 🚨 Pitfall'lar
 
@@ -184,6 +226,7 @@ Pollinations terk edildi. Şu an çalışan ücretsiz image generation API key'i
 ## 📁 Referans Dosyaları
 - `references/image-generation-providers.md` — Pollinations sonrası test edilen tüm sağlayıcılar ve durumları
 - `references/nvidia-free-models.md` — NVIDIA API test sonuçları (hangi modeller çalıştı, HTTP kodları, Türkçe kalitesi)
+- `references/nvidia-free-tier-research.md` — [14 Tem 2026] NVIDIA NIM free tier: 3 limit katmanı, model stabilite testleri (GLM 5.2 %100, M3 %80), abonelik bilgisi, rate limit yönetimi
 - `sohbet/references/literouter-free-model-rehberi.md` — LiteRouter 19 model detayı
 - `sohbet/references/konusma-degerlendirme-prompt.md` — Değerlendirme prompt şablonu
 - `sohbet/references/ogrenme.md` — Günlük öğrenme/rapor kaydı

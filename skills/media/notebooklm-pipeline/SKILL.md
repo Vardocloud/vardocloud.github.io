@@ -286,7 +286,7 @@ Eğer sonuç dönerse duplicate'tir, işleme. Emin değilsen web_extract'e geçm
 1. **Monitor:** `web_search` ile Monitor linklerini keşfet (birincil): `web_search query="site:apa.org/monitor/2026/07-08 psychology" limit=10`. `/monitor/2026` sayfasındaki issue listing'i de `web_extract` ile kontrol et. Browser console sadece web_search bulamazsa yedek kullan.
    **Press Release:** `web_extract(urls=["https://www.apa.org/news/press/"])` ile tara.
 2. AI makalelerini ÖNCELİKLİ işle
-3. **Tam metin:** `web_extract(url)` ile çek (Firecrawl, öncelikli). `web_extract` başarısızsa → Puppeteer MCP + `[...document.querySelectorAll('p')].filter(t => t.length > 50)` ile dene. O da blokluyorsa sadece RSS feed'deki press release'leri işle.
+3. **Tam metin:** Browser ile sayfaya git (`browser_navigate` → `browser_snapshot(full=true)`) ve tam metni oku. APA Monitor sayfalarında `web_extract` çoğu zaman sadece özet/önizleme döndürür. **APA için browser birincil araçtır.** Diğer sitelerde (press release, blog) `web_extract` yeterli olabilir.
 4. Zen curl (deepseek-v4-flash-free) ile Türkçe özet üret
 5. Wiki'ye `.md` kaydet
 6. NotebookLM: **1 deneme**, başarısızsa geç ("⚠️ NBLM: [hata]")

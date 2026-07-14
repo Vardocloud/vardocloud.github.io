@@ -40,6 +40,7 @@ Bir custom provider kaldirildiginda (Pollinations gibi), auxiliary altindaki mod
 2. **`hermes config set` ile doldur:** Ornegin `hermes config set auxiliary.compression.provider "custom:NVIDIA"`
 3. **Fallback guncelle:** `hermes config set fallback_providers '[...]'` ile eski provider referansini kaldir, yenisini ekle
 4. **Golden config sync:** `restore_config.py --sync && restore_config.py --check`
+5. **Free tier rate limitlerine dikkat et:** NVIDIA free tier'da model worker limitleri var (48/48 ResourceExhausted). Bu kalici bir limit degil, gecici worker yuklenmesi — retry edilebilir. Ama DeepSeek V4 Flash free tier surekli overload. Oneri: opencode-go lokal proxy kullan (kota yok, hizli). GLM 5.2 NVIDIA'da en stabil free model.
 
 Bilinen bos alanlar (model: '' / provider: auto): compression, kanban_decomposer, tts_audio_tags. TTS genelde LLM gerektirmez, auto kalabilir.
 
@@ -50,6 +51,20 @@ Bilinen bos alanlar (model: '' / provider: auto): compression, kanban_decomposer
 - Test etmeden modeli kritik yola koyma: once bir chat completion ile dil kalitesini dogrula, timeout/error veren modelleri ele
 
 **Env var override uyarisi:** Auxiliary tool'lar config'deki model yerine `AUXILIARY_*_MODEL` env var'ini kullanabilir. Debug'da once env var kontrol et. Config dogru olsa bile env override ederse tool calismaz.
+
+**Free tier limit testi ONCE yapilmali — modeli kritik yola koymadan once sinirlarini bil.**
+14 Tem 2026'daki hata: DeepSeek V4 Flash NVIDIA free tier'da worker limiti dolu (48/48) cikti. Oysa once burst testi yapilsaydi bu gorulurdu. Kural: yeni bir provider/modeli herhangi bir auxiliary role atamadan ONCE:
+1. Model listesini cek (`GET /v1/models`)
+2. Basit bir chat completion dene (200 donuyor mu?)
+3. Burst test: 10-20 ardışık request at, worker limiti / rate limit / 500 error var mi?
+4. Dil kalitesini dogrula (Turkce input ver, cikti mantikli mi?)
+5. Tum bunlar gectikten SONRA config'e ekle
+
+## CLI Config Edit Riskleri
+
+`hermes config set` komutu YAML parse edemezse config dosyasini truncate edebilir. Hermes truncation'dan once `.config.yaml.corrupt.*.bak` ile yedek alir. Kurtarma icin en son corrupt yedegi geri kopyala ve YAML sentaksini dogrula.
+
+**Kural:** `sed -i` gibi global pattern araclariyla YAML duzenleme — tum nested bloklarda eslesme yapip yapiyi bozar. Hermes config'ini sadece `hermes config set`, `restore_config.py` veya Python YAML API'si ile degistir.
 
 ## Pitfalls
 

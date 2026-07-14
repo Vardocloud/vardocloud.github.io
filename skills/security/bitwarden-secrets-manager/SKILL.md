@@ -413,7 +413,7 @@ BW_SESSION="$SESSION_KEY" ~/.hermes/bin/bw list items --search "ARA"
 |---------|-------|
 | `bw: command not found` | `bw serve` çalışıyorsa REST API kullan. CLI gerekliyse `export PATH="$HOME/.hermes/bin:$PATH"` |
 | `bws: not found` | `hermes secrets bitwarden install` veya elle indir |
-| `bws` binary var ama `command not found` | PATH'e `/home/ubuntu/.hermes/bin` ekle: `export PATH="$PATH:/home/ubuntu/.hermes/bin"` — Hermes Docker container'ında PATH otomatik eklenir ama WSL/local shell'de eklenmez |
+| `bws` binary var ama `command not found` | PATH'e `/home/ubuntu/.hermes/bin` ekle: `export PATH="$PATH:/home/ubuntu/.hermes/bin"` — Hermes Docker container'ında PATH otomatik eklenmeyebilir (container restart'ında entrypoint ~/.hermes/bin'i PATH'e eklemeyebilir). Kalıcı çözüm: ~/.bashrc'nin en başına PATH eklemesi koy. Doğrulama: which bws |
 | "Doesn't contain a decryption key" | Token formatı bozuk. `--access-token` flag dene, env var yerine |
 | "device_error" | Device bilgilerini BODY'de gönder, header'da değil |
 | "version_header_missing" | `Bitwarden-Client-Version: 2025.1.0` header'ı ekle |

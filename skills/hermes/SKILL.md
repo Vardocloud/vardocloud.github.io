@@ -44,6 +44,8 @@ Pattern: building and embedding Hermes UI surfaces; API contracts, UI state mana
 Pattern: diagnosing delegation/subagent failures — provider resolution, base_url inheritance, content filter blocks, and reconciliation steps.
 
 > 📎 **Supervisor Pattern PoC:** `references/supervisor-pattern-poc.md` — delegate_task ile paralel sub-agent yönetimi, validation layer ve targeted retry pattern'inin proof-of-concept analizi. (3 Tem 2026)
+>
+> 📎 **NVIDIA NIM Provider:** `references/nvidia-nim-provider.md` — free tier limits, 84-model catalog, 3-tier stability ranking, `providers` vs `custom_providers` name conflict warning, config.yaml modification workaround, testing methodology, user preference note. (Updated 14 Tem 2026)
 
 ### hermes-s6-container-supervision
 

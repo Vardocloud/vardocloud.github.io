@@ -107,6 +107,17 @@ Yazmaya başlamadan ÖNCE iki seviyeli kontrol yap:
 
 ⚠️ **"En son düzenlenen dosyayı bul" yaklaşımı kısır döngü yaratır** — aynı makale defalarca işlenir. Bunun yerine linkedin_posts.json'daki kayıtlarla çapraz kontrol yap.
 
+### 0. KAYNAĞI WEB'DEN ÇEK (APA Sayfaları İçin)
+APA Monitor sayfaları (`apa.org/monitor/`) genelde kısa bir özet/önizleme gösterir, gerçek tam metin sayfaya gömülüdür.
+
+**Doğru adımlar:**
+1. **Önce browser ile sayfaya git** — `browser_navigate(url)` → `browser_snapshot(full=true)` ile sayfadaki tam metni al
+2. **Grafik varsa** — `browser_get_images()` ile grafik URL'sini bul, `vision_analyze` ile verileri oku
+3. **Wiki'ye yaz** — Tam metni `~/wiki/apa-articles/` altına .md olarak kaydet
+4. **NotebookLM'e ekle** — `source_add(file_path=..., source_type="file")` ile EKLE. **URL olarak ekleme** — çünkü NotebookLM URL'den bazen özet alır, tam metni değil.
+
+**Uyarı:** `web_extract` APA sayfalarında çoğu zaman özet/önizleme döndürür, tam metin değil. APA makaleleri için browser birincil araçtır, web_extract yedek değil.
+
 ### 1. KAYNAĞI OKU
 `~/wiki/apa-articles/` altındaki ilgili .md dosyasını oku. Makalenin TÜM bölümlerinden beslen.
 

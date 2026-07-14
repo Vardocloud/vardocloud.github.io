@@ -216,6 +216,23 @@ Kurtarma adımları:
 | `~/.hermes/linkedin-poster/.env` | `LINKEDIN_CLIENT_ID`, `LINKEDIN_CLIENT_SECRET`, `LINKEDIN_REDIRECT_URI` | 600 izin |
 | `~/.hermes/skills/linkedin-post/linkedin/` | Detaylı LinkedIn skill (OAuth, post, hatalar) | Daha kapsamlı referans |
 
+## Test/Gönderi Güvenliği
+
+**Kesin kural: `lifecycleState: PUBLISHED` olmadan hiçbir post gerçek hesaba gitmez.** Ama yine de:
+
+- ⚠️ Token refresh/test işlemi yaparken ASLA post gönderme endpoint'ine istek atma
+- ⚠️ `linkedin_client.py` üzerinde debug yaparken `dry_run=True` parametresi varsa kullan, yoksa hiç post API'sini çağırma
+- ⚠️ Edel'in hesabında "VANİTAS DENEMESİ" / test içerikli paylaşımlar çıktığı geçmişte yaşandı — **test amaçlı bile olsa asla post oluşturma**
+- ⚠️ Token yenileme için sadece `/oauth/v2/accessToken` endpoint'ini kullan, `/rest/posts` veya `/v2/ugcPosts` ile işlem yapma
+
+### Refresh Token Dayanıklılığı
+
+LinkedIn refresh token'ları, access token süresi dolduktan **çok uzun süre sonra** (örnekte 20.000+ gün) bile çalışır. Access token 60 günlük olsa da refresh token kalıcıdır. Şu durumlarda her zaman refresh dene:
+
+- Token dosyası var ama `expires_in` süresi geçmiş → doğrudan refresh dene
+- Token 401 döndü → refresh dene
+- Refresh başarısız olursa (HTTP 400 "invalid_grant") → ancak o zaman OAuth akışı başlat
+
 ## Sık Hata Durumları
 
 | HTTP | Sebep | Çözüm |

@@ -36,7 +36,17 @@ Why:
 4. Both models equivalent on English JSON output quality
 5. MiniMax overkill for simple structured reasoning
 
-NVIDIA free tier also has deepseek-ai/deepseek-v4-flash (confirmed in catalog).
-Two access paths for decomposer:
-- opencode-go (127.0.0.1:19998) - recommended, lower latency
-- custom:NVIDIA (integrate.api.nvidia.com/v1) - free tier, 40 req/min limit
+### NVIDIA Free Tier Limitation (14 Tem 2026)
+
+NVIDIA free tier'da deepseek-ai/deepseek-v4-flash katalogda bulunur ancak:
+- Model basina ~48 request limiti vardir (ResourceExhausted: 503)
+- Limit dolunca "Worker local total request limit reached (48/48)" hatasi alinir
+- Limitin sifirlanma suresi bilinmiyor (24 saat olabilir)
+- NVIDIA free tier'da alternatif calisan modeller: meta/llama-3.3-70b-instruct, minimaxai/minimax-m3, z-ai/glm-5.2
+
+**Oneri:** Lokal proxy (opencode-go, 127.0.0.1:19998) uzerinden deepseek-v4-flash kullan — kota yok, gecikme yok, ayni model.
+
+### Access Paths
+- **opencode-go (127.0.0.1:19998)** — recommended for decomposer, lower latency, no rate limits
+- **custom:NVIDIA (integrate.api.nvidia.com/v1)** — free tier, 40 req/min, model basina ~48 request limit
+- **opencode-zen** — deepseek-v4-flash-free, alternatif

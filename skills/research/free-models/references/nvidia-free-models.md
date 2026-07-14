@@ -6,20 +6,32 @@
 curl -s https://integrate.api.nvidia.com/v1/models
 ```
 
+## 3 Katmanlı Rate Limit Sistemi
+
+| Limit Türü | Değer | Hata Kodu | Geçici mi? |
+|---|---|---|---|
+| RPM (per account) | ~40 request/dk | `429 Too Many Requests` | ✅ 1dk bekle |
+| Worker queue (per model) | 32-48 kuyruk | **`503 ResourceExhausted`** | ✅ Retry ile düzelir |
+| Inference credits | 1.000 (5.000 talep) | `402 Payment Required` | ❌ Kredi gerek |
+
+**Worker Local Total Request Limit (48/48):** Modelin worker instance'ı dolu. Retry et — worker işledikçe kuyruk boşalır. GitHub'da doğrulanmış: transient, not permanent.
+
 ## DeepSeek Modelleri
 
-| Model | Katalog | Free Tier | Completion Test |
-|-------|---------|-----------|----------------|
-| `deepseek-ai/deepseek-v4-flash` | ✅ Var | ✅ Free tier'da | ❌ Test edilmedi (önceki 503) |
-| `deepseek-ai/deepseek-v4-pro` | ✅ Var | ❌ Muhtemelen ücretli | ❌ Test edilmedi |
+| Model | Katalog | Free Tier | Completion Test | Sonuç |
+|---|---|---|---|---|
+| `deepseek-ai/deepseek-v4-flash` | ✅ Var | ✅ Free tier | ❌ 503 ResourceExhausted (48/48) | Worker dolu — farklı zaman dene |
+| `deepseek-ai/deepseek-v4-pro` | ✅ Var | ⚠️ Muhtemelen ücretli | ❌ Test edilmedi | |
 
 ## Test Edilip Çalışan Modeller
 
-| Model ID | Çıktı Dili | Süre | Not |
-|----------|-----------|------|-----|
-| `meta/llama-3.3-70b-instruct` | EN/TR | Hızlı | Config'de `nvidia-llama-3.3-70b` alias'ı ile mevcut |
-| `minimaxai/minimax-m3` | EN (Türkçe input'ta) | Normal | Decomposition JSON çıktısı başarılı |
-| `mistralai/mistral-nemotron` | - | Timeout | Çok yavaş, cron için uygun değil |
+| Model ID | Çıktı Dili | HTTP | Not |
+|---|---|---|---|
+| `meta/llama-3.3-70b-instruct` | EN/TR | ✅ 200 | Config'de `nvidia-llama-3.3-70b` alias'ı ile mevcut |
+| `minimaxai/minimax-m3` | EN (TR input) | ✅ 200 | Decomposition JSON çıktısı başarılı |
+| `z-ai/glm-5.2` | EN | ✅ 200 | Çalışıyor, hızlı |
+| `mistralai/mistral-nemotron` | - | ❌ 500 | Internal server error |
+| `deepseek-ai/deepseek-v4-flash` | - | ❌ 503 (48/48) | Worker queue full |
 
 ## Decomposition Test (14 Tem 2026)
 
@@ -37,10 +49,11 @@ curl -s https://integrate.api.nvidia.com/v1/models
 - MACD+RSI'yi tek task'ta birleştirmiş
 - NVIDIA API üzerinden çalışıyor (network gecikmesi var)
 
-**Değerlendirme:** DeepSeek V4 Flash decomposition için daha uygun — MIT lisansı, 13B aktif, lokal proxy'den hızlı, güçlü reasoning. NVIDIA'da free tier'da completion test edilmeli.
+**Değerlendirme:** DeepSeek V4 Flash decomposition için daha uygun — MIT lisansı, 13B aktif, lokal proxy'den hızlı, güçlü reasoning. NVIDIA'da free tier'da worker queue limitine takıldı (48/48). Retry edilebilir.
 
 ## Önemli Notlar
 
-- `deepseek-ai/deepseek-v4-flash` daha önce "503 ResourceExhausted" dönmüştü — free tier kotası dolduğu için. Farklı zamanda tekrar test et.
+- `deepseek-ai/deepseek-v4-flash` → **503 ResourceExhausted**: "Worker local total request limit reached (48/48)". Worker dolu, retry et. Kalıcı değil.
 - Decomposer text-only'dir → multimodal model avantaj sağlamaz.
 - Türkçe kalitesi: DeepSeek > MiniMax M3 > llama-3.3-70b > nemotron-70b
+- Kritik bir task'ı NVIDIA free tier'a atamadan ÖNCE limitleri test et. Free tier güvenilir değil.
