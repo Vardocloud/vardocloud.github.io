@@ -289,10 +289,8 @@ custom_providers:
 - api_key_env: NVIDIA_API_KEY
   api_mode: chat_completions
   base_url: https://integrate.api.nvidia.com/v1
+  discover_models: false
   models:
-    # ============================================================
-    # TIER 1 — En stabil, test edilmiş (GLM 5.2, Llama, Gemma)
-    # ============================================================
     z-ai/glm-5.2: z-ai/glm-5.2
     meta/llama-3.3-70b-instruct: meta/llama-3.3-70b-instruct
     meta/llama-3.1-70b-instruct: meta/llama-3.1-70b-instruct
@@ -300,7 +298,6 @@ custom_providers:
     meta/llama-4-maverick-17b-128e-instruct: meta/llama-4-maverick-17b-128e-instruct
     meta/llama2-70b: meta/llama2-70b
     meta/codellama-70b: meta/codellama-70b
-    # NVIDIA Nemotron
     nvidia/nemotron-3-ultra-550b-a55b: nvidia/nemotron-3-ultra-550b-a55b
     nvidia/nemotron-3-super-120b-a12b: nvidia/nemotron-3-super-120b-a12b
     nvidia/nemotron-3-nano-30b-a3b: nvidia/nemotron-3-nano-30b-a3b
@@ -317,7 +314,6 @@ custom_providers:
     nvidia/llama-3.3-nemotron-super-49b-v1: nvidia/llama-3.3-nemotron-super-49b-v1
     nvidia/llama-3.3-nemotron-super-49b-v1.5: nvidia/llama-3.3-nemotron-super-49b-v1.5
     nvidia/llama3-chatqa-1.5-70b: nvidia/llama3-chatqa-1.5-70b
-    # Google Gemma
     google/gemma-4-31b-it: google/gemma-4-31b-it
     google/gemma-3-12b-it: google/gemma-3-12b-it
     google/gemma-3-4b-it: google/gemma-3-4b-it
@@ -328,11 +324,9 @@ custom_providers:
     google/recurrentgemma-2b: google/recurrentgemma-2b
     google/codegemma-1.1-7b: google/codegemma-1.1-7b
     google/codegemma-7b: google/codegemma-7b
-    # Qwen
     qwen/qwen3.5-397b-a17b: qwen/qwen3.5-397b-a17b
     qwen/qwen3.5-122b-a10b: qwen/qwen3.5-122b-a10b
     qwen/qwen3-next-80b-a3b-instruct: qwen/qwen3-next-80b-a3b-instruct
-    # Mistral
     mistralai/mistral-large-3-675b-instruct-2512: mistralai/mistral-large-3-675b-instruct-2512
     mistralai/mistral-large: mistralai/mistral-large
     mistralai/mistral-large-2-instruct: mistralai/mistral-large-2-instruct
@@ -346,9 +340,6 @@ custom_providers:
     mistralai/ministral-14b-instruct-2512: mistralai/ministral-14b-instruct-2512
     nv-mistralai/mistral-nemo-12b-instruct: nv-mistralai/mistral-nemo-12b-instruct
     nvidia/mistral-nemo-minitron-8b-8k-instruct: nvidia/mistral-nemo-minitron-8b-8k-instruct
-    # ============================================================
-    # TIER 2 — Orta kararlılık
-    # ============================================================
     stepfun-ai/step-3.7-flash: stepfun-ai/step-3.7-flash
     stepfun-ai/step-3.5-flash: stepfun-ai/step-3.5-flash
     moonshotai/kimi-k2.6: moonshotai/kimi-k2.6
@@ -362,12 +353,10 @@ custom_providers:
     upstage/solar-10.7b-instruct: upstage/solar-10.7b-instruct
     microsoft/phi-4-mini-instruct: microsoft/phi-4-mini-instruct
     microsoft/phi-3.5-moe-instruct: microsoft/phi-3.5-moe-instruct
-    # IBM Granite
     ibm/granite-34b-code-instruct: ibm/granite-34b-code-instruct
     ibm/granite-8b-code-instruct: ibm/granite-8b-code-instruct
     ibm/granite-3.0-8b-instruct: ibm/granite-3.0-8b-instruct
     ibm/granite-3.0-3b-a800m-instruct: ibm/granite-3.0-3b-a800m-instruct
-    # Writer Palmyra (domain-specific)
     writer/palmyra-creative-122b: writer/palmyra-creative-122b
     writer/palmyra-fin-70b-32k: writer/palmyra-fin-70b-32k
     writer/palmyra-med-70b: writer/palmyra-med-70b
@@ -381,9 +370,6 @@ custom_providers:
     meta/llama-3.2-3b-instruct: meta/llama-3.2-3b-instruct
     meta/llama-3.2-1b-instruct: meta/llama-3.2-1b-instruct
     bigcode/starcoder2-15b: bigcode/starcoder2-15b
-    # ============================================================
-    # TIER 3 — Worker limiti / rate-limit riski
-    # ============================================================
     deepseek-ai/deepseek-coder-6.7b-instruct: deepseek-ai/deepseek-coder-6.7b-instruct
     deepseek-ai/deepseek-v4-flash: deepseek-ai/deepseek-v4-flash
     deepseek-ai/deepseek-v4-pro: deepseek-ai/deepseek-v4-pro
@@ -617,7 +603,6 @@ model_aliases:
   groq-hizli:
     model: groq-instant
     provider: Groq
-  # NVIDIA Free Endpoint — en stabil ilk sırada
   nvidia-free-glm52:
     model: z-ai/glm-5.2
     provider: NVIDIA
@@ -682,7 +667,7 @@ model_aliases:
     model: deepseek-v4-flash
     provider: opencode-go
 model_catalog:
-  enabled: true
+  enabled: false
   providers: {}
   ttl_hours: 24
   url: https://hermes-agent.nousresearch.com/docs/api/model-catalog.json

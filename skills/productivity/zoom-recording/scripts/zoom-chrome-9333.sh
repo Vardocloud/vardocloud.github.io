@@ -10,7 +10,13 @@
 
 export PULSE_SINK=zoom_rec
 export DISPLAY=${DISPLAY:-:99}
-export DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-unix:path=/tmp/dbus-live/socket}
+
+# D-Bus adresleri — start_pulseaudio.sh ile tutarlı olmalı
+DBUS_SOCK=$(find /tmp -name "system_bus_socket" -type s 2>/dev/null | head -1)
+if [ -n "$DBUS_SOCK" ]; then
+  export DBUS_SYSTEM_BUS_ADDRESS="unix:path=$DBUS_SOCK"
+fi
+export DBUS_SESSION_BUS_ADDRESS=${DBUS_SESSION_BUS_ADDRESS:-unix:path=/tmp/dbus-session}
 
 # PulseAudio socket
 PULSE_SOCK=$(find /tmp -name "native" -type s 2>/dev/null | head -1)

@@ -14,7 +14,47 @@ trigger: >-
 
 **Zoom web client'a Chrome + PulseAudio + fake media device ile başarılı katılım ve MP3 kaydı.** 🎉
 
-**Not:** Bu skill hem headless ARM64 (Oracle Cloud) hem de WSL/lokal PC (x86_64) ortamlarında çalışır. WSL'de DISPLAY ortam değişkeni ve PulseAudio yapılandırması farklılık gösterebilir — gerekirse `/mnt/c/` altındaki Windows araçları da kullanılabilir.
+---
+
+### 🚀 Tek Toplantı Runbook (15 Tem 2026)
+
+Tek bir Zoom toplantısı için hızlı setup — paralel/webinar olmayan durumlar için:
+
+```bash
+# 1. PulseAudio yoksa indir + kur (ilk seferde bir kere)
+#    references/pulseaudio-bootstrap-sid.md
+
+# 2. PulseAudio + D-Bus başlat
+bash ~/.hermes/skills/productivity/zoom-recording/scripts/start_pulseaudio.sh
+
+# 3. doğrulama: pactl info + pactl list sinks short (zoom_rec görünmeli)
+PULSE_SOCK=$(find /tmp -name "native" -type s 2>/dev/null | head -1)
+export PULSE_SERVER="unix:$PULSE_SOCK"
+export LD_LIBRARY_PATH="/tmp/pulseaudio_extract/usr/lib/x86_64-linux-gnu:/tmp/pulseaudio_extract/usr/lib/x86_64-linux-gnu/pulseaudio"
+${EXTRACT:-/tmp/pulseaudio_extract}/usr/bin/pactl info | head -3
+
+# 4. Chrome 9333 başlat (background)
+bash ~/.hermes/skills/productivity/zoom-recording/scripts/zoom-chrome-9333.sh
+
+# 5. ffmpeg kaydı başlat (background) — süre = toplantı süresi + 30dk
+mkdir -p ~/recordings/<klasor>
+nohup ffmpeg -y -f pulse -i zoom_rec.monitor -c:a libmp3lame -b:a 128k \
+  -t 02:00:00 ~/recordings/<klasor>/<dosya>.mp3 > /tmp/ffmpeg.log 2>&1 &
+# NOT: terminal(background=true) ile ffmpeg başlatma env kaybeder.
+# Bunun yerine yukarıdaki nohup pattern'i foreground terminal'de çalışır.
+
+# 6. Zoom join — CDP ile form doldur + çift tıkla
+#    references/cdp-websocket-join.py veya manuel browser_console JS
+
+# 7. Ses doğrulama (3 dk sonra)
+ffmpeg -i kayit.mp3 -af "volumedetect" -f null - 2>&1 | grep -E "mean_volume|max_volume"
+```
+
+**Not:** Chrome'u `zoom-chrome-9333.sh` ile başlat, yoksa PULSE_SINK env background'da kaybolur.
+
+---
+
+**Bu skill hem headless ARM64 (Oracle Cloud) hem de WSL/lokal PC (x86_64) ortamlarında çalışır.**
 
 Başarılı test: 2 YouTube videosu aynı anda oynatılırken 30+ dk kesintisiz kayıt. Transkript: Pollinations whisper-1.
 
@@ -292,8 +332,11 @@ document.querySelector('button').click()  # userGesture=True ile
 - [ ] `"Leave"` butonu — toplantıda olduğumuzu teyit
 - [ ] `"Participants"` — katılımcı paneli
 - [ ] `"2"` — host + bot = 2 katılımcı
-- [ ] Tab URL: `wc/MEETING_ID/join` (join DEĞİL, meeting client) 
+- [ ] Tab URL: `wc/MEETING_ID/join` (join DEĞİL, meeting client)
 - [ ] Blob worker'lar: `WCL_VIDEO_ENCODE`, `WCL_VIDEO_DECODE`, `zoom-tp`
+- [ ] **Iframe `#webclient` içinde:** `"Waiting for the host to start the meeting."` varsa → join başarılı, host bekleniyor
+- [ ] **Iframe içinde `"You are unmuted"` varsa** → ses bağlantısı aktif, kayıt alınıyor
+- [ ] **Iframe içinde `"Host Sign in"` butonu varsa** → toplantı scheduled ama host henüz katılmamış
 
 ### Ses Doğrulama
 
@@ -736,6 +779,7 @@ curl -X PUT "localhost:9333/json/new?URL"  # Yeni tab
 - `references/cdp-websocket-join.py` — **ÇALIŞAN CDP WebSocket join implementasyonu** (16 Haz 2026). Puppeteer CSP sorununu aşar, doğrudan websocket-client ile Runtime.evaluate
 - `references/live-test-tips.md` — bot detection bypass, real-time audio verification, CDP quirks, puppeteer MCP
 - `references/pwa-iframe-join-pattern.md` — **PWA iframe join pattern** (30 Haz 2026): Modern Zoom web client'ı `#webclient` iframe'i içinde yükler. CDP ile iframe'e erişim, iki alt pattern (passcode-only / isim+passcode), örnek kod.
+- `references/pwa-iframe-join-name-pwd.py` — **Çalışan PWA iframe join script** (15 Tem 2026): İsim+passcode ile Zoom toplantısına join yapan self-contained Python script. Landing page → "Join from Browser" → iframe form doldur → Join → waiting room doğrulama.
 - `scripts/transcribe-all.py` — **Batch transcription** (17 Haz 2026): splits large MP3 recordings into whisper-compatible chunks and transcribes via local Pollinations proxy. `python3 scripts/transcribe-all.py [m1] [m2]`
 - `scripts/zoom_switch.sh` — **Saatlik kayıt değiştirici** (3 Tem 2026): no-agent cron job'ları için ffmpeg geçiş script'i. Kullanım: `zoom_switch.sh <label> <süre>` (örn. `zoom_switch.sh seminer2_1800 01:05:00`). Eski ffmpeg'i kill edip yenisini başlatır.
 - `scripts/start_pulseaudio.sh` — **PulseAudio bootstrap** (18 Haz 2026): D-Bus + PulseAudio başlatma script'i. Extract'ten çalıştırır, socket'i bulur.
@@ -757,6 +801,7 @@ curl -X PUT "localhost:9333/json/new?URL"  # Yeni tab
 | "Join from browser" butonu tıklanmıyor (`browser_click`) | CDP veya puppeteer kullan — Hermes browser_click tetiklemez |
 | Join sonrası "Unmute" var ama form hâlâ görünüyor | Join butonuna İKİNCİ KEZ tıkla — overlay kalkar |
 | Tab ID değişiyor (SPA navigation) | SPA cross-origin navigation'dan sonra CDP target ID değişir. `curl /json` ile yeni ID'yi bul |
+| **Tab ID değişiyor — "Join from Browser" yeni tab açabilir (15 Tem)** | Landing page'de "Join from Browser" tıklandığında, meeting client bazen YENİ bir tab/window açar (eski tab kalır). Join'den sonra `/json` ile tüm tab'ları tara, `app.zoom.us/wc/` içeren URL'den doğru tab'ı bul |
 | AudioContext "suspended" kalıyor | Runtime.evaluate'de `userGesture: True` ekle |
 | ffmpeg önce başlatılmazsa lobby sesi kaçar | Join'den ÖNCE başlat |
 | PulseAudio module ID her seferde değişir | `pactl list short modules \| grep zoom_rec` ile ID'yi bul |
@@ -781,6 +826,7 @@ curl -X PUT "localhost:9333/json/new?URL"  # Yeni tab
 | **Test join sonrası form state'i bozuluyor (17 Haz)** | Test amaçlı join yapıp Leave ile çıktıktan sonra aynı tab'a tekrar join URL'i gitmek form input'larını render etmez (NO_INPUT hatası). Çözüm: Her join denemesi için **yeni temiz tab** aç. Eski Zoom tab'larını `/json` ile listele ama `/json/close/` KULLANMA — sadece yeni tab aç. |
 | **PULSE_SINK env background'da kaybolur (30 Haz)** | `terminal(background=true)` env değişkenlerini miras almaz. Chrome'u wrapper script ile başlat (`#!/bin/bash` içinde `export PULSE_SINK=...`). Doğrulama: `pactl list sink-inputs` ile sink ID'sini kontrol et. |
 | **CDP WebSocket URL manuel yazınca timeout (2 Tem)** | `ws://localhost:9333/devtools/page/{TAB_ID}` yerine `tab['webSocketDebuggerUrl']` kullan. HTTP `/json` endpoint'inden dönen URL her zaman doğrudur. |
+| **`/json/new?URL` URL encoding — `&` parametreleri keser (15 Tem)** | Chrome `/json/new?TARGET_URL` endpoint'i `?` ve `&` karakterlerini request query parametresi olarak yorumlar. Eğer TARGET_URL query string içeriyorsa (Zoom linkindeki `?pwd=...` gibi), `&` sonrası kesilir. Python `urllib.request.urlopen(url)` (GET) ile 405 alınır — **PUT** gerekir: `req = urllib.request.Request(url, method="PUT")`. `curl -X PUT "localhost:9333/json/new?URL"` doğru çalışır. |
 | **CDP `Page.enable` response dönmez (2 Tem)** | `Page.enable` gereksizdir. Direkt `Runtime.evaluate` ile başla — CDP herhangi bir initialization gerektirmez. |
 | **browser_* ile join yapınca Custom Chrome'da da ayrıca join gerekir (2 Tem)** | browser_* (9222) Hermes'in varsayılan Chrome'udur, ses KAYDETMEZ. Custom Chrome'da (9333) da aynı join flow'u tekrarlamazsan ffmpeg sessizlik kaydeder. Dual-browser pattern'ini uygula. |
 | **PulseAudio setup script'inde `mkdir` + `set -e` çakışması (2 Tem)** | `set -e` aktifken `mkdir /tmp/dizin` (zaten var) script'i sessizce öldürür. Her zaman `mkdir -p` kullan. |
@@ -792,7 +838,9 @@ curl -X PUT "localhost:9333/json/new?URL"  # Yeni tab
 | **D-Bus session bus calismiyor (10 Tem)** | Docker'da `dbus-daemon --fork` calismaz, `exec` + `background=true` da calismaz. Cozum: Python `subprocess.Popen(["dbus-daemon", "--session", ...], start_new_session=True)`. |
 | **Chrome zombie oluyor (10 Tem)** | Chrome `exec` ile `background=true` da baslatilinca parent exit 0 döner, child zombie olur. Cozum: Python `subprocess.Popen(start_new_session=True)`. |
 | **PulseAudio 17 D-Bus system bus istiyor (10 Tem)** | Session bus baslat, system bus degil. `DBUS_SESSION_BUS_ADDRESS` dogru ayarla. `dbus-daemon --session` kullan. |
-| **Seminer join kaçırıldı (10 Tem)** | Bekleme moduna geçince saat fark edilmedi. Çözüm: Her join için 10dk önce no-agent cron kur (scripts/zoom_autojoin.py). Sağlık kontrolü cron'ları ile ffmpeg canlılığını izle. 3 katmanlı sistemi kullan: (1) todo listesi, (2) join cron'u (10dk önceden), (3) saat başı proaktif sorgu. | `module-native-protocol-unix.so` yüklenirken `LD_LIBRARY_PATH`e modul dizinini de ekle: `.../pulse-17.0+dfsg1/modules`. |
+| **Seminer join kaçırıldı (10 Tem)** | Bekleme moduna geçince saat fark edilmedi. Çözüm: Her join için 10dk önce no-agent cron kur (scripts/zoom_autojoin.py). 3 katmanlı sistemi kullan: (1) todo listesi, (2) join cron'u, (3) saat başı proaktif sorgu. |
+| **D-Bus adresleri birbiriyle uyumsuz (start_pulseaudio.sh vs zoom-chrome-9333.sh)** | `/tmp/dbus-live/socket` ve `/tmp/dbus-session` çakışması. Chrome wrapper script'te her iki `DBUS_*_BUS_ADDRESS`'i export et. |
+| **Toplantı zamanı farkındalığı (15 Tem 2026)** | Setup en az 45dk önce tamamlanmalı. Toplantı saati geçtiyse join denenmez; 30dk gecikme = toplantı bitmiş sayılır. Saat kontrolü her join denemesinden ÖNCE yapılmalıdır. |
 
 ## 🔒 Gizlilik ve Güvenlik (17 Haz 2026)
 
@@ -844,6 +892,23 @@ pactl list sink-inputs | grep -E "Sink Input|Sink:|application.process.id"
 ```
 
 Aynı sorun PulseAudio başlatma için de geçerlidir (LD_LIBRARY_PATH wrapper script ile verilmelidir).
+
+### 🥇 15 Temmuz 2026 — Çocuğu Değerlendirmesi toplantısı kaybı dersleri
+
+**Olay:** Edel'in Zoom toplantısı kaçırıldı.
+- 19:43'te uyarıldım (20:00 toplantı) → sadece 17dk kala
+- PulseAudio sıfırdan indirildi → 3dk kayıp
+- Join script'i sıfırdan yazıldı (referanstaki hazır script atlandı)
+- Join başarılı göründü ama bekleme odasında kaldı → ses gelmedi
+- 2 saat boyunca -91 dB sessizlik kaydedildi, volumedetect ile kontrol edilmedi
+
+**Kök nedenler:**
+1. Skill yüklendi ama linked files (özellikle `references/cdp-websocket-join.py`) okunmadı
+2. Ses doğrulama atlandı ("join'den 6dk sonra volumedetect" talimatı vardı)
+3. Aktif izleme yapılmadı ("1 saat içinde Chrome tab'larını kontrol et")
+4. Setup çok geç başladı, toplantı saati geçince "bitmiş" varsayılmadı
+
+**Kural:** Skill yüklendiğinde linked files KESİNLİKLE taranmalı, özellikle references/ altındaki hazır script'ler kullanılmalı.
 
 ### 🥇 3 Temmuz 2026 — Kampüsten Sahaya Zirvesi Kayıt Dersleri
 
@@ -914,6 +979,30 @@ Eğer süre bilinmiyorsa, cron tabanlı transkripsiyon retry mekanizması kullan
 Bu skill'i `skill_view` ile yüklediğinde, içindeki adımları OKUMADAN alternatif bir yönteme atlama.
 16 Haz 2026'da Camoufox'a geçtim — Chrome+CDP daha hızlı çalışacakken 20 dakika kaybettim.
 **Sıra:** Skill'i yükle → Oku → Takip et. Sadece skill'deki yöntem başarısız olursa alternatif ara.
+
+### 🥇 15 Temmuz 2026 — Toplantı Zamanı Farkındalığı (KRİTİK)
+
+**Olay:** 20:00'da başlayan Zoom toplantısı için setup 19:43'te başladı (17dk kala).
+Setup (PulseAudio indir + extract + boot + Chrome + ffmpeg + join script yaz + hata ayıkla)
+20+ dakika sürdü. Join başarılı görünse de bekleme odasında kaldı, toplantı kaçırıldı,
+kayıt 2 saat tam sessizlik (mean_volume: -91.0 dB).
+
+**Kök neden:**
+1. Setup çok geç başladı — PulseAudio sıfırdan indirilip kuruldu (17dk yetmez)
+2. Join script'i iki versiyonda hata aldı (405 Method Not Allowed, iframe erişimi)
+3. Saat 23:20'de hala "Waiting for the host" mesajına rağmen join'de ısrar edildi
+4. **Zaman muhakemesi yapılmadı:** "20:00 toplantısı → 23:24 → bitmiştir" çıkarımı yapılmalıydı
+
+**Kural:**
+- Setup (PA + Chrome + ffmpeg) toplantıdan **EN AZ 45dk ÖNCE** tamamlanmış olmalı
+- Toplantı başlangıç saati geçtiyse ve join henüz yapılmadıysa → **"toplantı kaçırıldı"** kabul et, join denenmez
+- **30dk gecikme = toplantı bitmiş sayılır** — 20:00 toplantısı için 20:30'dan sonra join denenmez
+- Bekleme odasında "Waiting for the host" mesajı + saat toplantı saatinin 15dk üzerinde → host yok, çık
+- Saat kontrolü her join denemesinden ÖNCE yapılmalıdır
+
+**PWA iframe join doğrulaması:** `#webclient` iframe'i içinde `input-for-name` + `input-for-pwd` + `Join` butonu
+başarıyla doldurulup tıklandı. Join sonrası "Waiting for the host" mesajı görüldü → teknik join çalıştı
+ama host onayı gerekliydi. Ses routing'i doğrulamak için join sonrası `volumedetect` kontrolü şart.
 
 ### 🥈 İkinci Altın Kural: Linked Files'ı Kontrol Et
 Skill_view() çıktısında `linked_files` varsa, özellikle `references/` altındaki dosyaları da oku.

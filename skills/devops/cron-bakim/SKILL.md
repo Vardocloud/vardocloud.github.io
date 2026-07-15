@@ -177,7 +177,7 @@ Cron job oluştururken/kontrol ederken provider seçimine dikkat et:
 
 | Provider | Ne Zaman Kullanılır | Risk |
 |----------|---------------------|------|
-| `opencode-zen` | **Varsayılan.** deepseek-v4-flash-free, mimo-v2.5-free modelleri sorunsuz çalışır. Çoğu cron job için idealdir. | Yok |
+| `opencode-zen` | **Varsayılan.** deepseek-v4-flash-free, mimo-v2.5-free modelleri sorunsuz çalışır. Çoğu cron job için idealdir. | ⚠️ **Günlük rate limit paylaşımlıdır.** Aynı free tier'ı kullanan **tüm cron job'lar + Hermes yardımcı sistemleri** (compression, curator, session_search, skills_hub, title_generation, mcp vb.) ortak bir günlük kotayı tüketir. 5+ cron job aynı anda bu provider'ı kullanıyorsa günün ilerleyen saatlerinde 429 almaya başlarsınız. **Dağıtma stratejisi:** Kritik job'ları NVIDIA free tier veya opencode-go (ücretli proxy) gibi alternatif provider'lara taşı. opencode-zen'i az sayıda düşük öncelikli job'a ve yardımcı sistemlere bırak. |
 | `custom:Pollinations` | LinkedIn postları, görsel üretimi gerektiğinde (gpt-5.4-mini ile) | Proxy (port 19999) ayakta olmalı |
 | `LiteRouter` | **Kullanma.** 7sn rate limit var, cron job'larında garantili hata alırsın. | 403 Rate limit |
 
@@ -413,6 +413,15 @@ hermes cron create \
 
 ## Pitfalls
 
+### Template: API Retry & Backoff
+Script-tabanlı cron job'larda API 429 rate limit'i için şu template'i kullan (`templates/api-retry-backoff.py`):
+```
+call_with_retry(client, model, messages, retries=5, base_delay=30)
+```
+Özellikler: 5 deneme, exponential backoff (60s-120s-240s-480s-600s), rate limit dışı hatalarda anında fırlat.
+
+### Genel Pitfall'lar
+
 - **Tüm cron'ları aynı anda resume etme.** Önce düzelt, sonra resume et.
 - **Script hatasında direkt "kaldır" deme.** Önce düzeltmeyi dene.
 - **no_agent script output'u okurken** içerideki çıktının hassas veri (token, key) içerebileceğini unutma.
@@ -420,11 +429,11 @@ hermes cron create \
 - **LinkedIn token refresh gibi ayda 2 kere çalışan cron'lar** gözden kaçabilir. Son çalışma tarihi > 2 haftaysa mutlaka kontrol et.
 - **Cron schedule'ı prompt'ta yazandan farklı olabilir** — cronjob'daki schedule doğrudur.
 - **"once at DATE TIME" formatı çalışmaz:** `"once at 2026-07-05 20:25"` yazarsan `next_run_at: null` olur, cron hiç tetiklenmez. **Doğru format ISO 8601:** `"2026-07-05T20:25:00+03:00"`. Relative format (örn. `"30m"`, `"2h"`) da güvenlidir, exact schedule her zaman ISO kullan.
-- **LLM-driven job'lar LiteRouter kullanmamalı.** 7sn rate limit yüzünden cron job'larında garantili hata alınır. opencode-zen'e taşı.
+- **opencode-zen free tier günlük limiti tüm job'lar arasında paylaşılır.** 5+ cron job + Hermes yardımcı sistemleri aynı free API'yi kullanıyorsa gün ortasında 429 almaya başlarsınız. Çözüm: kritik job'ları NVIDIA free tier (`nvidia-free-deepseek-flash`) veya opencode-go (ücretli proxy, port 19998) gibi alternatif provider'lara dağıt. Günlük Sentez gibi script-tabanlı job'lara retry + exponential backoff ekle (5 deneme, 60-600s).
 - **Edel'e hata bildirimi gelmesi = cron sistemi hatayı zaten bildirmiş.** Sen oturumunda cronjob list ile kontrol et, monitörün tespit etmesini bekleme.
 - **Mixed job'lar (script + LLM provider):** Script başarılı olsa bile provider rate limit'e takılırsa cron error gösterir. Kök neden ayrımı için script'i elle çalıştır.
 - **MCP server crash sonrası MCP tool'ları kullanılamaz hale gelir.** Detaylı kurtarma adımları: `references/mcp-crash-recovery.md`
-- **"Script not found" — no_agent=true script parametresinde `python3 /path/` ön eki:** no_agent=true job'larda `script` parametresi sadece dosya adı alır (`~/hermes/scripts/` altında). `python3 /home/ubuntu/.hermes/scripts/dosya.py` yazmak "Script not found" hatasına yol açar. **Düzeltme:** `script` parametresini sadece dosya adına çevir (örn. `coin-listesi.py`). Sistem shebang'i okuyarak Python ile çalıştırır.
+- **"[SILENT]" çıktısı veren cron job'lar hâlâ API çağrısı tüketir.** Bir agent job (LLM-driven) [SILENT] çıktısı verse bile, prompt'u işlemek için 1 API çağrısı yapar. Kuyruğu dolu olan karusel gibi job'lar her gün 2 boş API çağrısı yaparak free tier limitini gereksiz tüketir. Çözüm: kuyruk limitine ulaşmış job'ları **pause'a al**, sadece [SILENT] çıktısı vermeye bırakma. Tüketici olmayan job'lar çalışmaya devam etsin diye düşünme — her çağrı sayılır.
 - **"Script timed out" — no_agent script cron'un 120sn timeout sınırı:** Cron no_agent=true script'leri çalıştırırken **built-in 120 saniye timeout** uygular. Script bu sürede tamamlanmazsa cron "Script timed out after 120s" hatası verir ve script'i SIGTERM ile öldürür. **Bu cron seviyesinde yapılandırılabilir bir parametre DEĞİLDİR — değiştirilemez.** Çözüm:
   - Script içi API timeout değeri **110sn veya altı** olmalı (cron'a 10sn marj bırak)
   - Script içi retry mekanizması (tenacity, urllib retry vb.) varsa **toplam süre 110sn'yi geçmemeli**

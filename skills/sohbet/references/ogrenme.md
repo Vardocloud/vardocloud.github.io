@@ -1947,3 +1947,76 @@
   "genel_ozet": "Vanitas baglam kurma ve durum bildiriminde iyi, ancak sohbet taktiklerini (tek soru, acik uclu soru, arastirma referansi) nadiren uyguluyor. Dinleme ortalama, dogallik makul."
 }
 ```
+
+## 2026-07-15 10:00 — Konuşma Değerlendirme
+
+```json
+{
+  "konusmalar": [
+    {
+      "puanlar": {
+        "M": 8,
+        "T": 10,
+        "A": 0,
+        "B": 9,
+        "R": 7,
+        "D": 9
+      },
+      "ozet": "Kaynak belirtildi, tek soru yok, dogal ama acik uclu soru eksik."
+    },
+    {
+      "puanlar": {
+        "M": 9,
+        "T": 10,
+        "A": 8,
+        "B": 9,
+        "R": 8,
+        "D": 9
+      },
+      "ozet": "Net aciklama, baglamli, dogal ama referans sinirli."
+    },
+    {
+      "puanlar": {
+        "M": 8,
+        "T": 10,
+        "A": 7,
+        "B": 9,
+        "R": 0,
+        "D": 9
+      },
+      "ozet": "Teknik aciklama iyi, referans yok, dogal ama acik uclu soru eksik."
+    },
+    {
+      "puanlar": {
+        "M": 7,
+        "T": 10,
+        "A": 0,
+        "B": 8,
+        "R": 0,
+        "D": 9
+      },
+      "ozet": "Hizli yanit, baglamli ama acik uclu soru ve referans yok."
+    },
+    {
+      "puanlar": {
+        "M": 8,
+        "T": 10,
+        "A": 0,
+        "B": 9,
+        "R": 0,
+        "D": 9
+      },
+      "ozet": "Teknik inceleme iyi, dogal ama acik uclu soru ve referans yok."
+    }
+  ],
+  "ortalama": {
+    "M": 8.0,
+    "T": 10.0,
+    "A": 4.6,
+    "B": 8.8,
+    "R": 4.4,
+    "D": 9.0
+  },
+  "genel_ozet": "Tek soru kuralina uyuldu, dogallik iyi ama acik uclu soru ve referans eksik."
+}
+```

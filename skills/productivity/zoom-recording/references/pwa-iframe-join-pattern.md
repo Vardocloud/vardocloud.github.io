@@ -115,7 +115,10 @@ CHECK_IFRAME = '''
 
 ## Önemli Notlar
 
-- Tab ID **değişmez** — PWA aynı tab içinde SPA navigasyonu yapar
+- Tab ID **değişebilir** — "Join from Browser" tıklaması bazen eski tab'ı bırakıp **yeni bir tab/window açar**. Her adımda `/json` ile tab'ları tara, `app.zoom.us/wc/` içeren URL'den doğru tab'ı bul
 - Join sonrası iframe title'ı "Zoom meeting on web" → webinar adına döner
 - Waiting room'da body'de "Please wait. The webinar will begin soon" yazar
 - Başlamış toplantıda "The host muted you" mesajı ve "Unmute" butonu görünür
+- "You are unmuted" mesajı görünüyorsa → ses bağlantısı aktif, kayıt alınıyor
+- "Waiting for the host to start the meeting" mesajı görünüyorsa → join başarılı, host bekleniyor (scheduled meeting, host henüz katılmamış)
+- "Host Sign in" butonu görünüyorsa → toplantı scheduled durumda, host'un kendi hesabıyla giriş yapıp başlatması gerekiyor

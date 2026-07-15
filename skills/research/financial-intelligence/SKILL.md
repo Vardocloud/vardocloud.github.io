@@ -339,12 +339,27 @@ python3 ~/.hermes/scripts/kaldirac-simulator.py --hedef-coinler XRP,SOL,ADA,DOGE
 
 ## 🤖 Ekonomi Cron'ları Referansı
 
-### ⏰ Ekonomi Zekası Bülteni
-**Job ID:** `3acdcd93e3b7`
-**Zamanlama:** `0 8,18 * * 1-5` (günde 2 kere, haftaiçi)
+### ⏰ Ekonomi Zekası Bülteni — Sabah
+**Job ID:** `30b1dc424150`
+**Zamanlama:** `0 8 * * 1-5` (haftaiçi sabah)
 **Skills:** financial-intelligence, sohbet, kripto-teknik-analiz
-**Model:** deepseek-v4-flash-free @ opencode-zen
-**Deliver:** Home kanalı
+**Deliver:** 📈 Kanalı
+
+### ⏰ Ekonomi Zekası Bülteni — Akşam
+**Job ID:** `a8c4f902f05d`
+**Zamanlama:** `0 18 * * 1-5` (haftaiçi akşam)
+**Skills:** financial-intelligence, sohbet, kripto-teknik-analiz
+**Deliver:** 📈 Kanalı
+
+### 🛠 Provider Seçimi (Önemli)
+
+| Provider | Durum | Açıklama |
+|----------|-------|----------|
+| `opencode-zen` (deepseek-v4-flash-free) | ⚠️ Free limit ortak | Diğer cron job'larla + Hermes yardımcı sistemleriyle aynı günlük kotayı paylaşır |
+| `NVIDIA` (deepseek-ai/deepseek-v4-flash) | ❌ Güvenilmez | Ara sıra 200 dönse de çoğu istek timeout. Kullanma. |
+| `custom:opencode-go` (port 19998, deepseek-v4-flash) | ✅ En güvenilir | Ücretli proxy ama ana sohbet zaten kullanıyor. Rate limit yok. Ek maliyet minimal. |
+
+**Güncel:** NVIDIA'ya geçildi ama timeout sorunu yaşatıyor → opencode-go'ya geçilmesi düşünülüyor.
 
 ### 🐝 Bitcoin Arısı Tarama
 **Job ID:** `9d515802f2b2` | **Zaman:** 09:00 | **no_agent**

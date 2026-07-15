@@ -109,22 +109,40 @@ def read_recent_ogrenme(days=7):
 
 # ─── Deepseek Synthesis ──────────────────────────────────────────────────────
 
-def call_deepseek(system_prompt, user_content):
-    """Call Pollinations/deepseek with reasoning enabled."""
+def call_deepseek(system_prompt, user_content, retries=5):
+    """Call Pollinations/deepseek with reasoning enabled and retry logic."""
+    import time
     client = OpenAI(
         api_key=POLLINATIONS_API_KEY,
         base_url=POLLINATIONS_BASE_URL,
     )
-    response = client.chat.completions.create(
-        model=MODEL,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content},
-        ],
-        temperature=0.7,
-        max_tokens=16384,
-    )
-    return response.choices[0].message.content
+    last_error = None
+    for attempt in range(1, retries + 1):
+        try:
+            response = client.chat.completions.create(
+                model=MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_content},
+                ],
+                temperature=0.7,
+                max_tokens=16384,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            last_error = e
+            error_str = str(e)
+            if "429" in error_str or "rate_limit" in error_str.lower() or "Rate limit" in error_str:
+                if attempt < retries:
+                    wait = min(2 ** attempt * 30, 600)  # 60s, 120s, 240s, 480s, 600s
+                    print(f"  Rate limit hit (attempt {attempt}/{retries}), waiting {wait}s...")
+                    time.sleep(wait)
+                else:
+                    print(f"  Rate limit exhausted after {retries} attempts.")
+            else:
+                # Non-rate-limit error, re-raise immediately
+                raise
+    raise last_error
 
 def build_synthesis_prompt(date_str, new_content, today_files_content, recent_ogrenme, schema):
     """Build the user prompt containing today's data for synthesis."""

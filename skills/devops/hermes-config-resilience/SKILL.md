@@ -68,6 +68,8 @@ Bilinen bos alanlar (model: '' / provider: auto): compression, kanban_decomposer
 
 ## Pitfalls
 
+- **`discover_models` flag (critical):** When adding a custom_provider with an explicit `models:` list, you MUST set `discover_models: false`. Hermes defaults this to `true`, which causes it to call the provider's `/v1/models` API and **overwrite your curated model list** with the live catalog. This is especially bad for aggregator gateways like NVIDIA's free tier where the API returns 121 models (including embedding/safety/vision) instead of your curated 84. The `/model` picker will show every model from the endpoint, unordered, instead of your tier-sorted curation. See `references/nvidia-free-tier-notes.md` for the code path in `hermes_cli/model_switch.py`.
+- **Provider name collision:** Don't define the same provider under both `providers:` and `custom_providers:`. The basic `providers:` entry takes precedence and shadows the custom_providers models. Put rich model lists in `custom_providers` only.
 - **Bitwarden + Golden cycle:** Setup Bitwarden → `--sync` → edit golden to set `secrets.bitwarden.enabled: true` → `--restore`. Don't skip the golden edit step.
 - **`--restore` after update:** If the update added new config keys, `--sync` first, then `--restore`. Never `--restore` without `--sync` — you'd lose the new keys.
 - **`--check` exit code:** Exit 0 = aligned, exit 1 = drift. Use this in automation.
@@ -75,6 +77,7 @@ Bilinen bos alanlar (model: '' / provider: auto): compression, kanban_decomposer
 - **Run `--check` BEFORE `--restore`** — always see the diff first. This session found 32 diffs after Bitwarden setup; most were harmless ordering diffs, but `secrets.bitwarden.enabled: false` in golden was critical. If `--restore` had run without first fixing golden to `true`, Bitwarden would have been disabled.
 - **After new provider/model alias:** `--sync` then `--check`. New custom providers or model_aliases won't be in golden until synced.
 - **Adding custom providers (Hermes config):** When `hermes config` CLI doesn't support the operation, use `python3` with `yaml` to edit `custom_providers` and `model_aliases` programmatically. Then run `restore_config.py --sync` to update golden. Always `systemctl --user restart hermes-gateway` after provider changes. The `api_key_env` references a Bitwarden secret name. See voice-agent reference for Groq integration example.
+- **`hermes config set` deletes YAML comments:** The `hermes config` CLI serializes YAML without preserving comments. If your config has documentation comments (like tier headers in model lists), use Python string replacement instead of `hermes config set` when editing blocks that contain comments.
 
 ## Env Var Override Pitfall: AUXILIARY_VISION_MODEL (11 Tem 2026)
 

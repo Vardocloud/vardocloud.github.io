@@ -2,8 +2,21 @@
 # All 84 text generation models from free tier, organized by stability
 # Tier 1 = most stable, Tier 3 = rate-limit / overload risk
 #
-# Paste this under custom_providers: in config.yaml, replacing the old models: block.
-# Each alias is model_id: model_id (straight passthrough, no remapping).
+# CRITICAL: discover_models: false MUST be set, or Hermes will overwrite
+# this curated list with the full API catalog (121 models including embed/
+# safety/vision — not just text gen). See references/nvidia-free-tier-notes.md
+#
+# Paste this entire provider block under custom_providers: in config.yaml.
+# Also add model_aliases entries for frequently-used models.
+#
+# Example full entry:
+#   - api_key_env: NVIDIA_API_KEY
+#     api_mode: chat_completions
+#     base_url: https://integrate.api.nvidia.com/v1
+#     discover_models: false             ← REQUIRED
+#     models:
+#       <paste models below here>
+#     name: NVIDIA
 
   models:
     # ============================================================

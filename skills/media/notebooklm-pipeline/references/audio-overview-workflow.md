@@ -161,3 +161,4 @@ MEDIA:/path/to/downloaded/audio.mp3
 - **Session timeout:** Uzun beklemelerde cron job'ın kendini yeniden planlaması gerekebilir (30dk'ya kadar).
 - **Dil seçimi:** Transkript İngilizce ise `--language tr` koyma — NotebookLM karışık dilde audio üretebilir.
 - **--confirm bayrağı:** Onay sorusunu atlar, headless ortamda gerekli.
+- **"unknown" status limbo (MCP):** `mcp_notebooklm_studio_create(artifact_type="audio")` bazen hemen "status: unknown" (not "in_progress") döner ve artifact saatlerce bu durumda kalır. Bu, generation'ın hiç başlamadığı anlamına gelir — ne iptal ne tamamlanma. **Doğru müdahale:** (1) Polling yapma — status değişmez. (2) Download deneme — URL yok, boş döner. (3) Aynı artifact ID ile yeniden create çağırma — rate-limit'e takılırsın. (4) Bir sonraki cron çevriminde auth tazele + yeni artifact ID ile yeniden dene. (5) Art arda 2 cron çevrimi "unknown" alırsan, pipeline'a "⚠️ NBLM audio: persistent unknown status" notu ekle ve podcast'i atla.

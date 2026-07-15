@@ -56,9 +56,9 @@ re-running the cron will hit if not encoded.
   one-line pointer to the archive. The same threshold logic as llm-wiki's `log.md`.
   **The rotation check is a MANDATORY step in the workflow (step 1), not an optional
   maintenance task.**
-  **🚨 ROTATION OVERDUE — 3 CONSECUTIVE SKIPS (July 12, 13, 14 2026):**
-  As of July 14 2026 the ledger is at **644+ lines / 57+ KB** and has NOT been
-  rotated despite THREE cron runs skipping the gate. Each skip makes dedup less
+  **🚨 ROTATION OVERDUE — 4 CONSECUTIVE SKIPS (July 12, 13, 14, 15 2026):**
+  As of July 15 2026 the ledger is at **655+ lines / 58+ KB** and has NOT been
+  rotated despite FOUR cron runs skipping the gate. Each skip makes dedup less
   reliable (the tail entries — the most recent ones needed for dedup — are beyond
   the `read_file` 500-line truncation point and must be read with `offset`).
   **The VERY NEXT run MUST rotate FIRST, before any news gathering.** Do NOT
@@ -68,8 +68,18 @@ re-running the cron will hit if not encoded.
   section and easy to miss when the agent jumps straight to news gathering.
   The workflow step 1 says "ROTATION GATE" but the agent reads the ledger, sees
   the content, and proceeds to search without checking the size threshold.
+  Additionally, the rotation procedure only documents `mv` (terminal command),
+  but agents in cron mode tend to avoid terminal and only use `read_file`/
+  `write_file`/`patch` — so rotation feels impossible and gets silently skipped.
   FIX: After `read_file` returns, **check `total_lines` IMMEDIATELY**. If >500,
   STOP — rotate before doing anything else. No exceptions.
+  **ROTATION WITHOUT TERMINAL (write_file method):** If `terminal` is not
+  available or you prefer not to use it, rotate using `write_file`:
+  1. Read the full ledger (first 500 lines + `offset` tail to get all content)
+  2. `write_file` to `~/wiki/news/processed_titles-2026.md` with the FULL content
+  3. `write_file` to `~/wiki/news/processed_titles.md` with just the header +
+     last 80 lines (recent entries for ongoing dedup)
+  This is the cron-safe rotation path — no `mv` needed.
 
 - **`execute_code` blocked under cron mode** — when `approvals.cron_mode` is set
   without a user present to approve, `execute_code` is rejected. Use direct tools
@@ -100,12 +110,16 @@ re-running the cron will hit if not encoded.
   describe an old study as "new research" if the publication date is >6 months old,
   (c) if a story seems too old to include, skip it in favor of genuinely recent work.
 
-- **Day-summary file skipped (recurring)** — On July 14 2026, the cron wrote 10
-  per-item files under `news/<category>/` but did NOT write the day-summary file
-  (`news/YYYY-MM-DD-haber-ozeti.md`). This is backwards from the skill's priority:
-  the day-summary is the primary deliverable (step 8), per-item files are optional
-  (step 7, "frequently skipped to save time"). **Always write the day-summary file.**
-  If time is tight, skip per-item files instead.
+- **Day-summary file skipped (recurring)** — On July 14 AND July 15 2026, the cron
+  wrote per-item/category batch files under `news/<category>/` but did NOT write the
+  day-summary file (`news/YYYY-MM-DD-haber-ozeti.md`). On July 15, the agent wrote
+  `science/2026-07-15-batch.md` and `tech/2026-07-15-batch.md` (category batches)
+  thinking these were sufficient — they are NOT. The day-summary is the primary
+  deliverable (step 8), per-item files are optional (step 7, "frequently skipped
+  to save time"). **Category batch files are NOT a replacement for the day-summary.**
+  The day-summary (`YYYY-MM-DD-haber-ozeti.md`) aggregates ALL categories in one
+  document and is what makes the news wiki searchable by date.
+  **Always write the day-summary file.** If time is tight, skip per-item files.
 
 ## Workflow (deterministic order)
 

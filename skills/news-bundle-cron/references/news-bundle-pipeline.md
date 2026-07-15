@@ -112,6 +112,7 @@ confidence: high | medium | low
 
 When `processed_titles.md` exceeds ~500 lines OR ~50 KB:
 
+### Method A: Terminal (if available)
 1. `mv ~/wiki/news/processed_titles.md ~/wiki/news/processed_titles-YYYY.md`
 2. Create new `processed_titles.md` with header:
    ```
@@ -122,6 +123,18 @@ When `processed_titles.md` exceeds ~500 lines OR ~50 KB:
    ```
 3. Verify the archive file is readable.
 4. Log the rotation in the day summary or a maintenance note.
+
+### Method B: write_file (cron-safe, no terminal needed)
+1. Read the full ledger in two parts: `read_file` (first 500 lines) +
+   `read_file` with `offset=<total_lines-80>` (tail).
+2. `write_file` to `~/wiki/news/processed_titles-YYYY.md` with the FULL
+   concatenated content (everything you just read).
+3. `write_file` to `~/wiki/news/processed_titles.md` with a fresh header
+   + only the last ~80 lines (recent entries needed for ongoing dedup).
+4. Log the rotation in the day summary or a maintenance note.
+
+**Use Method B when running in cron mode** — it requires only `read_file`
+and `write_file`, both of which work in cron mode without approval.
 
 ## Source Priority
 
@@ -153,17 +166,23 @@ When `processed_titles.md` exceeds ~500 lines OR ~50 KB:
   lost ~4.4 KB of mid-file entries.)
 
 - **Ledger rotation not performed** — The rotation check is MANDATORY in
-  step 1 of the workflow, not optional maintenance. As of July 14 2026 the
-  ledger is at **644+ lines / 57+ KB** and has NOT been rotated despite THREE
-  cron runs (July 12, 13, 14) skipping the gate. Each skip worsens dedup
+  step 1 of the workflow, not optional maintenance. As of July 15 2026 the
+  ledger is at **655+ lines / 58+ KB** and has NOT been rotated despite FOUR
+  cron runs (July 12, 13, 14, 15) skipping the gate. Each skip worsens dedup
   reliability because the tail entries (most recent, most needed for dedup)
   are beyond the `read_file` 500-line truncation point.
   **ROOT CAUSE:** The agent reads the ledger content, sees familiar entries,
   and proceeds to news gathering without checking `total_lines` against the
-  threshold. The "ROTATION GATE" label in step 1 is not enough — the agent
-  must **check `total_lines` in the `read_file` response IMMEDIATELY** and
-  if >500, STOP and rotate before any other action.
+  threshold. Additionally, the rotation procedure only documented `mv`
+  (terminal), but cron-mode agents tend to avoid terminal — so rotation
+  feels impossible and gets silently skipped.
   **The VERY NEXT run MUST rotate FIRST.** See Rotation Procedure below.
+  **write_file-based rotation (no terminal needed):**
+  1. Read the full ledger (first 500 lines + `offset=<total_lines-80>` tail)
+  2. `write_file` to `~/wiki/news/processed_titles-2026.md` with the FULL content
+  3. `write_file` to `~/wiki/news/processed_titles.md` with just the header +
+     last 80 lines (recent entries for ongoing dedup)
+  This is the cron-safe rotation path.
 
 - **web_extract URL limit** — Max 5 per call. Split into multiple calls.
 
@@ -207,5 +226,11 @@ When `processed_titles.md` exceeds ~500 lines OR ~50 KB:
   directories, so this is usually unnecessary.)
 
 - **Output length limit** — 10 items × 5N1K format (3-4 sentences each) +
-  citations ≈ 2500-3000 chars. The system may truncate the last few lines.
-  Keep items concise. The wiki files are the full record.
+  citations ≈ 2500-3000 chars. The system may truncate the last few lines and
+  require a continuation message. On July 15 2026, 10 items at full 5N1K length
+  exceeded the response limit — the last item was cut mid-sentence and required
+  a second message to complete.
+  **Mitigation:** Keep each item to 2-3 sentences max. If the system still
+  truncates, reduce to 8 items. The wiki files are the full record — the chat
+  delivery is a summary, not the archive. Do NOT sacrifice the day-summary file
+  (step 8) to fit more items in the chat output.

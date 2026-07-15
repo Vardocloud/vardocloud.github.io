@@ -76,7 +76,7 @@ ls ~/.local/share/opencode/
 ss -tlnp | grep 19998
 ```
 
-The opencode-go proxy (`python3 scripts/opencode-go-proxy.py`) is a **separate component** — it proxies API requests to `https://opencode.ai/zen/go` for Hermes' `opencode-go` provider. It does NOT require the opencode CLI binary to function. Conversely, installing the CLI does not affect the proxy. See `references/opencode-go-proxy-architecture.md`.
+The opencode-go proxy (`python3 scripts/opencode-go-proxy.py`) is a **separate component** — it proxies API requests to `https://opencode.ai/zen/go` for Hermes' `opencode-go` provider. It does NOT require the opencode CLI binary to function. Conversely, installing the CLI does not affect the proxy. See `references/opencode-go-proxy-architecture.md` and `references/hermes-provider-health.md` for provider health and selection guidance.
 
 ## Key Config Options (from opencode.ai/docs)
 

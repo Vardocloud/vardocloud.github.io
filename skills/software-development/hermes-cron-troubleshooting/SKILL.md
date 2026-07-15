@@ -408,6 +408,110 @@ cronjob(action='update', job_id='095fa7d69603',
         model={"model": "mimo-v2.5-free", "provider": "opencode-zen"})
 ```
 
+## Pitfall: Free Tier Rate Limit Exhaustion — Cumulative Cron Usage
+
+### Symptom
+One or more cron jobs fail with `HTTP 429` / `FreeUsageLimitError: Rate limit exceeded` while other jobs using the same provider continue to work, or eventually also fail as the day progresses.
+
+**Example from 2026-07-14:**
+```
+Günlük Sentez (23:00) → HTTP 429: FreeUsageLimitError: Rate limit exceeded
+```
+While earlier-running jobs (Ekonomi Sabah 08:00, LinkedIn kuyruk 08:00, Skool 10:00, Karusel sabah 10:00) succeeded earlier in the day.
+
+### Root Cause
+The `opencode-zen` free tier (`deepseek-v4-flash-free`, `nemotron-3-ultra-free`, etc.) has a **shared daily request/token quota** across ALL jobs using that provider. When 6-8 cron jobs each make 1-3 API calls per day, plus Hermes auxiliary systems (compression, curator, session_search, skills_hub, MCP, etc.) also hit the same endpoint, the cumulative usage exceeds the free daily limit.
+
+This is **not** a single-job rate limit — it is a **system-wide aggregate** issue. Each individual job may stay under its own limit, but their combined usage exhausts the free tier before all jobs complete.
+
+### Diagnosis
+
+**Step 1: Count jobs by provider**
+```python
+import json
+with open('/home/ubuntu/.hermes/cron/jobs.json') as f:
+    jobs = json.load(f)['jobs']
+
+from collections import Counter
+provider_counts = Counter()
+for j in jobs:
+    if j.get('enabled', False) and j.get('last_status') != 'completed':
+        provider = j.get('provider', 'no_agent')
+        provider_counts[provider] += 1
+
+print(f"Enabled jobs by provider ({sum(provider_counts.values())} total):")
+for prov, count in provider_counts.most_common():
+    print(f"  {prov}: {count}")
+```
+
+**Step 2: Identify the 429 pattern**
+
+| Signal | Interpretation |
+|--------|---------------|
+| Only 1 job failed with 429 | That job exceeded the provider per-request rate limit |
+| Several jobs failed later in the day | Cumulative daily quota exhausted |
+| All jobs fail simultaneously | Provider outage or account-level block |
+| 429 clears next day, repeats same pattern | Confirmed: cumulative usage > daily limit |
+
+### Fix Options
+
+**Option A — Distribute jobs across providers (preferred):**
+Move some jobs to a different provider:
+
+| Source | Alternative 1 | Alternative 2 |
+|--------|---------------|---------------|
+| `opencode-zen` free flash | `custom:opencode-go` paid (port 19998) | NVIDIA free tier |
+| `opencode-zen` free ultra | `custom:opencode-go` paid | NVIDIA free tier |
+
+**Option B — Reduce free tier load:**
+- Nightly jobs (23:00+) hit exhausted limit most often — schedule heavy jobs earlier in the day
+- Merge small jobs sharing the same provider into fewer runs
+- Use `no_agent=true` scripts where possible (no LLM quota consumption)
+
+**Option C — Add retry with backoff to no_agent scripts:**
+```python
+import time
+import urllib.error
+
+def call_with_retry(url, data, headers, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            req = urllib.request.Request(url, data=data, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return resp.read()
+        except urllib.error.HTTPError as e:
+            if e.code == 429 and attempt < max_retries - 1:
+                wait = 60 * (2 ** attempt)
+                print(f"429, {wait}s bekleniyor (deneme {attempt+2}/{max_retries})...")
+                time.sleep(wait)
+            else:
+                raise
+```
+
+### Prevention
+- **Default strategy:** Routine cron → `opencode-zen` free. Critical/heavy cron → `custom:opencode-go` paid. This reserves free tier capacity for jobs that need it least.
+- **Audit monthly:** Run the provider counter script to catch provider drift.
+- **Watch for clusters:** If 6+ jobs share the same free provider, proactively split them before the limit is hit.
+- **New jobs:** Check `cronjob list` first to see current provider balance before choosing.
+- **NVIDIA free tier: selective model reliability.** Not all listed models work. Tested matrix (15 Tem 2026):
+
+  | Model | Status | Turkish | Notes |
+  |-------|--------|---------|-------|
+  | `minimaxai/minimax-m3` | ✅ Reliable | 🟢 Good | Best choice — lightweight, high worker limit |
+  | `meta/llama-3.1-70b-instruct` | ✅ Reliable | 🟢 Good | Heavy model, lower worker limit |
+  | `z-ai/glm-5.2` | ⚠️ Slow | 🟢 Good | 120s timeout needed; reserve for voice agent |
+  | `deepseek-ai/deepseek-v4-flash` | ⚠️ Flaky | 🟢 Good | Edel reports intermittent failures |
+  | `nvidia/llama-3.1-nemotron-nano-8b-v1` | ✅ Works | 🔴 Broken | Responds in garbled Turkish |
+  | `stepfun-ai/step-3.7-flash` | ⚠️ Partial | 🟡 N/A | Returns `content: null` format |
+  | `google/gemma-4-31b-it` | ❌ Timeout | — | HTTP 000/500 |
+  | `mistralai/mistral-7b-instruct-v0.3` | ❌ 404 | — | Model not found |
+
+  **Recommendation:** Use `minimaxai/minimax-m3` via NVIDIA for production cron jobs. Avoid `deepseek-ai/deepseek-v4-flash` on NVIDIA (same flakiness pattern Edel reported). Reserve `z-ai/glm-5.2` for voice agent use.
+
+- **Hermes auxiliary systems consume the same free quota** — compression, curator, session_search, approval, MCP, skills_hub all use `opencode-zen` (`deepseek-v4-flash-free`) with `base_url: https://opencode.ai/zen/v1`. Config audit: `auxiliary.*.provider == opencode-zen`.
+
+---
+
 ### Pitfall: Model Watchdog Script — Python String-Quote Bugs in f-strings
 
 The `model-watchdog.py` script (at `~/.hermes/scripts/model-watchdog.py`) can crash with `NameError` due to missing string quotes in f-string interpolations. Two instances found and fixed 2026-06-10:
