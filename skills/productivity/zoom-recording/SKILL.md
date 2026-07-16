@@ -10,6 +10,48 @@ trigger: >-
 
 # Zoom Recording — Headless/Yerel Ses Kaydı
 
+## 🔁 AKIŞ: Link Geldiğinde Yapılacaklar (15 Tem 2026)
+
+Bu skill link paylaşılınca OTOMATİK yüklenir. İlk görüşte şu sırayı izle:
+
+### A. TEK TOPLANTI (en yaygın)
+
+```bash
+# 1. HEMEN cron kur — manuel join yapma, manuel setup yapma
+cronjob action=create \
+  name="Zoom - [Toplantı Konusu]" \
+  schedule="[TARİH T19:55:00+03:00]" \
+  skills="zoom-recording" \
+  prompt="MEETING_ID: ...
+PASSCODE: ...
+DISPLAY_NAME: Sudenaz
+ZOOM_URL: ..."
+
+# 2. Cron 19:55'te skill'i yükler → tüm adımları otomatik yapar
+#    (PA→Chrome→ffmpeg→join→ses kontrolü)
+# 3. Cron çıktısını bekle — manuel müdahale GEREKMEZ
+```
+
+**ÖNEMLİ:** Link gelince kron kur, başka bir şey yapma. Skill'e güven.
+
+### B. ÇAKIŞAN İKİ TOPLANTI (paralel kayıt)
+
+```
+19:30 Toplantı A  →  Chrome 9333 + zoom_rec       →  meetingA.mp3
+20:00 Toplantı B  →  Chrome 9334 + zoom_rec_2     →  meetingB.mp3
+```
+
+İki ayrı cron kur — biri 19:25'te (A için), diğeri 19:55'te (B için).
+İkinci cron'un prompt'unda "Bu toplantı ilkiyle EŞ ZAMANLI" yaz.
+İkinci cron farklı port (9334) + farklı sink (zoom_rec_2) kullanır.
+
+### C. ZAMAN FARKINDALIĞI (kritik — 15 Tem 2026 dersi)
+
+Her join denemesinden ÖNCE saati kontrol et:
+- Toplantı saati +30dk geçtiyse → **join YAPMA**, "toplantı bitmiş" raporla
+- Bekleme odasında +15dk beklediysen → host yok, çık
+- Saat 23:20'de hala "Waiting for the host" mesajına takılı kalma
+
 ## ✅ ÇALIŞAN YÖNTEM (13 Haz 2026 — Kanıtlanmış)
 
 **Zoom web client'a Chrome + PulseAudio + fake media device ile başarılı katılım ve MP3 kaydı.** 🎉
@@ -338,16 +380,76 @@ document.querySelector('button').click()  # userGesture=True ile
 - [ ] **Iframe içinde `"You are unmuted"` varsa** → ses bağlantısı aktif, kayıt alınıyor
 - [ ] **Iframe içinde `"Host Sign in"` butonu varsa** → toplantı scheduled ama host henüz katılmamış
 
-### Ses Doğrulama
+### 🎥 Video+ Ses Kaydı (16 Tem 2026 — x11grab Yöntemi) ⭐
+
+Edel "videolu kaydet" istediğinde kullanılır. ffmpeg x11grab ile ekran + PulseAudio ile ses aynı anda kaydedilir.
+
+**Ön koşul:** Xvfb çalışıyor olmalı (`ps aux | grep Xvfb`). DISPLAY=:99 olmalı.
 
 ```bash
-# Kayıtta ses var mı?
-ffmpeg -i kayit.mp3 -af "volumedetect" -f null - 2>&1 | grep -E "mean_volume|max_volume"
-# -91.0 dB = SESSİZLİK (sorun var)
-# -6.9 dB veya daha yüksek = ✅ SES VAR
+ffmpeg -y \
+  -video_size 1280x720 -framerate 10 -f x11grab -i :99 \
+  -f pulse -i zoom_rec.monitor \
+  -c:v libx264 -preset ultrafast -crf 28 \
+  -c:a aac -b:a 128k \
+  -t 02:00:00 \
+  /home/ubuntu/recordings/toplanti_adi.mp4
 ```
 
-**⏱️ Timing Uyarısı:** Join'den hemen sonra yapılan ses kontrolü **yalancı sessizlik** gösterebilir. Join sonrası Chrome → WebRTC → PulseAudio pipeline'ının oturması 2-3 dakika alır. İlk 3 dakikada -80 dB civarı ölçüm alırsan panik yapma — 6. dakikada tekrar kontrol et. Toplantı içinde host konuşurken yapılan ölçüm en güveniliridir.
+**Parametreler:**
+- `-video_size 1280x720` — Chrome penceresi boyutuyla eşleşmeli
+- `-framerate 10` — düşük FPS, dosyayı küçük tutar (Zoom ekranı için yeterli)
+- `-preset ultrafast` — hızlı encode, CPU yükü düşük
+- `-crf 28` — kalite-denge (18=lossless, 28=iyi, 35=düşük)
+- `-t 02:00:00` — maksimum 2 saat (tahmini süre+30dk)
+
+**Wrapper script pattern:**
+```bash
+#!/bin/bash
+export DISPLAY=:99
+ffmpeg -y -video_size 1280x720 -framerate 10 -f x11grab -i :99 \
+  -f pulse -i zoom_rec.monitor \
+  -c:v libx264 -preset ultrafast -crf 28 \
+  -c:a aac -b:a 128k -t 02:00:00 \
+  /home/ubuntu/recordings/toplanti.mp4
+```
+Script'i `bash script.sh` ile `background=true` olarak çalıştır.
+
+### 🎥 Ses Kaydı (varsayılan, PulseAudio monitor)
+
+Video gerekmezse sadece ses kaydı:
+
+```bash
+ffmpeg -y -f pulse -i zoom_rec.monitor \
+  -c:a libmp3lame -b:a 128k -t 02:00:00 \
+  /home/ubuntu/recordings/toplanti.mp3
+```
+
+### 🔧 Parametrik Join Script'i (16 Tem 2026) ⭐
+
+`~/.hermes/scripts/zoom_join.py` — parametrik Zoom join script'i. Chrome 9333 çalışır durumda olmalı.
+
+```bash
+python3 ~/.hermes/scripts/zoom_join.py --meeting 84334046493 --pwd 559488 --name Sudenaz
+python3 ~/.hermes/scripts/zoom_join.py --meeting MEETING_ID --pwd PASS --name NAME [--url FULL_URL]
+```
+
+Çıktı: ✅ JOIN OK (içeride) veya ❌ JOIN FAILED (sebeple birlikte).
+
+### 🚫 Chromium Cleanup Koruması (16 Tem 2026)
+
+`~/.hermes/scripts/chromium-cleanup.sh` — 15dk'da bir 30dk+ idle Chrome'ları öldürür. **Zoom kaydı için remote-debugging-port'lu Chrome'ları öldürmemesi** için script güncellendi:
+
+```bash
+ps -eo pid,etime,pcpu,comm,args --no-headers | grep -iE 'chrom|puppeteer' | while read pid etime pcpu comm args; do
+    # Skip Chrome instances with remote debugging port (Zoom/Meet kaydı)
+    if echo "$args" | grep -q 'remote-debugging-port'; then
+        continue
+    fi
+    ...
+```
+
+Eğer Chrome'lar sessizce ölüyorsa, önce cleanup script'ini kontrol et.
 
 ### Transkript — Groq Whisper (birincil), Pollinations (yedek)
 
@@ -378,14 +480,59 @@ ffmpeg -i kayit.mp3 -af "volumedetect" -f null - 2>&1 | grep -E "mean_volume|max
 - **⚠️ Bilinen sorun:** Pollinations "pollen" bakiye sistemi kullanır. Bakiye tükenirse `PAYMENT_REQUIRED: Insufficient balance` hatası alınır (30 Haz 2026: 0.0012 pollen kalmıştı). Bu durumda Groq'a geç.
 - **Bakiye kontrol:** Küçük bir sessizlik MP3'ü ile test: `curl -s -X POST http://localhost:19999/v1/audio/transcriptions -F "file=@test.mp3" -F "model=whisper-1" -F "language=tr"`. 402 dönerse bakiye bitmiş.
 
-### Cron ile Zamanlanmış Join (17 Haz 2026) ⭐
+### ⏰ Cron ile Zamanlanmış Join (15 Tem 2026 — Edel'in Güncel Tercihi) ⭐
 
-> ⚠️ **Edel'in Tercihi (2 Tem 2026): Cron KULLANMA, manuel takip et.**
-> Edel, kayıt takibi için cron job'larına güvenmez. Geçmişte cron'un
-> takip etmediği bir kayıt sorun yaratmıştır.
-> **Bunun yerine:** 20:00'ye kadar aktif seste kal, her saat başı manuel
-> ffmpeg değiştir. Arada Chrome tab'larını ve ses seviyesini kontrol et.
-> Cron job'ları sadece Edel açıkça istediğinde kullan.
+**Edel'in talimatı:** Zoom linki geldiği ANDA cron job kur. Toplantı saatinden 5dk önce tetiklenecek şekilde ayarla. Cron job, **zoom-recording skill'ini** kullanarak join + kayıt yapsın.
+
+```bash
+# TEK TOPLANTI
+cronjob action=create \
+  name="Zoom - Toplantı Adı" \
+  schedule="2026-07-15T19:55:00+03:00" \
+  skills="zoom-recording" \
+  prompt="Bu Zoom toplantısına join yap ve kayıt al. 
+MEETING_ID: 81347534550
+PASSCODE: 1234
+DISPLAY_NAME: Sudenaz
+ZOOM_URL: https://us06web.zoom.us/j/81347534550?pwd=...
+Konu: Çocuğu Değerlendirmesi Nasıl Yapılır?"
+```
+
+```bash
+# PARALEL KAYIT — 2. toplantı için (farklı port + sink)
+cronjob action=create \
+  name="Zoom - Toplantı B (paralel)" \
+  schedule="2026-07-16T19:55:00+03:00" \
+  skills="zoom-recording" \
+  prompt="20:00 Miuul toplantısı — PARALEL KAYIT (PORT 9334)
+Bu toplantı 19:30 toplantısı ile EŞ ZAMANLI çalışır.
+
+MEETING_ID: 84334046493
+PASSCODE: 559488
+DISPLAY_NAME: Sudenaz
+ZOOM_URL: https://miuul.zoom.us/j/84334046493?pwd=...
+
+Paralel kayıt kurallarını uygula:
+- Chrome 9334 (9333 DEĞİL!), PULSE_SINK=zoom_rec_2
+- ffmpeg zoom_rec_2.monitor
+- farklı user-data-dir (/tmp/zoom_profile2)"
+```
+
+**Hazır join script'i:** `scripts/zoom_join.py` — parametrik kullanım:
+```bash
+python3 scripts/zoom_join.py --meeting 81347534550 --pwd 1234 --name Sudenaz
+```
+Bu script Chrome 9333 çalışırken çağrılır. Landing page'den "Join from Browser" tıklar, PWA iframe içinde form doldurur, join durumunu doğrular.
+
+**Neden cron:**
+- Provider limiti, model değişikliği, session kesintisi gibi aksaklıklardan etkilenmez
+- Saat 20:00 olduğunda chat'te olmasam bile tetiklenir
+- Skill içindeki tüm adımlar otomatik uygulanır (PA→Chrome→ffmpeg→join→ses kontrolü)
+- Manuel adım sırası unutulmaz
+
+**Kural:** Join saati geçtiyse (30dk+ gecikme), cron çalışsa bile "toplantı bitmiş" varsay ve kayıt başlatma.
+
+### ⏰ Saatlik Bölünmüş Kayıt (2 Tem 2026) ⭐
 
 Setup'ı toplantıdan çok önce yap, join'i cron ile tetikle. Bu sayede:
 - PulseAudio/Chrome/ffmpeg başlatma gecikmeleri yaşanmaz
@@ -840,7 +987,9 @@ curl -X PUT "localhost:9333/json/new?URL"  # Yeni tab
 | **PulseAudio 17 D-Bus system bus istiyor (10 Tem)** | Session bus baslat, system bus degil. `DBUS_SESSION_BUS_ADDRESS` dogru ayarla. `dbus-daemon --session` kullan. |
 | **Seminer join kaçırıldı (10 Tem)** | Bekleme moduna geçince saat fark edilmedi. Çözüm: Her join için 10dk önce no-agent cron kur (scripts/zoom_autojoin.py). 3 katmanlı sistemi kullan: (1) todo listesi, (2) join cron'u, (3) saat başı proaktif sorgu. |
 | **D-Bus adresleri birbiriyle uyumsuz (start_pulseaudio.sh vs zoom-chrome-9333.sh)** | `/tmp/dbus-live/socket` ve `/tmp/dbus-session` çakışması. Chrome wrapper script'te her iki `DBUS_*_BUS_ADDRESS`'i export et. |
-| **Toplantı zamanı farkındalığı (15 Tem 2026)** | Setup en az 45dk önce tamamlanmalı. Toplantı saati geçtiyse join denenmez; 30dk gecikme = toplantı bitmiş sayılır. Saat kontrolü her join denemesinden ÖNCE yapılmalıdır. |
+| Toplantı zamanı farkındalığı (15 Tem 2026) | Setup en az 45dk önce tamamlanmalı. Toplantı saati geçtiyse join denenmez; 30dk gecikme = toplantı bitmiş sayılır. Saat kontrolü her join denemesinden ÖNCE yapılmalıdır. |
+| **Passcode "Incorrect Password" (16 Tem 2026)** | Zoom "Incorrect Password" dönerse: (1) passcode'u tekrar dene (native setter doğru çalışmamış olabilir), (2) hala aynı hataysa Edel'e bildir — passcode yanlış veya değişmiş. 3+ kez deneME. |
+| **Chromium Cleanup cron Chrome'u öldürür (16 Tem 2026)** | `/home/ubuntu/.hermes/scripts/chromium-cleanup.sh` 15dk'da bir çalışır, 30dk idle + CPU<%1 Chrome'ları kill eder. Zoom Chrome'ları (remote-debugging-port) bundan etkilenir. Çözüm: cleanup script'inde `remote-debugging-port` olan process'leri atla — `~/.hermes/scripts/chromium-cleanup.sh` dosyasında `grep -q 'remote-debugging-port'` ile skip et. |
 
 ## 🔒 Gizlilik ve Güvenlik (17 Haz 2026)
 

@@ -146,6 +146,31 @@ Many SaaS platforms (Deepgram, OpenAI, ElevenLabs, etc.) store **login credentia
 
 → Template: `templates/set-or-key.sh`
 
+## File Permission Hardening (CRITICAL)
+
+After any credential/key/token file operations, verify and fix file permissions:
+
+```bash
+# Fix secrets directory and all files inside (600 = owner read/write only)
+chmod 600 ~/.hermes/secrets/* 2>/dev/null
+chmod 600 ~/.hermes/secrets/.* 2>/dev/null
+
+# Fix individual key files at root of .hermes
+chmod 600 ~/.hermes/soniox_api_key.txt ~/.hermes/soniox_password.txt 2>/dev/null
+chmod 600 ~/.hermes/serper_key.txt ~/.hermes/tavily_key.txt ~/.hermes/brave_key.txt 2>/dev/null
+chmod 600 ~/.hermes/google_client_secret.json 2>/dev/null
+
+# Verify (should show -rw------- for all sensitive files)
+ls -la ~/.hermes/secrets/
+```
+
+**Known issue (July 2026):** Multiple credential files were found with **777 (world-readable)** permissions in the `~/.hermes/` directory tree. BWS is available with 37 secrets but many keys remain in plaintext files with permissive access. After creating or saving any credential file, immediately run `chmod 600 <file>`.
+
+**Audit command:** To find all world-readable credential files:
+```bash
+find ~/.hermes -type f \( -name '*key*' -o -name '*token*' -o -name '*secret*' -o -name '*password*' -o -name '*cred*' \) -perm /o+r 2>/dev/null | grep -v '/\.git/' | grep -v 'backup-'
+```
+
 ## Security Rules (CRITICAL — DO NOT VIOLATE)
 
 1. NEVER pass decoded credentials into primary model context

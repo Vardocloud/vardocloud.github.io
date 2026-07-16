@@ -366,6 +366,8 @@ Eğer sonuç dönerse duplicate'tir, işleme. Emin değilsen web_extract'e geçm
 - **Pollinations tool call (5 Haz 2026):** Provider taraflı sorun, düzeltilemedi. Ana ajan olarak kullanma. Sadece curl text-in/text-out için kullanılabilir.
 - **OpenRouter free (5 Haz 2026):** Tüm ücretsiz modellerde `function_calling: false`. Cron job için kullanılamaz.
 
+**⚡ Research roundup sayfalarını tanı (16 Tem 2026):** Monitor sayfasındaki bazı URL'ler tek bir makale değil, **birden çok çalışmanın özetini** içeren "research roundup" sayfalarıdır. İşleme kuralları: `references/research-roundup-handling.md`. Kural: roundup sayfasını 17 ayrı wiki dosyasına bölme — tek dosya, en önemli 3-5 bulgu, kalanı liste.
+
 **⚡ Press release'leri tara (3 Haz 2026):** Monitor sayfası tamamen işlenmişse, APA Press Releases bölümünü de kontrol et. Firecrawl `web_extract` ile eriş:
 
 ```
@@ -1331,7 +1333,7 @@ Without `is_visible()` checks, the script may try to fill a hidden password auto
 
 - **`xvfb-run` xauth hatası (20 Haz 2026):** `xvfb-run` komutu `xauth command not found` hatası verip çıkabilir. xauth yüklemek için root gerekir. **Alternatif:** Manuel Xvfb başlat: `Xvfb :99 -screen 0 1280x1024x24 -ac &` sonra `DISPLAY=:99 notebooklm-mcp server ...` ile sunucuyu başlat. `-ac` flag'i xauth kontrolünü devre dışı bırakır.
 
-- **🔍 Speaking of Psychology URL değişti (13 Tem 2026):** Eski URL (`apa.org/news/podcast`) artık 404 dönüyor. Güncel podcast ana sayfası: `apa.org/news/podcasts/speaking-of-psychology`. Bölüm listesi ve arama: aynı domain altında `/search` endpoint'i. Cron/kanal taramasında güncel URL kullan.
+- 
 - **nlm source add PERMISSION_DENIED (13 Tem 2026):** `nlm login --check` "Authentication valid!" dese de, `nlm source add --file` ve MCP text source ekleme API code 7 (PERMISSION_DENIED) dönebilir. Google yazma token'ı okuma token'ından ayrı doğrulanır. Çözüm: 1 deneme yap, başarısızsa pipeline'ı bloke etmeden geç. Wiki asıl teslimat, NotebookLM opsiyonel.
 - **Monitor soft-launch pattern (17 Haz 2026):** APA Monitor'un yeni sayısının ana sayfası (/monitor/2026/07-08 gibi) 404 dönebilir ama bireysel makalelere (/monitor/2026/07-08/slug) erişilebilir. Sayı henüz /monitor/2026 sayfasında listelenmemiş olsa bile makaleler "ön yayında" olabilir. `web_search query="site:apa.org/monitor/2026/07-08"` ile keşfet.
 - **Cron mode'da podcast üretme!** Podcast 10-25 dk sürer, cron zaman aşımına uğrar. Kullanıcı yokken MEDIA gönderimi anlamsız. Cron'da sadece wiki + NotebookLM kaynak + rapor. Podcast'i interaktif seansa bırak.

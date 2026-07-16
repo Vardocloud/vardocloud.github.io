@@ -158,6 +158,17 @@ Pick the closest existing category. Don't invent new top-level categories casual
 
 10. **Missing `disable-model-invocation` on information-only skills.** If a skill doesn't need to be invoked by the model mid-conversation (e.g., read-only lookups, static references), set `disable-model-invocation: true`. Without it, the model may fire off expensive tool calls (web searches, file reads) without the user asking, wasting tokens and polluting context.
 
+## User-Friendly Language
+
+Skills are read by both the AI and the user. Avoid internal Hermes jargon:
+
+- DON'T say "linked files" — say **ek dosyalar** or **referans dosyalari** (references/), scripts, templates.
+- DON'T say "skill_view(name) shows linked_files" in triggers — just say "load the skill" or "use scripts/".
+- DO write triggers in the user's language: "Zoom linki gelince" not "when zoom.us URL is detected".
+- DO write instructions as direct commands, not tool descriptions.
+
+Reason: Users read these skills too. Keep it accessible.
+
 ## Verification Checklist
 
 - [ ] File is at `skills/<category>/<name>/SKILL.md` (not in `~/.hermes/skills/`)

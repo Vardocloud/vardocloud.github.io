@@ -192,6 +192,12 @@ Edel içerik/link gönderdiğinde:
 - Bu yaklaşım sadece niyet mektubu için değil, Edel adına yazılan tüm resmi metinler için geçerlidir (LinkedIn post, e-posta, başvuru yazısı)
 - **Test:** Cevabın "Bardo için şöyle uyarlayabiliriz" veya "strateji önerisi" içeriyorsa ve Edel bunu istemediyse, yanlış varsayım yapmışsındır.
 - **Kural:** Önce doğrudan cevap, sonra "istersen detaylandırırım" seçeneği.
+- **🚨 SIN #8 vs SIN #12 çatışması — İçerik paylaşımında doğru akış (16 Tem 2026):**
+  SIN #8: "Anladıysan sorma, uygula." SIN #12: "Neden gönderdiğini varsayma." Bu ikisi çatıştığında (Edel içerik paylaştı ama ne yapmamı istediği net değil):
+  1. **Önce hızlı analiz yap** — web_extract ile içeriğe bak, ne olduğunu anla
+  2. **Sun ve bir kere sor:** "Bunu işlememi ister misin yoksa sadece haberin olsun mu istedin?"
+  3. **Cevabı al → uygula.** Aynı soruyu ikinci kez sorma.
+  Bu "bir kere sor, sonra sus" yaklaşımı hem SIN #8'i (gereksiz soru) hem SIN #12'yi (varsayım) ihlal etmez.
 
 ### 🔴 SIN #17: Gerçekçi olmayan tahminler / aşırı iyimserlik (1 Temmuz 2026)
 

@@ -214,7 +214,48 @@ A script named `stepfun_evaluator.py` that calls `openrouter.ai` is misleading. 
 - [ ] State directory exists (`os.makedirs(dirname, exist_ok=True)`)
 - [ ] `cronjob action='list'` shows correct `last_status` after manual test run
 
-### 4b. Telegram Kanalı İzleme — HTML Parsing + State Diffing
+### 4b. NVIDIA'da "Listede Ama Çalışmıyor" Tuzağı
+
+NVIDIA'nın build.nvidia.com sitesinde "Free Endpoint" etiketiyle listelenen 73 modelin HEPSİ fiilen çalışmaz. Bir modelin:
+- build.nvidia.com'da "Free Endpoint" ✅
+- API `/v1/models` listesinde (118 model) ✅
+- config.yaml'da NVIDIA provider `models:` listesinde ✅
+- Hatta 8M indirme sayısı olması ✅
+...o modelin API'den yanıt vereceği anlamına gelmez. Özellikle büyük modeller (70B+) ve Z.ai gibi üçüncü taraf modeller timeout yiyebilir.
+
+**GLM-5.2 örneği (16 Tem 2026):**
+- build.nvidia.com'da "Free Endpoint" ✅, 8M indirme, Z.ai tarafından yayınlanmış
+- API `/v1/models` listesinde `z-ai/glm-5.2` olarak ✅
+- config.yaml NVIDIA provider `models:` listesinde ✅ (294. satır)
+- **API çağrısı: timeout ❌** (100sn+ yanıt yok)
+
+**Güvenilir test yöntemi:** Her modeli küçük prompt'la 15sn timeout'lu API çağrısı ile test et:
+```python
+from openai import OpenAI
+import httpx
+client = OpenAI(api_key=..., base_url="https://integrate.api.nvidia.com/v1",
+                timeout=httpx.Timeout(15, connect=10))
+try:
+    r = client.chat.completions.create(model="test-edilecek-model",
+        messages=[{"role":"user","content":"1+1?"}], max_tokens=5)
+    print("OK")
+except:
+    print("FAIL (timeout/error)")
+```
+
+**Güvenilirliği kanıtlanmış NVIDIA free modelleri:**
+1. `mistralai/mistral-small-4-119b-2603` — 0.9sn, en hızlı/güvenilir
+2. `deepseek-ai/deepseek-v4-flash` — 1.1sn
+3. `minimaxai/minimax-m3` — 13sn (dar context'te çalışır, economy bültenleri için Edel onaylı)
+
+**NVIDIA'da listelenen ama çalışmayan modeller:**
+- ~~`z-ai/glm-5.2`~~ — timeout (sitede Free Endpoint yazsa da, 8M indirmesi olsa da)
+- ~~`meta/llama-3.3-70b-instruct`~~ — timeout
+- ~~`meta/llama-3.1-70b-instruct`~~ — timeout
+
+Detaylı benchmark: `references/nvidia-model-benchmarks.md`
+
+## 4c. Telegram Kanalı İzleme — HTML Parsing + State Diffing
 
 Telegram public kanalları (`t.me/s/KanalAdi`) JavaScript gerektirmeden statik HTML sunar. no_agent cron + state dosyası ile yeni mesaj kontrolü yapılabilir.
 
@@ -309,7 +350,105 @@ En sık karşılaşılan hata: `[Errno 2] No such file or directory: '/tmp/.or_k
    ```
 4. Cron schedule'ını kontrol et — key re-fetch job'ı ana cron'dan önce mi çalışıyor? Gerekirse bir `cron_before` dependency ekle.
 
-### LiteRouter — Aktif Provider (20 Haz 2026 ✔️)
+### NVIDIA — Güvenilir Provider (16 Tem 2026, rev. 3)
+
+**Durum:** NVIDIA NIM (`integrate.api.nvidia.com/v1`) — güvenilir cron alternatifi.
+
+**ÖNEMLİ — Tüm NVIDIA modelleri çalışmaz!** Listedekilerin çoğu timeout yiyor.
+
+Gerçek test sonuçları (küçük prompt, max_tokens=5):
+- `mistralai/mistral-small-4-119b-2603` — **0.9s** (⭐ en hızlı/güvenilir)
+- `deepseek-ai/deepseek-v4-flash` — **1.1s** (orijinal sentez modeli)
+- `minimaxai/minimax-m3` — **13s** (yavaş ama Edel onaylı, dar context'te çalışır)
+- ~~`meta/llama-3.3-70b-instruct`~~ — **timeout** (❌ çalışmıyor)
+- ~~`z-ai/glm-5.2`~~ — **timeout** (❌ çalışmıyor)
+
+Detaylı benchmark: `references/nvidia-model-benchmarks.md`
+
+**⚠️ Provider Model Whitelist — Gizli 404 Tuzağı**
+
+NVIDIA provider `discover_models: false` ile yapılandırılmıştır ve sadece `models:` listesindeki modellere izin verir. Listede olmayan bir model çağrılırsa `HTTP 404: 404 page not found` hatası alınır. **Ancak listede olması da yetmez** — GLM 5.2 listede olmasına rağmen timeout yiyor.
+
+**Agent job'larda bir model kullanmadan önce:**
+1. Provider `models:` listesinde var mı? → kontrol et
+2. API'den fiilen yanıt alınabiliyor mu? → 15sn timeout'lu test et
+3. Cron 120sn limitine sığıyor mu? → toplam süre < 110sn olmalı
+
+Eksik bir model eklemek için config.yaml'da NVIDIA provider'ının `models:` listesine elle ekle (`hermes config edit` ile). Hem kısa adı hem tam adı ekle (örn. `glm-5.2: z-ai/glm-5.2` ve `z-ai/glm-5.2: z-ai/glm-5.2`).
+
+Not: Model alias'ı (örn: `nvidia-free-m3`) provider+model çözümlemesi ayrıdır. Alias doğru çözülse bile, provider'ın models listesinde yoksa 404 alınır.
+
+**🔤 Türkçe Model Seçimi (Güncel — 16 Tem 2026)**
+
+NVIDIA'da Türkçe için modellerin performansı:
+- `mistralai/mistral-small-4-119b-2603` — ⭐⭐⭐⭐ **Türkçesi iyi, en hızlı (0.9sn)**
+- `minimaxai/minimax-m3` — ⭐⭐⭐⭐ **MoE mimarisi, kodlama+agentic'te frontier. 13sn.**
+- `meta/llama-3.3-70b-instruct` — ⭐⭐ Türkçesi zayıf (ekonomi için kullanma)
+- `z-ai/glm-5.2` — ⭐⭐⭐ NVIDIA'da 96sn çalışır (kodlama için kullanılır, cron'da timeout riski)
+
+Edel'in uyarısı: Llama 3.3'ün Türkçesi ekonomi kavramlarını doğru bağlamda işleyemeyebilir.
+
+**Agent job'larda bir model kullanmadan önce** şu modelin provider'ın `models:` listesinde olduğunu KONTROL ET:
+```yaml
+# config.yaml → NVIDIA provider section
+discover_models: false
+models:
+  mistralai/mistral-small-4-119b-2603: mistralai/mistral-small-4-119b-2603  # ✅ var
+  minimaxai/minimax-m3: minimaxai/minimax-m3  # ✅ var (ama yavaş)
+  meta/llama-3.3-70b-instruct: meta/llama-3.3-70b-instruct  # ✅ var
+```
+
+Eksik bir model eklemek için config.yaml'da NVIDIA provider'ının `models:` listesine ekle:
+```yaml
+models:
+  # ... mevcut listeye yeni satır
+  yeni-model-adı: yeni-model-adı
+```
+
+Not: Model alias'ı (örn: `nvidia-free-m3`) provider+model çözümlemesi ayrıdır. Alias doğru çözülse bile, provider'ın models listesinde yoksa 404 alınır.
+
+**🔤 Türkçe Model Seçimi — Ekonomi İçin Kritik**
+
+NVIDIA'da Türkçe ekonomik analiz için modellerin performansı:
+- `mistralai/mistral-small-4-119b-2603` — ⭐⭐⭐⭐ **Türkçesi iyi, önerilen**
+- `minimaxai/minimax-m3` — ⭐⭐⭐ Türkçesi orta ama çok yavaş
+- `meta/llama-3.3-70b-instruct` — ⭐⭐ Türkçesi zayıf (ekonomi için önerilmez)
+- `meta/llama-3.2-3b-instruct` — ⭐ çok küçük model, Türkçesi sınırlı
+
+Edel'in uyarısı: Llama 3.3'ün Türkçesi ekonomi kavramlarını (enflasyon, faiz, cari açık) doğru bağlamda işleyemeyebilir. Mistral Small 4 bu konuda daha güvenilir.
+
+**Mistral Small 4 (119B) — Günlük Sentez için önerilen model:**
+Full context (~13 haber dosyası + öğrenme geçmişi + şema) ile:
+- 30-60sn yanıt süresi (cron 120sn limitine sığar)
+- 10,719 karakter detaylı sentez üretebildi
+- Mistral modelleri genelde kaliteli ve hızlı
+
+**DeepSeek V4 Flash da NVIDIA üzerinden çalışır:**
+- Model: `deepseek-ai/deepseek-v4-flash`
+- Küçük prompt: ~33sn, full context: ~82sn
+- Cron limitine sığar ancak Mistral Small 4'ten yavaş
+
+Detaylı benchmark sonuçları: `references/nvidia-model-benchmarks.md`
+
+**Kurallar:**
+- endpoint: `https://integrate.api.nvidia.com/v1`
+- API key: `NVIDIA_API_KEY` (`.env`'de)
+- API timeout: max 100sn (cron 120sn limiti için 20sn marj)
+- max_tokens: 8192 (fazlası cron'da timeout riski)
+- Retry gerekmez — NVIDIA rate limit yok
+
+**ESKİ (opencode-zen) → YENİ (NVIDIA) geçiş rehberi:**
+```
+ESKİ: base_url=https://opencode.ai/zen/v1, MODEL=deepseek-v4-flash-free, key=OPENCODE_ZEN_API_KEY
+YENİ: base_url=https://integrate.api.nvidia.com/v1, MODEL=mistralai/mistral-small-4-119b-2603, key=NVIDIA_API_KEY
+
+Alternatif NVIDIA modelleri:
+- mistralai/mistral-small-4-119b-2603 (119B ⭐ en hızlı, günlük sentez + ekonomi)
+- meta/llama-3.3-70b-instruct (70B, ~10sn, Türkçe gerektirmeyen işler)
+- deepseek-ai/deepseek-v4-flash (33-82sn, orijinal model)
+```
+
+### LiteRouter — Eskiden Aktif (20 Haz 2026, artık önerilmez)
 
 **Durum:** Routeway'deki kronik 502/504 sorunları (deepseek-v4-flash:free her seferde 502) ve free model çeşitliliğinin sınırlı olması (sadece step-3.5-flash çalışıyordu) nedeniyle **LiteRouter'a geçildi.**
 
@@ -319,7 +458,7 @@ En sık karşılaşılan hata: `[Errno 2] No such file or directory: '/tmp/.or_k
 - Free modellerde **unlimited requests** (1 req/5sn soft limit)
 - Instant failover — bir provider 502 verirse otomatik başkasına geçer
 - 19 adet free model (`:free` suffix ile)
-- Free modeller Pollinations sponsorluğunda — Polen tüketmez
+- Free modeller ~~Pollinations sponsorluğunda~~ — Polen tüketmez
 - API key: Bitwarden secret ID'den alınır, `/tmp/.or_key`'e kaydedilir
 
 **Aktif Model: `deepseek-v3.2:free`** (20 Haz 2026 itibarıyla)

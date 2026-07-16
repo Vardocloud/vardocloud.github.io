@@ -2020,3 +2020,81 @@
   "genel_ozet": "Tek soru kuralina uyuldu, dogallik iyi ama acik uclu soru ve referans eksik."
 }
 ```
+
+## 2026-07-16 10:00 — Konuşma Değerlendirme
+
+```json
+{
+  "konusmalar": [
+    {
+      "puanlar": {
+        "M": 8,
+        "T": 10,
+        "A": 9,
+        "B": 9,
+        "R": 7,
+        "D": 9
+      },
+      "ozet": "Empatik yanıt, tek soru yok ama bağlam ve doğallık iyi.",
+      "yasakli_kalip": "Yok"
+    },
+    {
+      "puanlar": {
+        "M": 5,
+        "T": 0,
+        "A": 0,
+        "B": 3,
+        "R": 0,
+        "D": 8
+      },
+      "ozet": "Boş mesaj, soru yok, bağlam zayıf.",
+      "yasakli_kalip": "Yok"
+    },
+    {
+      "puanlar": {
+        "M": 7,
+        "T": 8,
+        "A": 8,
+        "B": 8,
+        "R": 0,
+        "D": 9
+      },
+      "ozet": "Ders çıkarma iyi, referans yok ama doğallık yüksek.",
+      "yasakli_kalip": "Yok"
+    },
+    {
+      "puanlar": {
+        "M": 8,
+        "T": 9,
+        "A": 9,
+        "B": 9,
+        "R": 0,
+        "D": 9
+      },
+      "ozet": "Hata kabulü ve çözüm odaklı, referans eksik.",
+      "yasakli_kalip": "Yok"
+    },
+    {
+      "puanlar": {
+        "M": 0,
+        "T": 0,
+        "A": 0,
+        "B": 0,
+        "R": 0,
+        "D": 0
+      },
+      "ozet": "Boş mesaj, değerlendirme yapılamadı.",
+      "yasakli_kalip": "Yok"
+    }
+  ],
+  "ortalama": {
+    "M": 5.6,
+    "T": 5.4,
+    "A": 7.2,
+    "B": 7.6,
+    "R": 1.6,
+    "D": 9
+  },
+  "genel_ozet": "Doğallık yüksek ama referans eksik, boş mesajlar ve soru yönetimi zayıf."
+}
+```

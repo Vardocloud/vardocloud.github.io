@@ -629,11 +629,11 @@ Değerlendirme rubric'i ve karar ağacı için **`bulgu-degerlendirme`** skill'i
 **2️⃣ ...**
 ```
 
-**⚠️ ÖNEMLİ — Wiki kaydı ≠ NotebookLM arşivi:**
-Wiki'ye kaydetmek, içeriği NotebookLM'e otomatik GÖNDERMEZ. Bunlar ayrı adımlardır:
-- ✅ Wiki (LIBRARY, Layer 4) — kalıcı bilgi deposu, otomatik
-- ❌ NotebookLM (VAULT, Layer 6) — ayrıca `nlm add text` veya `mcp source_add` ile elle eklenmeli
-Her "uyarlanabilir" içerik için: wiki'ye kaydettikten sonra, NotebookLM Bridge'e gönder (bkz: references/wiki-to-notebooklm-bridge.md). Sıra: (1) wiki'ye kaydet, (2) `nlm source add --file` ile NotebookLM'e ekle, (3) auth yoksa atla ve raporda belirt.
+**⚠️ KAYIT FİLTRESİ (ZORUNLU):**
+- **🟢 Adaptable / 🔵 Try + uygulanacak somut aksiyon** → Wiki'ye kaydet + NotebookLM'e ekle (uygunsa)
+- **🟡 Watch / ⚪ Skip / salt makale/duyuru** → HİÇBİR YERE kaydetme. Sadece raporda bahset.
+- **NotebookLM:** Sadece uygulanan repo/yöntem gider. Teorik içerik atılmaz.
+- Wiki şişmesin — küratörlü bilgi tabanı, döküm değil.
 
 **Katman 2 — Sentez (max 3-4 satır):**
 
@@ -787,6 +787,7 @@ Yeni kurulumda wiki'deki mevcut skool dosyalarını tara, URL'leri ve dosya adla
 | **execute_code cron modunda bloklanır** | `approvals.cron_mode: deny` olan cron profillerinde `execute_code` (Python script tool) tamamen bloklanır — hata mesajı döner, çalışmaz. Terminal ise çalışır. | JSON güncellemeleri için **öncelikle `terminal` + `python3 -c` dene** — cron'da çalışır, büyük JSON'ları dosyayı baştan yazmaya gerek kalmadan günceller. Alternatif: `write_file` (tüm dosyayı yeniden yaz) veya `patch` (targeted, tek anahtarda kal). |
 | **JSON patch ile anahtar silinmesi (5 Tem 2026)** | `patch` ile JSON'da çok satırlı `old_string` kullanırken `old_string`'in bitişik JSON anahtarının başlangıcını da kapsaması halinde, `new_string`'de o anahtar olmadığı için JSON'dan düşer. Örn: `],\n  \"wiki_files\": [` içeren bir `old_string` → `],` ile değiştirilince `wiki_files` anahtarı JSON'dan silinir. | **write_file tercih et:** Tüm JSON'u `read_file` ile oku, memory'de build et, `write_file` ile baştan yaz — en güvenilir yöntem. `patch` kullanacaksan `old_string`'in TEK BİR JSON anahtarı içinde kaldığına emin ol (array içi ekleme/eleman değiştirme gibi). Asla bitişik anahtarları da kapsayacak şekilde çok satırlı eşleşme yapma. |
 | **NotebookLM source add — DO NOT assume failure (DOĞRULANDI 13 Tem 2026)** | Eski bir pitfall, PERMISSION_DENIED olduğunu varsayıp denemeden atlamaya yol açtı. Oysa hem MCP `source_add` hem CLI `nlm source add --file` ÇALIŞIYOR. | **ÖNCE DENE.** `mcp_notebooklm_legacy_server_info()` ile auth kontrol et. Auth "configured" ise dene. Hata alırsan CLI ile `nlm source add --file` dene. İkisi de başarısız olursa atla. Asla denemeden "PERMISSION_DENIED" diye raporlama. |
+| **Attached skill cron'da yüklenmez — prompt explicit talimat vermeli (16 Tem 2026)** | `bulgu-degerlendirme` skill'i cron'un skills listesindeydi ama agent Phase 1-4'ü çalıştırmadı. Skills listesinde olmak ≠ otomatik yüklenmek. | Cron prompt'unda İLK SATIR: "ÖNCE `bulgu-degerlendirme` skill'ini yükle ve her bulgu için Phase 1-4'ü çalıştır. Etiketler ANCAK değerlendirme sonunda verilir." Skill sadece "kullanılabilir" olur, "yüklü" olmaz. Agent davranışını değiştiren tek şey prompt'taki direktiftir. |
 
 ## Cron Job Özel Notları (GÜNCELLENDİ 4 Tem 2026)
 

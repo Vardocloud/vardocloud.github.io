@@ -71,7 +71,7 @@ Her job için şu alanlara bak:
 | `LiteRouter rate limit (mixed job)` | **Script tabanlı cron + LLM provider.** Script (`pm_master_scan.py` gibi) kendi API çağrılarını yapıp 429 alır. Retry'ler bittikten sonra hatalı çıktı → agent hatası → last_status=error | **Kök neden ayrımı:** Script'in kendi API 429'u mu? Yoksa provider'ın rate limit'i mi? Kontrol: script'i elle çalıştır (`timeout 60 python3 script.py`). Script başarılıysa sorun provider'dadır → provider değiştir. Script 429 alıyorsa API'nin kendi limitidir → retry sayısını artır veya schedule'ı seyrelt. |
 | `RuntimeError: HTTP 429: Weekly usage limit reached` | OpenCode model kotası doldu (deepseek-v4-flash-free vb. haftalık limit) | Bekle — ertesi gün kendiliğinden düzelir. **Kalıcı çözüm:** Script tabanlı işse cron'u `no_agent: true` yap, LLM katmanını kaldır. Modeli limitsiz bir provider'a (LiteRouter llama-3.3-70b:free) taşı. |
 | `401 Authentication required` | `.env`'de `POLLINATIONS_API_KEY` eksik | MCP tool'ları çalışsa bile (setApiKey bellekte) `.env` ayrı mekanizmadır. `.env`'ye key ekle, proxy'yi restart et. |
-| `402 Insufficient Balance / PAYMENT_REQUIRED` | Pollinations API bakiyesi tükenmiş. Cost ~0.0020 pollen, available < 0.0005. | **Tespit edilebilir** ama otomatik düzeltilemez. Bakiye yüklemek için Edel'e bildir: Pollinations hesabına bakiye eklemesi gerek. Alternatif: job'ı farklı bir provider'a taşı (ör. opencode-zen). LinkedIn ve Günlük Sentez job'ları sık etkilenir. |
+| `402 Insufficient Balance / PAYMENT_REQUIRED` | Pollinations API bakiyesi tükenmiş — **Pollinations kapalıdır (16 Tem 2026), kullanılmaz.** | Job'ı farklı bir provider'a taşı (NVIDIA Mistral Small 4 veya MiniMax M3). Tüm Pollinations referanslarını temizle. |
 | `FileNotFoundError: [Errno 2] ... '/usr/local/bin/nlm'` | Script içinde hardcoded binary path, sistemde o yolda binary yok. | Path'i gerçek binary neredeyse onunla değiştir (`/home/ubuntu/node_modules/.bin/nlm`). İki script'te bu sorun yaşandı: `nb_autologin.py` ve `restore_config.py`. **Kalıcı çözüm:** Script'i `subprocess.run(["nlm", ...])` ile PATH üzerinden çalışacak şekilde güncelle. |
 | `Camoufox is not installed at ...` (exit code 1) | `upw_session_refresh.cjs` için Camoufox npm paketi veya binary'si yüklü değil. | **Üç adım:** (1) `npm install camoufox` (2) `npx camoufox fetch` (3) `chmod +x ~/.cache/camoufox/camoufox-bin` |
 | `pending_approval` | Cron'da onay gereken komut | approvals.cron_mode: deny var mı kontrol et |
@@ -178,7 +178,7 @@ Cron job oluştururken/kontrol ederken provider seçimine dikkat et:
 | Provider | Ne Zaman Kullanılır | Risk |
 |----------|---------------------|------|
 | `opencode-zen` | **Varsayılan.** deepseek-v4-flash-free, mimo-v2.5-free modelleri sorunsuz çalışır. Çoğu cron job için idealdir. | ⚠️ **Günlük rate limit paylaşımlıdır.** Aynı free tier'ı kullanan **tüm cron job'lar + Hermes yardımcı sistemleri** (compression, curator, session_search, skills_hub, title_generation, mcp vb.) ortak bir günlük kotayı tüketir. 5+ cron job aynı anda bu provider'ı kullanıyorsa günün ilerleyen saatlerinde 429 almaya başlarsınız. **Dağıtma stratejisi:** Kritik job'ları NVIDIA free tier veya opencode-go (ücretli proxy) gibi alternatif provider'lara taşı. opencode-zen'i az sayıda düşük öncelikli job'a ve yardımcı sistemlere bırak. |
-| `custom:Pollinations` | LinkedIn postları, görsel üretimi gerektiğinde (gpt-5.4-mini ile) | Proxy (port 19999) ayakta olmalı |
+| ~~`custom:Pollinations`~~ | **KALICI OLARAK KAPANDI** (16 Tem 2026, Edel bildirdi) — tüm job'lar başka provider'a taşındı, config'den kaldırıldı | Referans kalırsa temizle |
 | `LiteRouter` | **Kullanma.** 7sn rate limit var, cron job'larında garantili hata alırsın. | 403 Rate limit |
 
 **Kural:** LLM-driven bir cron job'ı hata veriyorsa ilk bakılacak şey provider seçimidir. Özellikle LiteRouter'dan opencode-zen'e geçiş çoğu sorunu çözer.
@@ -306,6 +306,13 @@ Edel cron hatalarını bildirmek zorunda kalmamalı. Cron Sağlık Monitörü te
 4. Yeni bir hata türü keşfettiysen: bu skill'in pitfall'larını güncelle VE Otomatik Onarım job'ının prompt'una yeni pattern'i ekle (`cronjob action=update job_id=eb8aa9f5ed25 prompt=...` ile)
 5. Düzeltme sonrası Edel'e sadece ne yaptığını bildir, onay bekleme
 
+**⚠️ ÖZEL KURAL — Edel bir cron hatasını bildirdiğinde soru sorma, düzelt:**
+Edel "günlük sentez çalışıyor mu?" diye sorduğunda veya cron hatasını bildirdiğinde, hatanın kök nedeni netse (ör. rate limit + timeout 2+ gündür tekrarlıyor) çözüm için izin isteme. Doğrudan düzelt:
+  - rate limit → daha güvenilir bir provider'a geç (NVIDIA Mistral Small 4, Llama 3.3 70B veya NVIDIA deepseek-v4-flash)
+  - timeout → script içi timeout'u düşür, retry'leri kaldır
+  - Pollinations hatası → başka provider'a geç (Pollinations kapalı)
+Düzeltme sonrası "şunu yaptım, bu gece 23:00'te dener" diye bildir. Onay beklemek yerine çözümü gösterip devam et.
+
 ### Cron Sağlık + Otomatik Onarım İş Birliği
 ```
 Cron Sağlık Monitörü (4 saatte bir)  →  Hata tespit + rapor
@@ -341,29 +348,33 @@ Bir cron job provider rate limit'ine takıldığında:
    - Provider failover ekle (aşağıdaki 3 kademeli yapı)
    - Job'ı farklı bir provider/model ile yeniden yapılandır
 
-### 3 Kademeli Fallback Yapısı (2 Temmuz 2026)
+### 3 Kademeli Fallback Yapısı (16 Tem 2026 — Pollinations çıkarıldı, NVIDIA güncellendi)
 
 Ana provider (`opencode-go`) rate limit yediğinde otomatik devreye giren fallback zinciri:
 
 ```
 opencode-go (deepseek-v4-flash)
   ├─ opencode-zen (deepseek-v4-flash-free) — ücretsiz
-  ├─ Pollinations (deepseek) — ücretsiz proxy
-  └─ openrouter/free — son çare
+  ├─ NVIDIA (mistralai/mistral-small-4-119b-2603) — ücretsiz, hızlı ✅
+  └─ NVIDIA (minimaxai/minimax-m3) — ücretsiz, yavaş ama Edel onaylı
 ```
+
+❌ Çalışmayan NVIDIA modelleri (kullanma):
+- `meta/llama-3.3-70b-instruct` — timeout, Türkçesi zayıf
+- `z-ai/glm-5.2` — timeout
 
 **Kurulum:**
 ```bash
 hermes config set fallback_providers '[
   {"model":"deepseek-v4-flash-free","provider":"opencode-zen"},
-  {"model":"deepseek","provider":"Pollinations"},
-  {"model":"openrouter/free","provider":"openrouter"}
+  {"model":"mistralai/mistral-small-4-119b-2603","provider":"NVIDIA"},
+  {"model":"minimaxai/minimax-m3","provider":"NVIDIA"}
 ]'
 ```
 
 **Test sonuçları ve bilinen sorunlar:** `references/provider-fallback-testing.md`
 
-**Önemli:** opencode-zen dışarıdan 403 verse de Hermes üzerinden cron job'larında çalışır. Pollinations her koşulda çalışır. openrouter/free için OPENROUTER_API_KEY env'de olmayabilir — alternatif olarak `LITEROUTER_API_KEY` mevcut.
+**Önemli:** opencode-zen dışarıdan 403 verse de Hermes üzerinden cron job'larında çalışır. NVIDIA'da Mistral Small 4 en güvenilir modeldir. MiniMax M3 sadece dar context'li işlerde kullanılır (ekonomi bültenleri).
 
 ## Aylık Tarama Cron Pattern
 

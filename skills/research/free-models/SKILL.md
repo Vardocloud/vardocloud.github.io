@@ -232,3 +232,4 @@ Pollinations terk edildi. Şu an çalışan ücretsiz image generation API key'i
 - `sohbet/references/ogrenme.md` — Günlük öğrenme/rapor kaydı
 - `references/model-senaryolar.md` — Model-senaryo eşleştirmeleri
 - `references/en-arac-kutusu.md` — EN işler için araç kutusu detayı
+- `references/telegram-model-picker-limit.md` — Telegram inline keyboard limiti (100 buton): sondaki modeller gorunmez olur, tani ve cozum

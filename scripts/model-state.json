@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-15T04:01:06.993686",
+  "timestamp": "2026-07-16T04:01:10.498419",
   "working_models": [
     "deepseek-v4-flash",
     "deepseek-v4-pro",
@@ -21,14 +21,15 @@
     "qwen3.7-max",
     "qwen3.7-plus"
   ],
-  "changes": [],
+  "changes": [
+    "Cron \"linkedin_sabah\": minimaxai/minimax-m3 -> deepseek-v4-flash"
+  ],
   "skipped": [
     "glm-5.1 (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
     "gemma (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
-    "minimaxai/minimax-m3 (strike 2/3)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
@@ -39,7 +40,7 @@
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
-    "deepseek-v4-flash-free (PROTECTED)",
-    "deepseek-v4-flash-free (PROTECTED)"
+    "nvidia-free-m3 (strike 1/3)",
+    "nvidia-free-m3 (strike 2/3)"
   ]
 }

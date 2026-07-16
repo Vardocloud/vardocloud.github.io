@@ -1,14 +1,15 @@
 ---
 name: meet-record
-description: Google Meet toplantılarını headless Chrome+PulseAudio ile MP3 kaydetme
+description: Google Meet ve Zoom toplantılarını headless Chrome+PulseAudio ile kaydetme — tekli ve paralel kayıt
 category: productivity
 trigger: >-
-  Kullanıcı "toplantı kaydı", "meeting record", "Google Meet", "meet", "seminere gir",
-  "toplantıya gir", "kayıt al", "meeting join" gibi ifadeler kullandığında otomatik yüklenir.
+  Kullanıcı "toplantı kaydı", "meeting record", "Google Meet", "Zoom", "meet", "seminere gir",
+  "toplantıya gir", "kayıt al", "meeting join", "paralel kayıt", "eş zamanlı" gibi ifadeler
+  kullandığında otomatik yüklenir.
+
 ---
 
-# Meet Record — Google Meet Ses Kaydı
-
+# Meet Record — Online Toplantı Ses/Video Kaydı
 ## Çalışan Yöntem (13 Haz 2026)
 
 **Google hesabı girişli Chrome (port 9222, NotebookLM profili) + PulseAudio null-sink + ffmpeg ile başarılı kayıt.** NotebookLM Chrome'una yeni sekme açılır, mevcut sekmelere dokunulmaz.
@@ -188,7 +189,201 @@ NotebookLM'nin Chrome'u (port 9222, profil: `.notebooklm-mcp-cli/chrome-profiles
 - **Kamera hatası = safe:** Google Meet "Kamera bulunamadı" diye uyarır — kapatıp geç. Ses kaydı için önemsiz.
 - **Tarayıcı uyarısı:** "Bu tarayıcı sürümü artık desteklenmiyor" — Chromium 148 eski ama çalışır, dikkate alma.
 
+---
+
+## Zoom Web Client ile Kayıt (CDP WebSocket Yöntemi)
+
+Google Meet'ten farklı olarak Zoom, browser üzerinden katılım için **CDP WebSocket** kullanır (Puppeteer MCP yerine). Zoom'un PWA'sı `app.zoom.us/wc/` üzerinden çalışır.
+
+### Akış
+
+```
+PulseAudio null-sink oluştur
+→ Chrome'u PULSE_SINK=<sink> ile başlat (ayrı user-data-dir)
+→ ffmpeg <sink>.monitor → MP3 başlat
+→ Chrome CDP WebSocket üzerinden navigate et
+→ İsim gir (input-for-name)
+→ Mute + Stop Video + Join
+→ Computer Audio seç (Join Audio by Computer)
+→ Device uyarılarını dismiss et (Got It / Continue without)
+→ Kayıt devam eder
+```
+
+### Chrome Başlatma
+
+```bash
+PULSE_SINK=zoom_rec_2 DISPLAY=:99 \
+  chromium --show-component-extension-options \
+    --no-default-browser-check --disable-pings --media-router=0 \
+    --disable-dev-shm-usage --no-sandbox --disable-gpu \
+    --remote-debugging-port=9334 --remote-allow-origins=* \
+    --user-data-dir=/home/ubuntu/.hermes/chrome_profile_zoom_9334 \
+    --window-size=1280,1024 \
+    about:blank
+```
+
+### Zoom URL Yapısı
+
+```bash
+# Doğrudan meeting join:
+https://app.zoom.us/wc/join/<MEETING_ID>?pwd=<PASSCODE>
+# Alternatif:
+https://miuul.zoom.us/j/<MEETING_ID>?pwd=<PASSCODE>
+# (join sayfasına redirect eder)
+```
+
+### CDP WebSocket Kontrolü (Python)
+
+Puppeteer MCP'nin aksine Zoom PWA'sı ile websocket-client kullanılır:
+
+```python
+import websocket, json
+
+TARGET_ID = "<tab-id-from-json>"
+WS_URL = f"ws://localhost:9334/devtools/page/{TARGET_ID}"
+
+def send_cmd(ws, cmd_id, method, params=None):
+    msg = {"id": cmd_id, "method": method}
+    if params: msg["params"] = params
+    ws.send(json.dumps(msg))
+    while True:
+        resp = json.loads(ws.recv())
+        if resp.get("id") == cmd_id: return resp
+
+ws = websocket.create_connection(WS_URL, timeout=15)
+send_cmd(ws, 0, "Runtime.enable")
+
+# Sayfada JavaScript çalıştır
+r = send_cmd(ws, 1, "Runtime.evaluate", {
+    "expression": "document.title",
+    "returnByValue": True
+})
+```
+
+### Zoom Form Alanları & Butonlar
+
+| Element | ID/Text | İşlem |
+|---------|---------|-------|
+| İsim input | `input-for-name` | `inp.value = 'Name'; dispatch input+change events` |
+| Ses kapat | `"Mute"` | `button.click()` |
+| Video kapat | `"Stop Video"` | `button.click()` |
+| Katıl | `"Join"` | `button.click()` |
+| Bilgisayar ses | `"Join Audio by Computer"` veya `"Computer Audio"` | `button.click()` |
+| Uyarı onay | `"Got It"` | `button.click()` |
+| Mikrofonsuz devam | `"Continue without microphone and camera"` | `button.click()` |
+
+**Önemli:** React uygulaması olduğu için input değeri native setter ile atanmalı:
+```js
+var nativeSetter = Object.getOwnPropertyDescriptor(
+    window.HTMLInputElement.prototype, 'value'
+).set;
+nativeSetter.call(inp, 'Sudenaz');
+inp.dispatchEvent(new Event('input', {bubbles: true}));
+inp.dispatchEvent(new Event('change', {bubbles: true}));
+```
+
+### PulseAudio Sink Kontrolü
+
+```bash
+# Custom PulseAudio binary
+EXTRACT=/tmp/pulseaudio_extract
+export LD_LIBRARY_PATH=$EXTRACT/usr/lib/x86_64-linux-gnu:$EXTRACT/usr/lib/x86_64-linux-gnu/pulseaudio:$EXTRACT/usr/lib/pulse-17.0+dfsg1/modules
+export PULSE_SERVER="unix:/tmp/pulse-PKdhtXMmr18n/native"
+
+# Null-sink oluştur
+$EXTRACT/usr/bin/pactl load-module module-null-sink sink_name=zoom_rec_2
+
+# Sink'leri listele
+$EXTRACT/usr/bin/pactl list sinks short
+
+# Chrome'un hangi sink'e bağlı olduğunu kontrol et
+$EXTRACT/usr/bin/pactl list sink-inputs | grep -E "Sink:|application.process.id"
+```
+
+### ffmpeg Kayıt
+
+```bash
+ffmpeg -y -f pulse -i zoom_rec_2.monitor -c:a libmp3lame -b:a 128k \
+  -t 02:00:00 /home/ubuntu/recordings/miuul_airflow_16tem2026.mp3
+```
+
+---
+
+## Paralel Çoklu Kayıt
+
+Aynı anda iki farklı toplantı kaydedilebilir — her biri ayrı Chrome instance + ayrı PulseAudio null-sink + ayrı ffmpeg.
+
+### Mimari
+
+```
+Toplantı #1 (19:30)           Toplantı #2 (20:00)
+     │                              │
+Chrome 9333                   Chrome 9334
+PULSE_SINK=zoom_rec           PULSE_SINK=zoom_rec_2
+     │                              │
+     ▼                              ▼
+zoom_rec (Sink 0)             zoom_rec_2 (Sink 1)
+     │                              │
+     ▼                              ▼
+zoom_rec.monitor              zoom_rec_2.monitor
+     │                              │
+     ▼                              ▼
+ffmpeg -> MP3#1               ffmpeg -> MP3#2
+```
+
+### Kurulum Adımları
+
+```bash
+# 1. İkinci null-sink'i ekle (birincisi zaten PulseAudio başlatılırken yüklendi)
+pactl load-module module-null-sink sink_name=zoom_rec_2
+
+# 2. İkinci Chrome'u başlat (ayrı port, ayrı user-data-dir, ayrı PULSE_SINK)
+PULSE_SINK=zoom_rec_2 DISPLAY=:99 chromium --remote-debugging-port=9334 \
+  --user-data-dir=~/.hermes/chrome_profile_zoom_9334 ...
+
+# 3. İkinci ffmpeg'i başlat
+ffmpeg -y -f pulse -i zoom_rec_2.monitor -c:a libmp3lame -b:a 128k \
+  -t 02:00:00 /home/ubuntu/recordings/toplanti2.mp3
+
+# 4. Chrome 9334'ü CDP WebSocket ile kontrol et
+python3 /tmp/cdp_zoom_join.py
+```
+
+### Kısıtlamalar
+
+- Chrome process'leri aynı X display'ini (:99) paylaşır — görsel karışma olabilir
+- Her Chrome instance'ı ayrı PulseAudio sink'e yönlendirilir — ses ayrı kaydedilir
+- ffmpeg her sink için ayrı process'tir — biri düşerse diğeri etkilenmez
+- İkinci meeting için ayrı user-data-dir kullan — cookie/çakışma olmaz
+- İkinci Chrome için `--disable-gpu` önerilir (kaynak tasarrufu)
+
+### Kaynak Kullanımı (test edilen: 2 paralel kayıt)
+
+| Bileşen | CPU | RAM |
+|---------|-----|-----|
+| Chrome başına | ~%3-5 | ~200-300MB |
+| ffmpeg (audio) | ~%1-2 | ~50MB |
+| ffmpeg (video) | ~%10-15 | ~200MB+ |
+| Xvfb :99 | ~%0 | ~50MB |
+
+### Video+Ses Paralel (Ekran Görüntüsü + Ses)
+
+X11 ekran görüntüsü + ses aynı anda kaydedilebilir:
+```bash
+ffmpeg -y \
+  -video_size 1280x720 -framerate 10 -f x11grab -i :99 \
+  -f pulse -i zoom_rec.monitor \
+  -c:v libx264 -preset ultrafast -crf 28 \
+  -c:a aac -b:a 128k \
+  -t 02:00:00 kayit.mp4
+```
+
+> ⚠️ x11grab tüm display'i yakalar — birden fazla Chrome penceresi varsa hepsi görünür. İstenen sink'ten ses alınır (zoom_rec — hangi Chrome bağlıysa).
+
+---
+
 ### Referanslar
 
-- `references/test-session-2026-06-13.md` — 3 test meeting'inin detaylı kaydı
+- `references/test-session-2026-06-13.md` — 3 Google Meet test meeting'inin detaylı kaydı
+- `references/parallel-zoom-2026-07-16.md` — Paralel Zoom kaydı: Miuul Airflow (20:00) + 19:30 toplantısı
 - `scripts/meet-monitor.py` — keepalive + ffmpeg monitor scripti

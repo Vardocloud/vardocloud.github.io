@@ -1,6 +1,7 @@
 #!/bin/bash
 # Chromium Cleanup — 30dk + CPU idle (<%1) ise kapat
 # Cron ile her 15dk çalışır
+# Zoom/Meet kaydı için remote-debugging-port Chrome'ları atla
 
 IDLE_MINUTES=30
 CPU_THRESHOLD=1.0
@@ -8,7 +9,12 @@ LOG="/home/ubuntu/.hermes/logs/chromium-cleanup.log"
 
 killed=0
 
-ps -eo pid,etime,pcpu,comm --no-headers | grep -iE 'chrom|puppeteer' | while read pid etime pcpu comm; do
+ps -eo pid,etime,pcpu,comm,args --no-headers | grep -iE 'chrom|puppeteer' | while read pid etime pcpu comm args; do
+    # Skip Chrome instances with remote debugging port (Zoom/Meet kaydı)
+    if echo "$args" | grep -q 'remote-debugging-port'; then
+        continue
+    fi
+    
     # Parse elapsed time to minutes
     mins=$(echo "$etime" | awk -F'[-:]' '{
         if (NF==5) print $2*1440 + $3*60 + $4     # DD-HH:MM:SS

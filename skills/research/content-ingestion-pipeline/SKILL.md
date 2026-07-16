@@ -610,6 +610,16 @@ After repeated ingestion runs, the wiki's `index.md` accumulates:
 
 ### APA Full-Text Extraction (Member Login Required)
 
+> **⚠️ CROSS-REFERENCE:** Detaylı APA makalesi tam metin workflow'u (browser extraction, CAPTCHA handling, subagent failure patterns, wiki dosya formatı) için `apa-referenced-content` skill'ine bak.
+>
+> Aşağıdaki notlar sadece APA login ve PsycNET erişimine odaklanır.
+
+### Problem
+APA Monitor makaleleri web_extract ile özet olarak wiki'ye kaydediliyor. Oysa Edel'in APA üyeliği var ve tam metinlere erişebiliyor. Özetler yetersiz kalıyor.
+
+**Not — Public Monitor sayfaları için:** `web_extract` APA sayfalarında özet döndürür. Tam metin için browser kullanılır:
+`browser_navigate(url)` → `browser_console(expression)` ile `<main>` içeriğini çek. Detaylı workflow: `apa-referenced-content` skill'inde "0. KAYNAĞI WEB'DEN ÇEK" bölümü.
+
 ### Problem
 APA Monitor makaleleri web_extract ile özet olarak wiki'ye kaydediliyor. Oysa Edel'in APA üyeliği var ve tam metinlere erişebiliyor. Özetler yetersiz kalıyor — Edel: *"Özetler değil tam halleri bize lazım. APA'ya giriş yapabilmelisin."*
 

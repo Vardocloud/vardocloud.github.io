@@ -80,6 +80,49 @@ APA Monitor'dan gelen makaleleri işlerken:
 4. **NotebookLM** "APA Bilgi" notebook'una kaydet
 5. Edel'e sunarken emoji seçim butonları kullan (bkz. sohbet skill)
 
+## AEO/GEO İçerik Optimizasyonu (Psikolog Web Sitesi)
+
+### Temel Strateji (SEO → AEO → GEO)
+
+| Katman | Odak | Psikolog Sitesi İçin |
+|--------|------|----------------------|
+| **SEO (Temel)** | Site hızı, mobil uyum, teknik tarama | Google'da bulunma |
+| **AEO (Answer Engine Opt.)** | İlk 40-60 kelimede cevap, SSS şeması, soru başlıkları | ChatGPT/Perplexity cevaplarında çıkma |
+| **GEO (Generative Engine Opt.)** | Somut veri, güncellik, çapraz platform varlığı | AI'ın **önermesi** |
+
+### AEO Kuralları (Makale/Blog İçin)
+
+1. **İlk 40-60 kelime** — sorunun cevabını en başta ver
+2. **Başlıkları soru formatına çevir** — "Sınav Kaygısı Nedir?" gibi
+3. **SSS bloğu ekle** — sayfanın altında FAQ schema işaretlemesiyle
+4. **Format:** Liste yapıları, karşılaştırma tabloları, "X vs Y" kullan
+
+### GEO Kuralları (AI'ın Önermesi İçin)
+
+1. **Somut veri/istatistik kullan** — düz metne göre %30 daha fazla görünürlük
+2. **Son 90 günde güncelle** — güncel içerik 3 kata kadar daha fazla alıntılanır
+3. **Çapraz platform varlığı** — YouTube, LinkedIn, Google My Business, yerel dizinler
+4. **Entity netliği** — markanın kim olduğu, ne yaptığı net olmalı
+
+### Prompt (İçerik Dönüşümü İçin)
+
+```
+Bu içeriği AI uyumlu hale getir:
+1. Cevabı ilk 40-60 kelimede ver
+2. Başlıkları soru formatına çevir
+3. Somut istatistik/veri ekle
+4. SSS bloğu ve şema işaretlemesi öner
+5. Liste/karşılaştırma formatı kullan
+```
+
+### Bardo Psikoloji Sitesi Notları
+
+- Site: **bardopsikoloji.com.tr** — Tailwind CSS + Alpine.js + Cloudflare
+- Blog/Yazılar sayfası var ama **henüz yazı yok** — boş
+- Sınav Kaygısı sayfası AEO uyumlu örnek olarak duruyor
+- Potansiyel: otomatik makale üretim pipeline'ı → cron + API ile düzenli yazı
+- Detaylı referans: `references/aeo-geo-psikolog.md`
+
 ## KVKK Uyumu
 
 - Danışan verileri yerel sunucuda, şifreli

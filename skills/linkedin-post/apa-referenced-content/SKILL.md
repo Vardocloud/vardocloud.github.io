@@ -1,7 +1,7 @@
 ---
 name: apa-referenced-content
 description: "APA kaynaklı içerik üretimi — LinkedIn post, blog, podcast. Spesifik referans kullanımı, makale tamamından beslenme, infographic görsel üretimi."
-version: 2.1.0
+version: 2.3.0
 metadata:
   hermes:
     tags: [apa, linkedin, content, psychology, writing]
@@ -108,15 +108,102 @@ Yazmaya başlamadan ÖNCE iki seviyeli kontrol yap:
 ⚠️ **"En son düzenlenen dosyayı bul" yaklaşımı kısır döngü yaratır** — aynı makale defalarca işlenir. Bunun yerine linkedin_posts.json'daki kayıtlarla çapraz kontrol yap.
 
 ### 0. KAYNAĞI WEB'DEN ÇEK (APA Sayfaları İçin)
-APA Monitor sayfaları (`apa.org/monitor/`) genelde kısa bir özet/önizleme gösterir, gerçek tam metin sayfaya gömülüdür.
 
-**Doğru adımlar:**
-1. **Önce browser ile sayfaya git** — `browser_navigate(url)` → `browser_snapshot(full=true)` ile sayfadaki tam metni al
-2. **Grafik varsa** — `browser_get_images()` ile grafik URL'sini bul, `vision_analyze` ile verileri oku
-3. **Wiki'ye yaz** — Tam metni `~/wiki/apa-articles/` altına .md olarak kaydet
-4. **NotebookLM'e ekle** — `source_add(file_path=..., source_type="file")` ile EKLE. **URL olarak ekleme** — çünkü NotebookLM URL'den bazen özet alır, tam metni değil.
+APA Monitor sayfaları (`apa.org/monitor/`) genelde kısa özet/önizleme gösterir. **`web_extract` APA sayfalarında LLM özeti döndürür, tam metin değil.** APA makaleleri için browser birincil araçtır, web_extract yedek değil.
 
-**Uyarı:** `web_extract` APA sayfalarında çoğu zaman özet/önizleme döndürür, tam metin değil. APA makaleleri için browser birincil araçtır, web_extract yedek değil.
+**Tam metin çekme adımları:**
+
+1. **Browser ile sayfaya git** — `browser_navigate(url)` ile sayfayı aç
+2. **Tam metni JS ile çek** — `browser_console(expression)` ile ana içerik alanındaki tüm metni al. Bu yöntem `browser_snapshot(full=true)`'den daha temiz metin döndürür:
+   ```javascript
+   (()=>{const m=document.querySelector('main')||document.querySelector('[role="main"]');return m?m.innerText:document.body.innerText})()
+   ```
+3. **Grafik varsa** — `browser_get_images()` ile grafik URL'sini bul, `vision_analyze` ile verileri oku
+4. **Wiki'ye yaz** — Tam metni `~/wiki/apa-articles/` altına .md olarak kaydet (format için "Wiki Dosya Formatı" bölümüne bak)
+5. **NotebookLM'e ekle** — `source_add(file_path=..., source_type="file")` ile. URL olarak değil — çünkü NotebookLM URL'den bazen özet alır.
+
+#### Wiki Dosya Formatı (Full-Text)
+
+Yeni bir makale kaydederken veya mevcut özet dosyasını full-text'e yükseltirken:
+
+```yaml
+---
+title: "Makale Başlığı (FULL TEXT)"
+created: YYYY-MM-DD
+updated: YYYY-MM-DD
+type: full-text
+tags: [ilgili-etiketler]
+sources: [https://www.apa.org/monitor/.../makale-slogu]
+confidence: high
+access: member-login
+---
+```
+- `type: full-text` olarak işaretle (summary değil)
+- `sources` dizisine URL'yi ekle
+- `type: summary` olan eski dosyaları yükseltirken `updated` tarihini güncelle
+- Tam metin şablonu: Başlık + Kaynak künyesi (yazar, sayı, sayfa, okuma süresi) + `## Full Article Text` bölümü altında browser'dan alınan metin (kısaltma yapma, olduğu gibi koy)
+
+#### CAPTCHA/Bot Detection (APA Sitesi)
+
+APA sitesi (Microsoft-IIS/10.0) bazen bot benzeri davranışı tespit eder:
+- **Belirti:** `browser_navigate` sayfayı yükler ama response boyutu **800-1100 byte** (normal: 8000+ byte). `browser_console` boş veya çok az içerik (<500 chars) döndürür.
+- **Sebep:** Browser automation (Browserbase) bot detection'a takılır — residential proxy'siz çalışırken daha agresif.
+- **Çözüm:** 1-2 dakika bekle, aynı URL'yi tekrar dene (çoğu geçici). Yine olmazsa farklı makale ile devam et, döngü sonunda tekrar dene.
+- **Doğrulama:** `browser_console` çıktısının length'ini kontrol et. <500 chars ise CAPTCHA'dır, yeniden dene.
+
+#### Subagent ile Toplu İşleme — Bilinen Hata Desenleri
+
+Subagent'lar (delegate_task) ile toplu APA makalesi işlerken karşılaşılan üç hata deseni:
+
+**1. CAPTCHA/Bot Detection (~%40)**
+- Her subagent yeni bir browser oturumu açar; her oturum bağımsız bloklanabilir
+- Subagent `browser_navigate` başarılı döndüğü için sayfanın CAPTCHA olduğunu anlamaz, boş `browser_console`'u "sayfa yüklendi" zanneder
+- Önlem: `browser_console` çıktısında `result.length < 500` kontrolü yap, CAPTCHA ise 30sn bekle + tekrar dene
+
+**2. Patch Silent Failure (~%30)**
+- Subagent'lar `patch` kullanıp "✅ Updated" raporlar ama `old_string` eşleşmediği için dosya değişmez
+- Subagent hata kodunu kontrol etmez, özetinde başarılı olduğunu söyler
+- **Çözüm:** Full-text güncellemelerinde ASLA `patch` kullanma. `write_file` ile dosyanın tamamını yeniden yaz (frontmatter'ı koruyarak). Güncelleme sonrası dosya boyutunu kontrol et: `wc -c < dosya.md` önceki boyuttan büyük olmalı.
+
+**3. Timeout (~%10)**
+- Bazı APA sayfaları yavaş yüklenir, subagent 600s limitine takılır
+- Önlem: Subagent başına maksimum 5-6 makale ver
+
+**Genel kural:** Subagent'ların raporlarına güvenme — her subagent'dan sonra dosyaların gerçekten değişip değişmediğini doğrula. En güvenilir yöntem: browser oturumunu kendin kullan, her makaleyi sırayla işle.
+
+#### Toplu Retrospektif Güncelleme (Summary → Full-Text)
+
+1. **Envanter çıkar:**
+   ```bash
+   grep "^type:" ~/wiki/apa-articles/*.md | grep -v "full-text" | grep -v index.md
+   ```
+   Bu, hâlâ özet (summary/concept/entity/boş) olan tüm dosyaları listeler.
+
+2. **Subagent'lar ile paralel işle** (4-6 makale/subagent, browser toolset ile):
+   - Her subagent'a maksimum 5-6 makale ver (timeout riski)
+   - `write_file` kullanmalarını söyle, `patch` DEĞİL
+   - CAPTCHA'ya takılanları listele ve sonra elle dene
+   - Her subagent sonucunda dosya boyutlarını doğrula
+
+3. **CAPTCHA'ya takılanları elle dene:** Aynı browser oturumunda sırayla dene (genelde çalışır)
+
+4. **Doğrulama:**
+   ```bash
+   cd ~/wiki/apa-articles && find . -name "*.md" -size -5k | grep -v index.md | grep -v log.md
+   ```
+   <5KB olan dosyalar hâlâ özet seviyesindedir — işlenmemiş demektir.
+
+5. **Index.md güncelleme:** `index.md`'deki tür bilgilerini el ile güncelle (otomatik değil)
+
+#### Dosya Güncelleme Doğrulama Kontrol Listesi
+
+Her wiki dosyası güncellemesinden SONRA şunları kontrol et:
+- [ ] `type: full-text` olarak değişti mi? (`head -5 dosya.md | grep type:` ile kontrol et)
+- [ ] `sources` dizisinde URL var mı?
+- [ ] `updated` tarihi güncel mi?
+- [ ] `## Full Article Text` bölümü var mı?
+- [ ] Dosya boyutu öncekinden büyük mü? (full text >5000 byte olmalı)
+- [ ] İçerik kısaltılmamış mı? (browser_console çıktısının tamamı kaydedilmiş mi?)
 
 ### 1. KAYNAĞI OKU
 `~/wiki/apa-articles/` altındaki ilgili .md dosyasını oku. Makalenin TÜM bölümlerinden beslen.
