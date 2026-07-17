@@ -69,21 +69,44 @@ NEW_BLOCK = """            model_id = model_list[idx]
                 logger.error("Model picker switch failed: %s", exc)
                 result_text = f"Error switching model: {exc}"
 
-            # Health check: quick ping to verify provider responds
+            # Health check: verify provider responds AND model exists in its catalog
             try:
                 import aiohttp
-                providers_list = state.get("providers", [])
-                prov = next((p for p in providers_list if p.get("slug") == provider_slug), None)
-                if prov and prov.get("base_url"):
-                    base = prov["base_url"].rstrip("/")
+                providers_list = state.get(\"providers\", [])
+                prov = next((p for p in providers_list if p.get(\"slug\") == provider_slug), None)
+                if prov and prov.get(\"base_url\"):
+                    base = prov[\"base_url\"].rstrip(\"/\")
                     async with aiohttp.ClientSession() as s:
-                        async with s.get(f"{base}/models", timeout=aiohttp.ClientTimeout(total=2)) as r:
+                        async with s.get(f\"{base}/models\", timeout=aiohttp.ClientTimeout(total=3)) as r:
                             if r.status >= 500:
-                                result_text += "\\n\\n⚠️ Warning: This provider returned HTTP %s. Response might be slow until it recovers." % r.status
-                elif prov and not prov.get("base_url"):
+                                result_text += \"\\\\n\\\\n⚠️ Warning: This provider returned HTTP %s. Response might be slow until it recovers.\" % r.status
+                            elif r.status == 200:
+                                try:
+                                    import json
+                                    models_data = await r.json()
+                                    api_models = models_data if isinstance(models_data, list) else models_data.get(\"data\", [])
+                                    api_ids = {m[\"id\"] if isinstance(m, dict) else str(m) for m in api_models}
+                                    # Build candidate names: user-facing + API-style (e.g. z-ai/glm-5.2)
+                                    candidates = {model_id}
+                                    model_parts = model_id.split(\"/\")
+                                    if len(model_parts) == 1:
+                                        for mid in api_ids:
+                                            if mid.endswith(\"/\" + model_id):
+                                                candidates.add(mid)
+                                    found = bool(candidates & api_ids)
+                                    if not found:
+                                        result_text += (
+                                            \"\\\\n\\\\n⚠️ Model '%s' is configured but NOT found \" % model_id
+                                            + \"in this provider's current catalog.\"
+                                            + \"\\\\nThe provider may have removed or renamed it.\"
+                                            + \"\\\\nIf requests fail, use /model to switch to another model.\"
+                                        )
+                                except Exception:
+                                    pass  # model list parse failed — skip existence check
+                elif prov and not prov.get(\"base_url\"):
                     pass
             except Exception:
-                result_text += "\\n\\n⚠️ Warning: This provider is not responding right now. Model switch succeeded, but requests may fail until the provider recovers."
+                result_text += \"\\\\n\\\\n⚠️ Warning: This provider is not responding right now. Model switch succeeded, but requests may fail until the provider recovers.\"
 
             # Show confirmation by editing the message (works even when
             # callback query is expired — it uses message ID, not callback).

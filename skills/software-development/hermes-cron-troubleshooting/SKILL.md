@@ -667,4 +667,11 @@ Job '<id>': delivered to <platform>:<chat_id> via live adapter
 - `references/base-url-contamination-case-study.md` — `evening_precheck` Azure filter → provider switch → base_url contamination → fix. Timeline and diagnosis pattern.
 - `references/mimo-v2.5-free-base-url-case-study.md` — `morning_greeting` "Invalid model" error via stale Pollinations base_url with `mimo-v2.5-free` on `opencode-zen`. Same pattern, different model.
 - `references/morning-greeting-pollinations-migration.md` — Full timeline: base_url contamination → Pollinations migration → 128 tool limit → enabled_toolsets fix. Combines all three patterns in one case.
+- **Absorbed:** `references/absorbed-delegation-debugging.md` — Delegation failure debugging (provider resolution, base_url inheritance, rate limiting). From absorbed `hermes-delegation-debugging` skill.
+
+## Absorbed Skills
+
+| Skill | Type | Reference |
+|---|---|---|
+| `hermes-delegation-debugging` | Delegation failure patterns | `references/absorbed-delegation-debugging.md` |
 - `references/opencode-go-rate-limit-case-study.md` — 2026-06-07 Bundle Gündem 429 error → systematic migration of all 23 cron jobs to `opencode-zen` free tier. Strategy D model assignment matrix and zero-paid-jobs outcome.

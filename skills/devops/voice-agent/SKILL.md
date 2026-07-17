@@ -913,6 +913,21 @@ OpenRouter key at `/tmp/.or_key` (fully used: $0 balance).
 
 ⚠️ Deepgram's model name validation prevents using `:free` model IDs directly. Workaround: local HTTPS proxy.
 
+## Consolidated Sibling Skills
+
+The following skills have been absorbed into this umbrella. Their unique content was either merged into the main SKILL.md, moved into `references/`, or was already covered. Original skill directories are archived.
+
+| Absorbed Skill | Type | Key Content / Reference File |
+|---|---|---|
+| `voice-agent-development` | Browser development | Half/full-duplex patterns, Soniox JS/React SDK, VAD, Next.js 16, standalone Node.js server. See `references/absorbed-voice-agent-development.md` and related refs: `soniox-vanilla-js.md`, `soniox-react-sdk.md`, `standalone-nodejs-server.md`, `nextjs16-voice-agent-ui.md`, `faster-whisper-arm64-benchmark.md`, `cloudflared-tunnel-setup.md` |
+| `voice-agent-infrastructure` | Infrastructure | Model proxy, SSE filtering, Groq provider config, cloudflared tunnels, OpenRouter model selection. See `references/absorbed-voice-agent-infrastructure.md`, `references/groq-provider-setup.md`, `references/hermes-api-voice-latency.md` |
+| `voice-agent-dev` | Settings pitfalls | Deepgram Settings JSON validation gotchas (open_ai vs groq, model placement, SSE requirement). See `references/absorbed-voice-agent-dev.md` |
+| `voice-agent-deepgram` | Deepgram browser | Legacy Deepgram browser WebSocket auth and settings schema patterns. See `references/absorbed-voice-agent-deepgram.md`, `references/deepgram-settings-schema.md`, `references/deepgram-browser-js-patterns.md` |
+| `deepgram-voice-agent` | Deepgram reference | Deepgram API schema, manual pipeline v3/v4, streaming voice agent pattern, WAV playback, Turkish STT options. See `references/absorbed-deepgram-voice-agent.md`, `references/deepgram-api-schema.md`, `references/manual-pipeline-v3.md`, `references/manual-pipeline-v4.md`, `references/streaming-voice-agent-pattern.md`, `references/turkish-stt-options.md`, `references/wav-browser-playback.md`, `templates/relay_server.py` |
+| `voice-agent-pipeline` | Deprecated | Self-declared DEPRECATED — absorbed into `vanitas-voice-bridge` |
+| `voice-agent-webspeech` | Abandoned | Self-declared ABANDONED — absorbed into `vanitas-voice-bridge` |
+| `vanitas-voice-agent` | Deprecated | Self-declared DEPRECATED v5 — absorbed into `vanitas-voice-bridge` v16 |
+
 ## Reference Files
 
 - `references/stt-providers.md` — STT provider comparison matrix (June 2026)
@@ -922,6 +937,29 @@ OpenRouter key at `/tmp/.or_key` (fully used: $0 balance).
 - `references/deepgram-custom-llm-format.md` — Custom LLM flat JSON format (legacy)
 - `references/v6-relay-server.md` — Relay server code (v6, superseded)
 - `references/asyncio-voice-patterns.md` — Asyncio patterns for voice agents
-- `references/turkish-stt-landscape.md` — Turkish STT landscape analysis
+- `references/turkish-stt-landscape.md` — Turkish STT landscape analysis (original)
+- `references/turkish-stt-options.md` — Turkish STT options comparison (from deepgram-voice-agent)
+- `references/wav-browser-playback.md` — WAV header construction for browser playback
+- `references/groq-provider-setup.md` — Groq custom provider setup in Hermes config
+- `references/hermes-api-voice-latency.md` — Hermes API voice latency analysis
+- `references/deepgram-settings-schema.md` — Deepgram Settings JSON schema reference
+- `references/deepgram-browser-js-patterns.md` — Browser JS patterns for Deepgram WebSocket
+- `references/deepgram-api-schema.md` — Deepgram API schema reference
+- `references/manual-pipeline-v3.md` — Manual STT+LLM+TTS pipeline v3
+- `references/manual-pipeline-v4.md` — Manual pipeline v4 (faster-whisper, local)
+- `references/streaming-voice-agent-pattern.md` — Streaming voice agent pattern (v10.6)
+- `references/cloudflared-tunnel-setup.md` — Cloudflared tunnel setup for voice
+- `references/faster-whisper-arm64-benchmark.md` — ARM64 faster-whisper speed benchmarks
+- `references/nextjs16-voice-agent-ui.md` — Next.js 16 voice agent UI patterns
+- `references/soniox-react-sdk.md` — Soniox React SDK integration
+- `references/soniox-vanilla-js.md` — Vanilla JS SonioxClient integration
+- `references/standalone-nodejs-server.md` — Standalone Node.js voice server
+- `references/pinokio-tts-ecosystem.md` — Pinokio TTS ecosystem comparison
+- `references/chatterbox-hf-space-tts.md` — Chatterbox TTS via HF Spaces
+- `references/absorbed-voice-agent-development.md` — Full original SKILL.md (browser voice agent development)
+- `references/absorbed-voice-agent-infrastructure.md` — Full original SKILL.md (infrastructure)
+- `references/absorbed-voice-agent-dev.md` — Full original SKILL.md (settings pitfalls)
+- `references/absorbed-voice-agent-deepgram.md` — Full original SKILL.md (Deepgram browser)
+- `references/absorbed-deepgram-voice-agent.md` — Full original SKILL.md (Deepgram reference)
 - → `references/soniox-api-integration.md` (under sensitive-data-pipeline skill) — Soniox API details
 - → `references/deepgram-voice-agent-setup.md` (under sensitive-data-pipeline skill)

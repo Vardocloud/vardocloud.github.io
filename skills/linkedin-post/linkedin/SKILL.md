@@ -576,3 +576,13 @@ bir terapist olarak nasıl kullanabileceğini anlat.
 - `references/ekip-agent-pitfalls.md` — EKİP ajan hataları: GLM-5.1 timeout/boş dönme, Gemma #terapi sabotajı (2 Haz 2026)
 - `scripts/linkedin_api.py` — Token yönetimi + post oluşturma (+image, +silme)
 - `scripts/callback_server.py` — OAuth callback yakalama server'ı
+
+## Absorbed Skills
+
+The following LinkedIn-related skills were consolidated into this umbrella. Their unique content was moved into `references/`.
+
+| Absorbed Skill | Reference File |
+|---|---|
+| `linkedin-api` | `references/linkedin-api-guide.md` |
+| `linkedin-writing` | `references/linkedin-writing-methodology.md` |
+| `apa-referenced-content` | `references/apa-content-production.md`, `references/article-retrieval-pipeline.md`, `references/article-rotation.md`, `references/onay-akisi.md`, `references/apa-webinar-registration.md` |

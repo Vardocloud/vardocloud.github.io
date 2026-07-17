@@ -102,19 +102,6 @@ These all fail because Oracle Cloud datacenter IPs are fully blacklisted by Clou
 
 See `cloudflare-bot-bypass` skill's `references/upwork-case-study.md` for full details.
 
-### 4️⃣ Search API Fallback — Serper/Brave (Works Now, Limited Quality)
-
-**When:** Google CSE API key henüz yapılandırılmadıysa.
-
-**Why it works:** Serper (Google SERP) ve Brave Search kendi indekslerini sorgular — Cloudflare tetiklenmez.
-
-**Setup:** API key'ler zaten mevcut (`~/.hermes/serper_key.txt`, `~/.hermes/brave_key.txt`). `serper-search` veya `brave-search` skill'lerindeki curl komutlarını kullan.
-
-**⚠️ Quality Warning — Google Snippet Sorunu:**
-Google'ın Upwork snippet'leri **sayfa navigasyon metnini** gösterir (Data Entry, Virtual Assistant linkleri), iş başlığını değil. Çoğu sonuç alakasız çıkar. Job ID'yi URL'den çıkarıp detay sayfasını web_extract ile kontrol et.
-
-**Keywords stratejisi:** Dar ve spesifik sorgular kullan. Genel kelimeler çok noise üretir. En iyisi: Edel'e hangi roller ilgisini çeker diye sor, ona göre sorgu yap.
-
 ### 4️⃣ Search API Fallback — Serper/Brave (Works Now)
 
 **When:** Google CSE API key henüz yapılandırılmadıysa veya hızlı bir tarama gerekiyorsa.
@@ -140,12 +127,49 @@ Google'ın Upwork sayfalarından aldığı snippet'ler **sayfa navigasyon metnin
 - Job ID'yi URL'den çıkarıp `web_extract` ile detay sayfasını almak daha güvenilirdir
 - Google CSE API (Mode 1) kurulunca bu yöntemden daha kaliteli sonuç alınır
 
-**Keywords stratejisi:**
-Serper'da genel anahtar kelimeler çok noise üretir. Mümkün olduğunca spesifik ve dar sorgular kullan:
-- `site:upwork.com/jobs "psikoloji"` → Çok az sonuç (Upwork İngilizce ağırlıklı)
-- `site:upwork.com/jobs "research" "psychology"` → Daha iyi
-- `site:upwork.com/jobs "virtual assistant" OR "admin support"` → Çok geniş, noise yüksek
-- En iyisi: Edel'e hangi roller ilgisini çeker diye sor, ona göre dar sorgu yap
+**Keywords stratejisi:**\
+Serper'da genel anahtar kelimeler çok noise üretir. Mümkün olduğunca spesifik ve dar sorgular kullan:\
+- `site:upwork.com/jobs "psikoloji"` → Çok az sonuç (Upwork İngilizce ağırlıklı)\
+- `site:upwork.com/jobs "research" "psychology"` → Daha iyi\
+- `site:upwork.com/jobs "virtual assistant" OR "admin support"` → Çok geniş, noise yüksek\
+- En iyisi: Edel'e hangi roller ilgisini çeker diye sor, ona göre dar sorgu yap\
+\
+#### 🔬 Proven Workflow: Multi-Query + web_extract (18 Tem 2026)\
+\
+**Sorun:** `site:upwork.com/jobs` kısıtlı sorgular 0-1 sonuç döndürür. Google, Upwork iş ilanlarını çok seyrek index'ler.\
+\
+**Çözüm — İki aşamalı workflow:**\
+\
+1️⃣ **Keşif (Serper ile):** `site:` kısıtlaması olmadan geniş sorgular at, sonuçları Python'da Upwork linki var mı diye filtrele:\
+```python\
+queries = [\
+    'upwork academic writing research psychology jobs',\
+    'upwork.com jobs psychology researcher freelance',\
+]\
+for q in queries:\
+    resp = requests.post(SerperEndpoint, json={\"q\": q, \"num\": 10})\
+    upwork_links = [r for r in resp.json()[\"organic\"] if 'upwork.com' in r[\"link\"]]\
+```\
+Bu yöntem `site:` sorgularından **10x+ daha fazla** Upwork sonucu döndürür (34 vs 0-1).\
+\
+2️⃣ **Detay (web_extract ile):** Upwork iş sayfalarına (`/freelance-jobs/apply/*`) ve kategori sayfalarına (`/freelance-jobs/counseling-psychology/`) **web_extract doğrudan erişebilir** — Cloudflare bloklamaz. Kullan:\
+```python\
+from hermes_tools import web_extract\
+result = web_extract(urls=[job_url])\
+# İş detayı, bütçe, saatlik ücret, müşteri profili döner\
+```\
+\
+**⏱️ Timing:** Keşif ~15sn, detay alma ~5sn/iş. Toplam ~1dk'da 30+ iş taranabilir.\
+\
+**⚠️ Uyarı:** web_extract yalnızca Google'da index'lenmiş Upwork sayfalarına erişir. Güncel işler (son 1-2 saat) index'te olmadığı için erişilemez. Cron'da 12 saatte bir tarama yeterlidir.\
+\
+**Kanıtlanmış (18 Tem 2026):** Bu workflow ile şu kategoriler tespit edildi:\
+- Academic Writing: 399 iş\
+- Research Paper Writing: 303 iş\
+- Academic Research: 277 iş\
+- Counseling Psychology: 93 iş\
+- Research (genel): 1.538 iş\
+- Ayrıca $25-35/h'lik spesifik bir iş ilanı (Research Architect) detayı alındı.
 
 ## Job Quality Scoring
 
@@ -207,4 +231,6 @@ Toplam: N iş bulundu, M tane yüksek kaliteli
 - `cloudflare-bot-bypass` — Why direct Upwork access fails from datacenter IPs
 - `upwork-cookie-session` — Upwork account session management
 - `upwork-mcp-integration` — Upwork MCP server setup (if using official API)
-- `firecrawl` — For parsing job detail pages (only works via Google-indexed URLs, not direct Upwork)
+- `serper-search` / `brave-search` — Job discovery via Google SERP (bypasses Cloudflare)
+- `firecrawl` — Alternative for parsing job detail pages (Google-indexed URLs only)
+- `web_extract` (built-in tool) — Reaches Upwork job & category pages directly; use after Serper discovery

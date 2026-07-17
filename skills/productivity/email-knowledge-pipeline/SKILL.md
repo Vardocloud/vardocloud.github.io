@@ -211,14 +211,47 @@ Bu bir meta-öğrenme kuralıdır. Her NBLM source'u veya wiki entry'si işlenir
 - Servis güncellemeleri, fiyat değişiklikleri, geçici duyurular → HİÇBİR YERE kaydedilmez
 - "Bunu 6 ay sonra arasam bulabilir miyim?" testini geçemeyen → kaydedilmez, işlenir geçilir
 
-## Cron Yapısı
-- Sıklık: Günde 3 kez (örn: 09:00, 15:00, 21:00)
-- Kullanılan skill'ler: google-workspace (Gmail API), notebooklm-mcp, email-knowledge-pipeline
-- Gmail araması: `ALL_PROXY="" python3 google_api.py gmail search "is:unread newer_than:7d" --max 15`
-- Her mail işlendikten sonra `--remove-labels UNREAD` ile okundu işaretle
-- Kullanıcıya kısa özet ge (Türkçe, sohbet tonunda)
+## ⚠️ Mevcut Durum — EKİP Pipeline DURDURULDU (Temmuz 2026)
 
-### EKİP Mimarisi (Sınıflandırma + Özet)
+Edel'in kararı: **Otomatik pipeline her şeyi depoluyordu → durduruldu.** 
+Şu an aktif olan sadece basit no_agent `gmail_check.sh` (Himalaya IMAP, her 3 saatte bir, sadece öncelikli anahtar kelimeleri raporlar). İşleme talepleri **elle/interaktif** gelir.
+
+Aşağıdaki bölümler (EKİP Mimarisi, Analist/Yazar, GLM-5.1 pitfall'ları) eski pipeline için yazılmıştır. Komutlar (`gmail search`, `gmail modify`, `gmail get`) hâlâ interaktif kullanım için geçerlidir.
+
+## Cron Yapısı (Arşiv — DURDURULDU)
+- ~~Sıklık: Günde 3 kez (örn: 09:00, 15:00, 21:00)~~
+- ~~Kullanılan skill'ler: google-workspace (Gmail API), notebooklm-mcp, email-knowledge-pipeline~~
+- ~~Gmail araması: `ALL_PROXY="" python3 google_api.py gmail search "is:unread newer_than:7d" --max 15`~~
+- ~~Her mail işlendikten sonra `--remove-labels UNREAD` ile okundu işaretle~~
+- ~~Kullanıcıya kısa özet geç (Türkçe, sohbet tonunda)~~
+
+### Mevcut Aktif Setup: no_agent gmail_check
+- **Cron:** `f4ae649eb68f` — "Gmail kontrol — okunmamış mailler"
+- **Sıklık:** `every 180m` (günde ~8 kez)
+- **Script:** `gmail_check.sh` → `gmail_check.py` (no_agent)
+- **Yöntem:** Himalaya IMAP (Gmail API değil)
+- **Filtre:** Son 48 saat, öncelikli keyword'ler: `edu.tr`, `apa.org`, `prolific`, `upwork`, `monitor`
+- **Davranış:** Sadece raporla — işleme YOK, okundu işaretleme YOK. Eşleşme yoksa sessiz çıkış.
+- **Teslimat:** Telegram topic'ine (origin)
+
+### Güncel İnteraktif İşleme Akışı
+
+Edel'in tercih ettiği model (kronik pipeline'a alternatif):
+
+1. **Gmail no_agent** öncelikli mailleri bildirir → Edel haberdar olur
+2. **Edel talimat verir:** "X kategorisini işle, gerisini okundu işaretle" (ör: "APA olanları işle, işlenmeyenleri okundu işaretle")
+3. **İşleme adımları:**
+   - Tüm okunmamış mailleri Gmail API ile çek: `gmail search "in:inbox is:unread" --max 100`
+   - Gönderen domain'ine göre kategorilere ayır (apa.org, skool.com, soniox.com vb.)
+   - Hedef dışındaki mailleri toplu okundu işaretle + arşivle: `gmail modify ID --remove-labels "UNREAD,INBOX"`
+   - Hedef kategorideki mailleri `gmail get` ile oku
+   - Edel'e sohbet tonunda özetle
+4. **İşlenen hedef mailler de okundu işaretlenir** (Edel onayıyla)
+5. **İsteğe bağlı:** Önemli kaynaklar NotebookLM'e eklenir (Edel sorar, sen teklif edersin)
+
+**Detaylı adım adım komutlar:** `references/interactive-session-pattern.md` — "Category-Specific Processing" bölümü
+
+### EKİP Mimarisi (Sınıflandırma + Özet) [ARŞİV]
 - **Analist (mimo-v2.5-free, Zen)**: API keysiz, 0 reasoning, en iyi Türkçe — email kategorizasyonu
   - Endpoint: `https://opencode.ai/zen/v1/chat/completions` (API KEY GEREKMEZ)
   - Yedek: `nemotron-3-super-free` (Zen), `minimax-m3-free` (OpenCode Go :19998)

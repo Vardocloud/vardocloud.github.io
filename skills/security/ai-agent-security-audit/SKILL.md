@@ -111,9 +111,12 @@ chmod 600 ~/.hermes/google_client_secret.json 2>/dev/null
 
 | Finding | Severity | Fix |
 |---------|----------|------|
-| secrets/ directory files world-readable | CRITICAL | chmod 600 on all credential files |
+| `secrets/` directory files world-readable | CRITICAL | chmod 600 on all credential files |
+| `.env` backup files world-readable | CRITICAL | chmod 600 on .env.bak\* and .env.example |
 | Key files 777 (soniox, serper, tavily, brave) | CRITICAL | chmod 600 on each |
-| gateway strict mode disabled | MEDIUM | Enable in gateway config |
+| `linkedin-poster/.env` root:root 777 | MEDIUM | Needs sudo chmod 600 |
+| NVIDIA model name mapping not applied by gateway | MEDIUM | `glm-5.2` sent raw → 404. Use fallback provider |
+| `.env.bak*` and `.env.example` world-readable | MEDIUM | chmod 600 on old env backups containing API keys |
 | BWS installed but plaintext keys persist | MEDIUM | Migrate to BWS, delete plaintexts |
 | no-new-privileges not set in Docker | LOW | Add Docker security-opt flag |
 
@@ -124,6 +127,7 @@ chmod 600 ~/.hermes/google_client_secret.json 2>/dev/null
 - **BWS availability does not equal adoption.** Bitwarden SM may be installed but secrets still in plaintext. Active migration is required.
 - **Default security scan skips file permissions.** The typical security_scan.sh checks ports, disk, memory, services, and Docker health — but NOT file permissions. Add this step separately.
 - **Config changes require service restart.** Changing gateway or security settings needs `systemctl --user restart hermes-gateway` to take effect.
+- **NVIDIA provider model names need full prefixes.** A model like `glm-5.2` sent to NVIDIA's API returns 404. It must be sent as `z-ai/glm-5.2` — the full model ID from the catalog. Even when the `models:` mapping is correctly configured in `custom_providers`, the gateway may send the raw name instead of the mapped name. Test by comparing `curl -X POST ... -d '{"model":"glm-5.2"}'` (→ 404) vs `'{"model":"z-ai/glm-5.2"}'` (→ 401=model exists). Workaround: use a fallback provider (opencode-go, opencode-zen).
 - **Secrets leak through backups.** 600-permission files may be included in backup archives with broader permissions. Exclude credential paths from backup scripts.
 
 ## References

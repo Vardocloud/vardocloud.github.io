@@ -1,12 +1,29 @@
 ---
 name: media-transcription
 description: "Video/ses dosyalarını Google Drive, yerel disk veya URL'den alıp Groq Whisper (birincil), Pollinations (yedek) veya faster-whisper (yerel) ile transkript etme ve analiz pipeline'ı"
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Media Transcription Pipeline
 
 **Amaç:** Video/ses dosyalarını çeşitli kaynaklardan alıp transkript etme ve analiz etme.
+
+## ⚠️ ZORUNLU: Türkçe İçerikte BİRİNCİL Yöntem Groq Whisper'dir
+
+**Google Meet otomatik altyazıları (captions) Türkçe için GÜVENİLİR DEĞİLDİR.** 17 Temmuz 2026'da test edilmiş ve onaylanmıştır: Meet'in İngilizce otomatik çevirisi Türkçe konuşmayı anlamsız karakterlere dönüştürür.
+
+**Kural — transkripsiyon yöntem seçimi:**
+- Türkçe veya karışık TR/EN içerik → **Ses kaydı + Groq Whisper (whisper-large-v3, language=tr)** birincil
+- Sadece İngilizce içerik → Meet captions yeterli olabilir
+- Asla Meet captions'ı Türkçe için yeterli GÖRME
+
+**Canlı toplantıda ses yakalama ön koşulları:**
+- `pulseaudio --check` OK olmalı (ses çıkışı yakalanabilmeli)
+- `ffmpeg` kurulu olmalı (ses dönüşümü)
+- `GROQ_API_KEY` env'de veya BWS'de olmalı (Whisper API)
+- Eksik var → Edel'e hemen bildir: "Ses kaydı mümkün değil, [sebep]. Sen kaydeder misin?"
+
+**Kayıt sonradan gelirse:** media-transcription skille ait tüm yöntemler kullanılabilir (Drive'dan, yerelden, URL'den).
 
 ## Kaynak Türleri
 
@@ -198,8 +215,158 @@ Analiz için LiteRouter deepseek-v3.2 kullanılır (`references/transkript-anali
 - max_tokens: 4096, temperature: 0.3
 - System prompt analiz prompt'u, user message transkript içeriği
 
+## Post-Transkripsiyon: Adlandırma + Özet + Wiki + NotebookLM Pipeline
+
+**Bu pipeline, transkripsiyon TAMAMLANDIKTAN sonra otomatik olarak çalıştırılır.** Eksik yapılırsa dosyalar anlamsız isimlerle kalır (örn. `transkript_apa.md`) ve içerik kaybolur.
+
+### 0. Ön Kontrol: Mevcut Rapor/Özet Var mı?
+
+Transkript dosyası okunamıyorsa (garbled/bozuk) veya çok eskiyse, `~/recordings/` dizininde adında `rapor_` geçen dosyaları kontrol et. Eğer varsa, içeriklerini oku ve doğrudan wiki sayfasına taşı — bozuk transkripti yeniden analiz etmeye çalışma.
+
+**18 Tem 2026'da kanıtlanmış:** `transkript_meeting2.md` bozuktu ama `rapor_meeting2.md` (11KB) kapsamlı bir Türkçe özet içeriyordu.
+
+### 1. Dosya Adlandırma Standardı
+
+Transkripsiyon sonrası dosyalar HEMEN anlamlı isimlendirilmelidir:
+
+```
+~/recordings/{tarih}-{konu-slug}.md
+```
+
+| Eski İsim | Yeni İsim |
+|-----------|-----------|
+| `transkript_apa.md` | `2026-07-10-apa-school-avoidance.md` |
+| `transkript_yt.md` | `2026-07-10-bodynext-kariyer-masterclass.md` |
+| `transkript_meeting2.md` | `2026-06-17-erkeklik-psikolojisi-mfmf.md` |
+
+**Konu slug kuralları:**
+- Kısa ve tanımlayıcı: 2-5 kelime
+- Tarih başa: `YYYY-MM-DD-`
+- Tire ile ayrılmış küçük harfler (lowercase kebab-case)
+- Konuşmacı/etkinlik adı varsa ekle: `2026-07-17-yeni-nesil-yasam-koclugu-aret-vartanyan.md`
+- Kaynak dizin: `~/recordings/` (transkriptlerin ana dizini)
+- **Bozuk/garbled dosyalar:** `garbled-` veya `empty-` ön eki ekle — kullanıcı hangisinin işe yaramadığını hemen görsün
+
+**Dosya dağılımı:** Transkriptler `~/recordings/` içinde düz dosyalar, alt dizinler (tarih/etkinlik bazlı) veya kök dizinde olabilir. Tümünü `~/recordings/` altında tut, taşıma sırasında yapıyı koru.
+
+### 2. Özet Çıkarma (ZORUNLU)
+
+NotebookLM'e yüklemek YETMEZ — kullanıcının her seminerde NE işlendiğini bilmesi gerekir.
+
+**Her transkripsiyon sonrası yapılması gerekenler:**
+
+```python
+# Özet workflow:
+# 1. Transkript metnini mevcut LLM'e vererek:
+#    - Ana konu (1 cümle)
+#    - 3-5 ana başlık
+#    - Önemli alıntı/veri/vaka
+#    - Pratik çıkarım
+#
+# 2. Özeti wiki formatında ~/.hermes/wiki/seminerler/ dizinine kaydet
+# 3. Transkript dosyasına referans ekle
+```
+
+**3+ transkript paralel işleme (18 Tem 2026'da kanıtlanmış):**
+
+4 transkript 6.5 dakikada paralel işlendi. Kullanılacak yöntem:
+
+```
+1. Tüm transkript dosyalarını tespit et (tarama)
+2. Her biri için bir delegate_task subagent'ı oluştur (tasks array)
+3. Subagent'a ver: dosya yolu + konu bağlamı → dosyayı oku, analiz et, wiki sayfası yaz
+4. Subagent'lar paralel çalışır, sonuçlar birleşir
+5. Output'ları kontrol et — yazılan wiki sayfalarını doğrula
+```
+
+**Subagent talimatı yapısı:**
+```python
+context = f"""
+Read {file_path} (size_bytes). The file has a single large block of text.
+Extract: 1) seminar title and speaker info, 2) main topics covered,
+3) key concepts discussed, 4) practical takeaways.
+Write wiki page to {wiki_path}
+"""
+```
+
+**Önemli:** Subagent'lar dosyaları okurken `read_file` yerine `terminal` (cat + fold/head) kullan - büyük tek satırlı bloklar `read_file`'da kesilebilir.
+
+**Özet yapısı (wiki sayfası için):**
+```markdown
+---
+tarih: YYYY-MM-DD
+konu: Seminer Başlığı
+konusmaci: İsim Soyisim
+tur: webinar / seminer / masterclass / terapi-odakli
+sure: ~XX dakika
+kaynak: transkript_dosyasi.md
+---
+
+# Konu: [Seminer Başlığı]
+
+## Ana Konu
+1-2 cümleyle seminerin özü.
+
+## İşlenen Başlıklar
+- 📌 **Başlık 1**: Kısa açıklama
+- 📌 **Başlık 2**: Kısa açıklama
+- 📌 **Başlık 3**: Kısa açıklama
+
+## Önemli Çıkarımlar
+- Çıkarım 1
+- Çıkarım 2
+
+## Pratik Uygulama
+Bu seminerden ne öğreniyoruz, nasıl kullanırız?
+
+## Orijinal Transkript
+`~/recordings/transkript_dosyasi.md`
+```
+
+### 3. Wiki → NotebookLM Bridge
+
+Wiki sayfası oluşturulduktan sonra, içerik NotebookLM Vault'a da eklenir.
+
+**Batch işleme:** Eğer aynı anda birden fazla transkript yüklenecekse, önce konuya uygun yeni bir notebook oluştur, sonra tüm wiki sayfalarını tek tek yükle. Bu, ilgili içeriklerin bir arada durmasını sağlar.
+
+```bash
+# 1. Yeni notebook oluştur
+nlm notebook create --title "Eğitim & Seminer Notları (Temmuz 2026)"
+
+# 2. Her wiki sayfasını kaynak olarak ekle
+nlm source add <NOTEBOOK_UUID> \
+  --file ~/.hermes/wiki/seminerler/2026-07-10-konu.md \
+  --title "Seminer — Konu Başlığı (YYYY-MM-DD)" \
+  --wait --wait-timeout 120
+```
+
+**Hedef notebook seçimi:**
+- Toplu seminer notları → **Yeni notebook** oluştur (Örn: "Eğitim & Seminer Notları (Temmuz 2026)")
+- AI/teknik/psikoloji → "Vanitas AI Araştırmaları" (e4944538-...)
+- APA içerikleri → "APA Bilgi" (c44469fe-...) veya "APA Monitor 2026"
+
+**Auth düşerse:** NotebookLM atlanır, wiki sayfası yine de oluşturulur. Raporlanır.
+
+### Bilinen Dosya Yapısı
+
+```
+~/recordings/                     # Ana transkript/audio dizini
+  2026-07-10-{konu}.md           # Transkript dosyaları (yeniden adlandırılmış)
+  garbled-{konu}.md              # Bozuk transkript (işe yaramaz)
+  empty-{konu}.md                # Boş/eksik transkript
+  rapor_*.md                     # Eski özet raporlar (ön kontrol)
+  10temmuz/                      # Eski tarih bazlı alt dizin
+  cocugu_degerlendirme/          # Konu bazlı alt dizin
+  kampus_zirvesi/                # Etkinlik bazlı alt dizin
+  kampus_zirvesi_2/
+  chunks/                        # ffmpeg chunk çıktıları
+  *.mp3, *.mp4, *.m4a            # Ham ses/video kayıtları
+~/.hermes/wiki/seminerler/       # Wiki seminer sayfaları (özetler)
+
+
 ## Referanslar
 - `references/transkript-analiz-promptu.md` — Transkript analizi için system prompt
+- `references/meeting-prep-checklist.md` — Canlı toplantı öncesi hazırlık kontrol listesi
 
 ## Önemli Notlar
 - **Dil seçimi kritik:** Yanlış dil modeli anlamsız çıktı üretir

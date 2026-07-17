@@ -252,3 +252,18 @@ See `references/reel-pipeline.md` for a complete working example (the Reel autom
 ## References
 
 - `references/reel-pipeline.md` — Complete working script from the inaugural interior-design Reel session
+- `references/font-troubleshooting.md` — Font descender issues and solutions (from absorbed video-reel-automation)
+- `references/pixabay-music-download.md` — Pixabay music download via yt-dlp impersonation (from absorbed video-reel-automation)
+- `references/font-download-urls.md` — Google Fonts direct download URLs (from absorbed video-reel)
+- `references/moviepy-api-notes.md` — MoviePy 2.x API differences and solutions (from absorbed video-reel)
+- `references/absorbed-video-reel-automation.md` — Full original SKILL.md of absorbed sibling
+- `references/absorbed-video-reel.md` — Full original SKILL.md of absorbed sibling
+- `scripts/reel_olustur.py` — Main Reel creation script (from absorbed video-reel-automation)
+- `scripts/olustur.sh` — Easy-use wrapper (from absorbed video-reel-automation)
+
+## Absorbed Skills
+
+| Skill | Key Content |
+|---|---|
+| `video-reel-automation` | Instagram Reel automation script; specific Pixabay download approach; font troubleshooting. Absorbed into `scripts/` and `references/`. |
+| `video-reel` | Transition effects (crossfade, slide, kenburns, zoomblur, wipe); font URL references; MoviePy v2 API notes. Absorbed into `references/`. |

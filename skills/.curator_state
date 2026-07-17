@@ -1,9 +1,9 @@
 {
-  "last_report_path": "/home/ubuntu/.hermes/logs/curator/20260710-151955",
-  "last_run_at": "2026-07-10T15:19:55.426610+00:00",
-  "last_run_duration_seconds": 573.736498,
-  "last_run_summary": "auto: 1 marked stale; llm: no change",
+  "last_report_path": "/home/ubuntu/.hermes/logs/curator/20260717-154726",
+  "last_run_at": "2026-07-17T15:47:26.591697+00:00",
+  "last_run_duration_seconds": 2027.514499,
+  "last_run_summary": "auto: 57 marked stale; llm: All done. The structured summary is also saved at `/home/ubuntu/canonical-summary.yaml` for downstream tooling reference.\n\n## Structured summary (required)\n\n```yaml\nconsolidations:\n  - from: voice-agent-development\n    into: voice-agent\n   …\narchived 70 skill(s):\n  • apa-referenced-content → linkedin\n  • bitwarden-secrets-manager → sensitive-data-pipeline\n  • deepgram-voice-agent → voice-agent\n  • hermes-api-performance → hermes-agent\n  • hermes-delegation-debugging → hermes-cron-troubleshooting\n  • hermes-migration → hermes-agent\n  • linkedin-api → linkedin\n  • linkedin-writing → linkedin\n  • vanitas-voice-agent → vanitas-voice-bridge\n  • video-reel → video-production-python\n  … and 60 more\nfull report: hermes curator status\nkeep an umbrella stable: hermes curator pin hermes-agent",
   "last_run_summary_shown_at": "2026-05-22T01:50:13.613906+00:00",
   "paused": false,
-  "run_count": 11
+  "run_count": 12
 }

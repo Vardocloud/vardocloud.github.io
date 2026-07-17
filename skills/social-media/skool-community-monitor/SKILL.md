@@ -1,7 +1,7 @@
 ---
 name: skool-community-monitor
 description: "Skool topluluklarını düzenli tarama, video/dosya içeriğini işleme (YouTube transcript, Whisper, Google Drive, NotebookLM), Vanitas gelişimi için bilgi toplama. Günlük cron job'lar ve içerik analizi workflow'u."
-version: 1.21.0
+version: 1.22.0
 metadata:
   hermes:
     tags: [skool, community, monitoring, cron, notebooklm, youtube, transcript]
@@ -580,7 +580,33 @@ Post içinde dosya bağlantısı varsa (skill dosyaları, PDF, template):
 
 YouTube linki YOKSA ve video/dosya da yoksa bu adımı atla.
 
-### 6. NotebookLM'e Kaydet
+### 6. Bulgu Değerlendirme (Değerlendirme Aşaması) — KRİTİK: Rapor ÖNCESİ
+
+İçerik çekildikten SONRA, rapor yazılmadan ÖNCE her bulguyu değerlendir. Bu aşama NotebookLM kaydından da ÖNCE gelir — sadece **🟢 Adaptable / 🔵 Try** etiketi alan bulgular NotebookLM'e gider.
+
+**Zorunlu adımlar:**
+
+1. **`bulgu-degerlendirme` skill'ini yükle:**
+   ```
+   skill_view(name='bulgu-degerlendirme')
+   ```
+
+2. **Her bulgu için Phase 1-4'ü çalıştır:**
+   - **Faz 1 — Keşif:** Nedir? Hangi problemi çözer? Kim yaptı? Aktif mi? Maliyeti?
+   - **Faz 2 — Sistem Araştırması:** session_search (daha önce konuşuldu mu?), skills audit (mevcut skill var mı?), wiki kontrolü (zaten kayıtlı mı?), cron audit (tekrarlıyor mu?).
+   - **Faz 3 — Çatışma & Uyum:** Necessity (Critical/Valuable/Nice-to-have/Unnecessary), Risk (None/Low/Medium/High), Cost (Selenium Fairness), Conflicts (skill/cron/memory/workflow çakışması var mı?).
+   - **Faz 4 — Karar:** Etiket ANCAK bu aşamadan sonra verilir.
+
+3. **Kayıt filtresi uygula (ZORUNLU):**
+   - **🟢 Adaptable / 🔵 Try + somut aksiyon** → Wiki'ye kaydet + NotebookLM'e ekle
+   - **🟡 Watch / ⚪ Skip** → HİÇBİR YERE kaydetme. Sadece raporda bahset.
+   - **NotebookLM:** Sadece uygulanan repo/yöntem gider. Teorik içerik atılmaz.
+
+4. **Sessiz kalma kuralı:** Hiçbir bulgu Adaptable/Try eşiğini geçmediyse output verme — sadece `[SILENT]` döndür.
+
+**Pitfall — Skill listesinde olmak yetmez:** `bulgu-degerlendirme` skill'i skills listesinde olsa bile OTOMATİK YÜKLENMEZ. Agent davranışını değiştiren tek şey bu adımın workflow'da açıkça belirtilmesidir. Her cron çalışmasında bu adımı uygula — atlama.
+
+### 7. NotebookLM'e Kaydet
 
 **Ön Koşul — Auth Kontrolü:**
 NotebookLM işlemlerine başlamadan ÖNCE auth durumunu kontrol et:
@@ -603,13 +629,13 @@ Detaylı auth yenileme akışı: `references/notebook-ids.md`
 - **Tech Tools Updates** — günlük tarama özeti, topluluk aktivitesi
 - **Medya Öğrenme (Reels)** — YouTube transcript'leri (varsa)
 
-### 7. Rapor (KISA + SENTEZ)
+### 8. Rapor (KISA + SENTEZ)
 
 **Rapor iki katmanlı: (a) öncelik sıralı sentez, (b) detay liste. Önce sentez, sonra liste.**
 
-**Katman 1 — Bulgu Değerlendirme (bkz: `bulgu-degerlendirme` skill)**
+**Katman 1 — Bulgu Değerlendirme Özeti (Adım 6'da yapıldı)**
 
-Değerlendirme rubric'i ve karar ağacı için **`bulgu-degerlendirme`** skill'ini yükle. Bu skill şu kararları verir:
+Değerlendirme rubric'i ve karar ağacı Adım 6'da (Bulgu Değerlendirme) uygulandı. Raporda sadece sonuç etiketlerini (adaptable/try/watch/skip) ve gerekçelerini listele, değerlendirme sürecini tekrar anlatma.
 - **🟢 Uyarlanabilir** — Doğrudan entegre edilebilir, düşük risk, yüksek kazanç
 - **🔵 Dene** — Test etmeye değer, geri dönüşü kolay, önce PoC yap
 - **🟡 İzle** — Potansiyel var ama şimdi değil, bilgi topla bekle

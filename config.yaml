@@ -245,6 +245,12 @@ custom_providers:
     qwen-vision: qwen-vision
     qwen-vision-pro: qwen-vision-pro
   name: Pollinations
+- api_key_env: NVIDIA_API_KEY
+  api_mode: chat_completions
+  base_url: https://integrate.api.nvidia.com/v1
+  models:
+    glm-5.2: z-ai/glm-5.2
+  name: NVIDIA
 - api_key_env: MISTRAL_API_KEY
   base_url: https://api.mistral.ai/v1
   models:
@@ -491,9 +497,9 @@ memory:
   user_profile_enabled: true
   write_approval: false
 model:
-  default: glm-5.2
+  default: deepseek-v4-flash
   max_tokens: 16384
-  provider: NVIDIA
+  provider: opencode-go
 model_aliases:
   bedava:
     model: deepseek-v4-flash-free
@@ -507,66 +513,15 @@ model_aliases:
   derin:
     model: deepseek-v4-flash-free
     provider: opencode-zen
+  glm-5.2:
+    model: z-ai/glm-5.2
+    provider: NVIDIA
   groq:
     model: groq-llama-4-scout
     provider: Groq
   groq-hizli:
     model: groq-instant
     provider: Groq
-  nvidia-free-glm52:
-    model: z-ai/glm-5.2
-    provider: NVIDIA
-  nvidia-free-llama33:
-    model: meta/llama-3.3-70b-instruct
-    provider: NVIDIA
-  nvidia-free-nemotron-ultra:
-    model: nvidia/nemotron-3-ultra-550b-a55b
-    provider: NVIDIA
-  nvidia-free-nemotron-super:
-    model: nvidia/nemotron-3-super-120b-a12b
-    provider: NVIDIA
-  nvidia-free-gemma4:
-    model: google/gemma-4-31b-it
-    provider: NVIDIA
-  nvidia-free-mistral-small:
-    model: mistralai/mistral-small-4-119b-2603
-    provider: NVIDIA
-  nvidia-free-mistral-medium:
-    model: mistralai/mistral-medium-3.5-128b
-    provider: NVIDIA
-  nvidia-free-mistral-large:
-    model: mistralai/mistral-large-3-675b-instruct-2512
-    provider: NVIDIA
-  nvidia-free-qwen35:
-    model: qwen/qwen3.5-122b-a10b
-    provider: NVIDIA
-  nvidia-free-step37:
-    model: stepfun-ai/step-3.7-flash
-    provider: NVIDIA
-  nvidia-free-gemma312:
-    model: google/gemma-3-12b-it
-    provider: NVIDIA
-  nvidia-free-nemotron70:
-    model: nvidia/llama-3.1-nemotron-70b-instruct
-    provider: NVIDIA
-  nvidia-free-m3:
-    model: minimaxai/minimax-m3
-    provider: NVIDIA
-  nvidia-free-m27:
-    model: minimaxai/minimax-m2.7
-    provider: NVIDIA
-  nvidia-free-step35:
-    model: stepfun-ai/step-3.5-flash
-    provider: NVIDIA
-  nvidia-free-gemma34:
-    model: google/gemma-3-4b-it
-    provider: NVIDIA
-  nvidia-free-deepseek-flash:
-    model: deepseek-ai/deepseek-v4-flash
-    provider: NVIDIA
-  nvidia-free-deepseek-pro:
-    model: deepseek-ai/deepseek-v4-pro
-    provider: NVIDIA
   qwen:
     model: qwen3.7-max
     provider: opencode-go
@@ -576,9 +531,6 @@ model_aliases:
   varsayilan:
     model: deepseek-v4-flash
     provider: opencode-go
-  glm-5.2:
-    model: z-ai/glm-5.2
-    provider: NVIDIA
 model_catalog:
   enabled: false
   providers: {}
@@ -755,7 +707,7 @@ slack:
   require_mention: true
 streaming:
   buffer_threshold: 24
-  cursor: ' ▉'
+  cursor: " \u2589"
   edit_interval: 0.8
   enabled: false
   fresh_final_after_seconds: 60.0

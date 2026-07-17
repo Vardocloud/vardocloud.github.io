@@ -1026,3 +1026,13 @@ Types: `fix:`, `feat:`, `refactor:`, `docs:`, `chore:`
 - Use `get_hermes_home()` from `hermes_constants` for all paths (profile-safe)
 - Config values go in `config.yaml`, secrets go in `.env`
 - New tools need a `check_fn` so they only appear when requirements are met
+
+## Absorbed Skills
+
+The following hermes-* skills were consolidated into this umbrella as reference files:
+
+| Absorbed Skill | Reference File |
+|---|---|
+| `hermes-api-performance` | `references/hermes-api-performance.md` — provider latency benchmarks, prompt caching, provider comparison |
+| `hermes-migration` | `references/hermes-migration-guide.md` — full Hermes Agent migration between machines |
+| `hermes-agent-inheritance` | Archived — purely documentary (Superpower→Hermes inheritance), no procedural content |

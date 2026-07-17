@@ -459,7 +459,29 @@ timeout 300 /home/ubuntu/.local/bin/proxychains4 -q -f /home/ubuntu/.local/etc/p
 - Always verify skill count before clicking Next.
 - If crash happens, re-add all skills.
 
-## Camoufox Binary Installation & Troubleshooting
+### 🔴 PITFALL: Camoufox Binary Goes Missing (18 Tem 2026)
+
+**Sorun:** `npm install camoufox` paketi yüklü olsa bile `~/.cache/camoufox/camoufox-bin` binary'si kaybolabilir (örneğin container restart, cache temizliği, güncelleme).
+**Belirti:** Script hata vermeden exit code 1 ile çıkar. Direkt çalıştırınca Camoufox ile ilgili hata görülür.
+**Çözüm:** 
+```bash
+# npm paketi varsa binary fetch + chmod
+npx camoufox fetch
+chmod +x ~/.cache/camoufox/camoufox-bin
+```
+**Önleme:** `scripts/upwork_refresh.sh` wrapper'ına binary kontrolü eklenebilir. Şu an manuel müdahale gerekiyor.
+
+### WARP Container Kapalıyken Çalıştırma (18 Tem 2026)
+
+WARP Docker container'ı (172.19.0.2:1080) kapalı olsa bile **direkt Camoufox bağlantısı çalışır** — Camoufox'un fingerprint spoofing'i Cloudflare'i bypass eder. WSL/Docker Desktop ortamlarında residential IP üzerinden çıkıldığı için bu beklenen davranıştır. **Proxychains fallback yolu sadece datacenter IP'lerinde (Oracle Cloud) gerekir.**
+
+Script durumu kontrolü:
+```bash
+# WARP container çalışıyor mu?
+docker ps --format "{{.Names}}" 2>/dev/null | grep -q warp && echo "WARP: OK" || echo "WARP: DOWN"
+```
+
+### Camoufox Binary Installation & Troubleshooting
 
 ### 🔴 Pitfall: `npx camoufox fetch` GitHub API Rate Limit (21 Haz 2026)
 

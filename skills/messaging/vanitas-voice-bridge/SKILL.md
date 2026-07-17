@@ -1,9 +1,9 @@
 ---
 name: vanitas-voice-bridge
-version: 1.32.0
+version: 1.36.0
 title: Vanitas Voice Bridge — Multi-Backend Voice Agent
-description: 'v16 (ACTIVE). AudioWorklet birincil ✅. Ses Grace. VAD Turkish tuning (600ms, 0.4th). Prompt: rol karmaşası fix ("Sen Vanitas" → "Senin adın Vanitas"). "Canım" çok nadiren. RECORD_SESSION debugging. Tünel: cloudflared quick tunnel container içi (cron keeper v2).'
-tags: [voice, soniox, groq, stt, tts, cloudflared, edge-tts, soniox-client, vad, realtime-stt, websocket, heartbeat, tunnel, tailscale, v16, watchdog, keeper]
+description: 'v16 (ACTIVE). LLM=llama-3.3-70b-versatile (en iyi Türkçe, ~150ms Groq LPU). VAD-based LLM tetikleyici KALDIRILDI (kesilme sorunu). STT max_endpoint_delay_ms=1500 (Türkçe). Test Observer (otomatik session kaydı + analiz + cron raporu). AudioWorklet ayrı .js dosyası (iOS Safari Blob URL fix). getUserMedia+AudioContext resume tıklama anında. Keeper timeout 45sn. Dual-prompt sync.'
+tags: [voice, soniox, groq, stt, tts, cloudflared, edge-tts, soniox-client, vad, realtime-stt, websocket, heartbeat, tunnel, tailscale, v16, watchdog, keeper, test-observer]
 triggers:
   - tailscale
   - funnel
@@ -31,14 +31,19 @@ triggers:
   - ses yakalama
   - PCM
   - full-duplex.html
+  - test observer
+  - izleyici
+  - test analizi
+  - session kaydı
+  - kalite raporu
 ---
 
 # Vanitas Voice Bridge
 
-## v16 is CURRENT (12 Tem 2026) — Soniox Full-Duplex
+## v16 is CURRENT (17 Tem 2026) — Soniox Full-Duplex
 
-> **Pipeline:** PCM (16kHz mono) → Silero VAD (barge-in) → Soniox stt-rt-v5 (streaming STT) → Groq llama-3.3-70b (LLM) → Soniox tts-rt-v1 (streaming TTS, voice=Grace) → 24kHz PCM → hoparlör
-> **13 Tem Güncelleme:** AudioWorklet birincil ses yakalama (ScriptProcessor fallback) ✅. Ses Grace'e geçti (Maya→Grace). "Canım" prompt iyileştirmesi (çok nadiren kullan).
+> **Pipeline:** PCM (16kHz mono) → Silero VAD (barge-in) → Soniox stt-rt-v5 (streaming STT) → Groq **llama-3.3-70b-versatile** (LLM, ~150ms inference) → Soniox tts-rt-v1 (streaming TTS, voice=Grace) → 24kHz PCM → hoparlör
+> **17 Tem Güncelleme:** LLM modeli yeniden **llama-3.3-70b-versatile** seçildi — Türkçe kalitesi en iyisi, Groq LPU'da sadece ~150ms inference. **Kesilme sorunu çözüldü:** VAD-based LLM tetikleyici kaldırıldı, Soniox endpoint detection birincil. STT max_endpoint_delay_ms=1500 (Türkçe doğal duraklamalar). Dual-prompt sync (server.mjs + tools.py) tamamlandı. Keeper timeout 30→45sn.
 > **Referanslar:** `references/soniox-voice-bot-demo.md` (mimari), `references/nodejs-integration.md` (Node.js proxy), `references/voice-quality-diagnostics-11-tem-2026.md` (teşhis)
 > **⚠️ v10.10 Dual-Path HENÜZ entegre DEĞİL:** Şu an sadece tek patika (Groq direkt). Edel kararı: önce temel mekanizma tamamlanacak.
 
@@ -51,7 +56,7 @@ Client (Browser)
        └─ Proxy → Python (port 8765)
             ├─ Silero VAD (barge-in — konuşurken kesme)
             ├─ Soniox stt-rt-v5 (gerçek zamanlı transkripsiyon)
-            ├─ Groq llama-3.3-70b (Vanitas cevap üretimi)
+            ├─ Groq llama-3.3-70b-versatile (Vanitas cevap üretimi)
             └─ Soniox tts-rt-v1 (streaming ses çıkışı)
 ```
 
@@ -59,7 +64,7 @@ Client (Browser)
 - **Full-duplex:** Aynı anda konuşma + dinleme
 - **Barge-in:** VAD konuşma başlangıcını algılar → LLM üretimini iptal eder → yeni transkripsiyon başlar
 - **Düşük gecikme:** Streaming STT+TTS sayesinde half-duplex'e göre ~2s avantaj
-- **Groq LLM:** `llama-3.3-70b-versatile` — hızlı inference (~250ms TTFB)
+- **Groq LLM:** `llama-3.3-70b-versatile` — en iyi Türkçe kalitesi, ~150ms inference (Groq LPU)
 
 ## Frontend
 
@@ -72,14 +77,24 @@ Client (Browser)
 
 ### Ses Yakalama: AudioWorklet (birincil) + ScriptProcessor (fallback)
 
-`full-duplex.html` 13 Tem 2026 itibarıyla **AudioWorklet** kullanır:
-1. **AudioWorkletProcessor** (`PCMCaptureProcessor`) — Blob URL ile inline tanımlandı, ayrı audio thread'de çalışır
+`full-duplex.html` 17 Tem 2026 itibarıyla **AudioWorklet** kullanır:
+1. **AudioWorkletProcessor** (`PCMCaptureProcessor`) — `/audioworklet-processor.js` ayrı dosyasından yüklenir (iOS Safari Blob URL kısıtlaması nedeniyle)
 2. Sesi **Float32'den PCM s16le'ye** çevirir + **downsample** yapar (native rate → 16kHz)
 3. **Transferable** `postMessage` ile sıfır kopyalı gönderim (zero-copy)
 4. **AudioWorklet başarısız olursa** (çok eski tarayıcı) → ScriptProcessor fallback
 5. Her iki yol da aynı `handlePcmData()` fonksiyonuna gider — seviye göstergesi + byte sayacı ortak
 6. Echo önleme: `GainNode(0)` ile sessiz çıkış her iki yolda da uygulanır
 7. Hangi metodun aktif olduğu `captureBadge` ile gösterilir
+
+**🚨 MOBİL KRİTİK — getUserMedia + AudioContext resume tıklama anında yapılmalı:**
+iOS Safari (ve bazı Android tarayıcılar) `getUserMedia()` ve `AudioContext.resume()` çağrılarının kullanıcı tıklaması (user gesture) İÇİNDE yapılmasını zorunlu kılar. `ws.onopen` gibi async callback'lerde bu çağrılar sessizce başarısız olur, hiçbir hata mesajı gösterilmez.
+
+**YANLIŞ (çalışmaz):** `startSession()` → `connectWs()` → `ws.onopen` içinde `getUserMedia()` + `audioCtx.resume()` → ❌ gesture expired
+**DOĞRU (çalışır):** `startSession()` içinde `getUserMedia()` + `audioCtx.resume()` → ✅ sonra `connectWs()` aç
+
+**Doğrulama:** Mobilde çalışıyorsa seviye çubuğu (yeşil bar) konuşunca hareket eder. CaptureBadge'de "⚡ AudioWorklet" veya "🔄 ScriptProcessor" yazar. Hiçbiri yoksa → her iki yöntem de başarısız.
+
+**iOS Safari AudioWorklet Blob URL sorunu (17 Tem):** iOS Safari `addModule()`'a Blob URL'ye izin vermez. Hata sessizce yutulur → ScriptProcessor fallback. iOS 17+ ScriptProcessor kaldırıldı → hiç ses gitmez. Fix: `/audioworklet-processor.js` ayrı dosyası ile yükle.
 
 Referans: `references/audioworklet-migration-13-tem-2026.md`
 
@@ -267,31 +282,62 @@ SONIOX_API_KEY=<shared-key>
 SONIOX_API_KEY_TTS=<same-or-different-key>  # AYRI SET EDİLMELİ — boş olursa TTS bağlanamaz
 OPENAI_API_KEY=<groq-api-key>               # isim karışıklığı: Groq key
 OPENAI_BASE_URL=https://api.groq.com/openai/v1
-OPENAI_MODEL=llama-3.3-70b-versatile
+OPENAI_MODEL=llama-3.3-70b-versatile         # En iyi Türkçe kalitesi, ~150ms inference
 WEBSOCKET_HOST=127.0.0.1                    # IPv6 sorunlarını önlemek için
 WEBSOCKET_PORT=8765
 SCRIPTS_PATH=~/.hermes/scripts
 
-## Session Kaydı (Debugging) — RECORD_SESSION
+## Test Observer — Otomatik Session Kaydı ve Analiz (17 Tem 2026)
 
-**Amaç:** Edel'in test konuşmalarını kaydedip sonradan incelemek. Ses kesilmesi, gecikme, "canım" fazlalığı gibi sorunları tespit etmek için kullanılır.
+**Her session OTOMATİK kaydedilir** — hiçbir toggle, env variable veya manuel adım gerekmez. `session.py`'de `_RECORD_ENABLED = True` sabittir.
 
-**Aktifleştirme:** `RECORD_SESSION=true` ortam değişkeni ile Python server başlatılır:
+**Nereye kaydedilir:** `/tmp/vanitas-test-logs/<session_id>/`
+
+| Dosya | İçerik |
+|-------|--------|
+| `mic.wav` | Kullanıcı sesi (16kHz mono PCM→WAV) |
+| `tts.wav` | Vanitas TTS çıktısı (24kHz mono) |
+| `transcript.txt` | Zaman damgalı konuşma dökümü |
+| `session.json` | Yapılandırılmış kalite metadatasi |
+
+**session.json** her session sonunda otomatik oluşturulur. İçeriği:
+- `status`: success/partial/degraded/failed/silent
+- `llm_metrics`: first_token_ms, total_ms
+- `vad_events`: speech_starts, speech_ends sayıları
+- `connection_quality`: excellent/good/fair/poor/no_response
+- `errors[]`: zaman damgalı hata listesi
+- `transcript_sentences[]`: kim ne demiş, kaçıncı saniyede
+
+**Analiz Scripti:** 
 ```bash
-cd ~/vanitas-web && RECORD_SESSION=true node server.mjs
+cd ~/vanitas-web/soniox-server
+python3 voice_test_analyzer.py              # son 24 saat raporu
+python3 voice_test_analyzer.py --session <id>  # tek session derin analiz
+python3 voice_test_analyzer.py --watch      # sürekli izleme
 ```
-Node.js `spawn` ile `...process.env`'i Python'a geçirdiği için bu yeterlidir.
 
-**Kaydedilenler:**
-- `mic.pcm` / `mic.wav` — Mikrofondan gelen ham PCM (16kHz mono)
-- `tts.pcm` / `tts.wav` — Vanitas TTS çıktısı (24kHz mono)
-- `transcript.txt` — Zaman damgalı transkript + LLM yanıtları + olaylar
+**Cron Job:** `Voice Test Observer Raporu` (job_id `74f68b61a860`) her 4 saatte test özetini Edel'e gönderir.
 
-**Dosya yolu:** `/tmp/vanitas-recordings/<session-uuid>/`
+**Otomatik anomali tespiti:**
+- 🔇 Hiç transkripsiyon yok → mikrofon/STT sorunu (AudioWorklet, getUserMedia)
+- 🔄 VAD sürekli konuşuyor → echo loop (GainNode eksik)
+- 🧠 STT var ama LLM yok → LLM timeout/API hatası
+- 🔊 LLM var ama TTS yok → TTS bağlantı sorunu
+- 🐢 LLM >5sn → model çok yavaş
 
-**Kapatma:** RECORD_SESSION kaldırılır veya `false` yapılırsa recorder sıfır overhead ile çalışmaz.
+**Bakım:** Son 50 session tutulur, eskileri otomatik silinir.
 
-**Önemli:** Debug aracıdır. Test bittiğinde kapatılmalıdır.
+Referans: `references/test-observer-system-17-tem-2026.md`
+
+## STT Processor — Soniox Endpoint Detection (17 Tem 2026)
+
+**max_endpoint_delay_ms=1500** parametresi eklendi. Soniox `stt-rt-preview` modeli varsayılan endpoint delay'i (~1000ms) Türkçe doğal duraklamalar için kısa kalıyor. Türkçe konuşmada 500-1000ms arası duraklamalar normaldir (kelime arası nefes, düşünme durağı). 1500ms bu duraklamaları tolere ederken gereksiz gecikme eklemez.
+
+**Nerede:**
+- `processors/stt.py` — constructor parametresi + config mesajına eklenir
+- `main.py` line 111 — `STTProcessor(..., max_endpoint_delay_ms=1500)` olarak geçilir
+
+**İlgili:** LLM tetikleyici artık sadece `TranscriptionEndpointMessage` üzerinden çalışır (VAD tabanlı tetikleme kaldırıldı). Bu iki değişiklik (endpoint delay + VAD tetikleyici kaldırma) birlikte konuşma ortasında kesilme sorununu çözer.
 
 ## Voice Kalite Sorunu Teşhisi
 
@@ -337,6 +383,8 @@ VADProcessor(
 
 **Ek not:** AudioWorklet her process() çağrısında çok küçük chunk'lar gönderir (128 örnek = 2.67ms). Bu da sunucuda binden fazla küçük WebSocket mesajına yol açar. İdeal çözüm: worklet içinde PCM buffer'ı biriktirip 50-100ms'de bir göndermek. Ancak VAD buffer'ı zaten 512 örnekte bir işlediği için şu an acil sorun değil.
 
+**✅ DOĞRULANDI (17 Tem 2026):** VAD parametreleri (threshold=0.4, min_silence_duration_ms=600) **main.py'de uygulanmış durumda.** Başka bir yerde VADProcessor örneği oluşturulursa parametreleri manuel geçmeyi unutma.
+
 ### 1. Log ve Port Kontrolü
 
 ```bash
@@ -351,7 +399,7 @@ ps aux | grep "soniox-server/main.py" | grep -v grep
 tail -30 /home/ubuntu/vanitas-server-output.log
 ```
 
-### 2. EADDRINUSE — Keeper Restart Döngüsü
+### 2. EADDRINUSE / Keeper Timeout — Keeper Restart Döngüsü
 
 Log'da aşağıdaki pattern varsa sunucu sürekli restart döngüsünde:
 ```
@@ -371,13 +419,15 @@ cd /home/ubuntu/vanitas-web && node server.mjs >> /home/ubuntu/vanitas-server-ou
 # 15-20sn bekle, her iki port da gelmeli
 ```
 
+**✅ Keeper Timeout (17 Tem 2026 — FIXED):** Keeper script timeout'u 30sn → **45sn** yükseltildi. Her iki kopya (proje + cron) güncellendi. VAD warmup soğuk başlangıçta 15-30sn sürebilir — toplamda Node.js (5sn) + Python (3sn) + VAD (30sn) = 38sn, 45sn yeterli.
+
 ### 3. LLM Gecikmesi Teşhisi
 
 | Durum | Olası Sebep | Çözüm |
 |-------|------------|-------|
 | Genel yavaşlık | `tools=[]` + `tool_choice="auto"` | Fix deploy edildi (bkz: ilgili pitfall) |
 | İlk token geç | VAD model warmup / cold start | 2. konuşma hızlanır. Cache'de model varsa ~3sn |
-| Türkçe kalitesiz | `llama-3.3-70b-versatile` sınırlı | `llama-4-scout-17b` veya `llama-3.1-8b-instant` dene |
+| Türkçe kalitesiz | Yanlış model seçimi (8B çok küçük) | `llama-3.3-70b-versatile` kullan (en iyi Türkçe). Referans: `references/groq-model-benchmarks-17-tem-2026.md` |
 | Cevaplar bağlamsız | Sistem prompt çok minimal | `tools.py`'de prompt'u genişlet. Referans: `references/voice-system-prompt-11-tem-2026.md` |
 
 ### 4. tools=[] Fix Durumu (11 Tem 2026 — DEPLOY EDİLDİ)
@@ -415,6 +465,10 @@ Kullanıcı sorarsa: "Sistem prompt girmeye neden ihtiyacımız var? Hermes API'
 
 Cevap: Voice agent low-latency için **Groq'a direkt gider** — Hermes üzerinden gitseydi tüm skill'ler, memory, wiki yüklenirdi → 4-6 saniye gecikme. Sesli görüşmede 1sn bile kötü hissettirir. Bu yüzden Groq hızlı yol, elle yazılmış sistem prompt'u ile kullanılır. Arzu edilirse hybrid yapılabilir (acil bilgi için Hermes API'sine ayrıca danışma).
 
+### Excessive GET / Requests — Kaynak Sızıntısı (17 Tem 2026 — GEÇMİŞ LOG)
+
+**Belirti:** Log'da dakikada 5+ `GET /` satırı. Server gereksiz yere aynı sayfayı binlerce kez servis eder. **Teşhis edildi:** Temmuz başı log'larında 70+ istek görülmüş, şu an aktif flood yok. Muhtemelen cloudflared/tailscale health check'leri veya eski bir browser sekmesi.
+
 ## Pitfalls
 
 ### Python Server
@@ -427,7 +481,7 @@ Cevap: Voice agent low-latency için **Groq'a direkt gider** — Hermes üzerind
 
 - **STT `_receive_task_handler` sessiz çökme (KRİTİK — 12 Tem 2026 FIX):** `stt.py` `_receive_task_handler` içinde `content["tokens"]` direkt key access kullanır. Soniox bazen `tokens` içermeyen mesajlar gönderebilir (sadece `final_audio_proc_ms` gibi timing bilgisi). Bu durumda `KeyError` alır ve **catch-all exception handler olmadığı için arka plan task'i SESSİZCE ölür.** Belirti: VAD konuşmayı algılar ama hiç transkripsiyon gelmez, LLM hiç tetiklenmez. **Fix:** `content.get("tokens")` kullan + `except Exception as e:` catch-all ekle + hata durumunda `ErrorMessage` gönder. Ayrıca Soniox'tan gelen mesajların `tokens` listesi boş olabilir (`[]`) — bu normaldir, sessizlik için boş token döner. `if tokens:` kontrolü ile boş listeyi atla.
 
-- **LLM sadece Soniox endpoint'inde tetiklenir (KRİTİK — 12 Tem 2026 FIX):** `llm.py` `process()` sadece `TranscriptionEndpointMessage` geldiğinde `_generate_llm_response()` çağırır. Ama Soniox endpoint detection güvenilmez olabilir (gürültü, kısa konuşma). Sonuç: VAD konuşma bitişini algılasa bile LLM hiç çalışmaz. **Fix:** `UserSpeechEndMessage` handler ekle — VAD konuşma bitti dediğinde, eğer STT'den transkripsiyon metni gelmişse (`has_user_text` kontrolü), LLM'i tetikle. Bu çift tetikleyici (Soniox endpoint VEYA VAD end) sağlamlık sağlar.
+- **VAD-based LLM tetikleyici (17 Tem 2026 — DEĞİŞTİ):** `llm.py` `process()`'te `TranscriptionEndpointMessage` geldiğinde `_generate_llm_response()` çağırır — bu BİRİNCİL yoldur. VAD `UserSpeechEndMessage` handler'ı LLM'i tetiklemez (sadece log yazar). **Sebep:** VAD tabanlı tetikleme Türkçe doğal duraklamalarda (500-1000ms) LLM'i erken başlatıyor, kullanıcı cümle ortasında kesiliyordu. Soniox'un kendi endpoint detection'ı daha güvenilirdir. Barge-in (konuşma sırasında LLM iptali) hala VAD `UserSpeechStartMessage` üzerinden çalışır. **Test:** Bu değişiklikle kullanıcı cümlesini rahatça tamamlayabilmeli.
 
 - **Node.js API key injection (12 Tem 2026 FIX):** Python `.env` dosyasındaki API key'ler bayatlayabilir veya placeholder (`***`) olabilir. Node.js Bitwarden'dan güncel key'leri çekip `spawn({env: {...}})` ile Python'a geçirmeli. `startSonioxPythonServer()` fonksiyonu `async` yapılmalı, `getGroqKey()` ve `getSonioxKey()` await edilmeli. `.env`'deki `OPENAI_API_KEY` placeholder'ı Bitwarden'dan gelen gerçek key ile override edilir (dotenv `override=False` default). Ayrıca `SONIOX_API_KEY_TTS` çift tanımlanmasına dikkat — ikinci boş tanım birinciyi ezer.
 
@@ -520,9 +574,13 @@ Bu hem AudioWorkletNode'un hem de ScriptProcessorNode'un çalışmasını sağla
 - **HTTPS zorunluluğu (mobil):** Tarayıcılar `getUserMedia` (mikrofon) için HTTPS ister. Tailscale HTTP IP (`http://100.x.x.x:3005`) mobilde çalışmaz. Tailscale Funnel URL'si (`https://*.ts.net`) HTTPS sağlar. Localhost'ta HTTP çalışır ama telefonda kesinlikle HTTPS gerekli.
 - **Microphone stuck muted after TTS — `isSpeaking` flag leak (12 Tem 2026 FIX):** `playNextChunk()` fonksiyonu playback queue boşaldığında `isPlaying = false` yapıyor ama `isSpeaking`'i resetlemiyor. Eğer `onaudioprocess`'te `if (isSpeaking) return;` varsa (echo önleme), TTS bittiğinde mikrofon sonsuza kadar susar. Fix: `playNextChunk()` içinde queue boşken `isSpeaking = false; setStatus('listening', 'Dinliyorum...');` ekle. Aksi halde kullanıcı konuşur, transkripsiyon alınmaz, hiçbir tepki olmaz.\n- **Mobile browser caching (12 Tem 2026 FIX):** Safari/iOS `Cache-Control: no-cache` header'ını göz ardı edebilir. Fix: `full-duplex.html`'e meta tag ekle: `<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">` + `Pragma` + `Expires`. Ayrıca kullanıcıya \"sayfayı kapatıp gizli modda yeniden aç\" de. Cache yüzünden eski JS (hatalı voice kodu, eksik AudioContext resume, echo loop) yüklenmeye devam edebilir.\n- **Sessiz mikrofon hatası (11 Tem 2026 FIX UYGULANDI):** `startMicCapture()` hata alırsa orijinal kodda `catch(() => stopSession())` ile sessizce kapanıyordu — kullanıcı ne olduğunu görmüyordu. Fix: `catch((err) => { showError('Mikrofon hatası: ' + err.message); setStatus('error', ...); stopSession(); })` → artık Türkçe hata mesajı gösterir. Bu `full-duplex.html` line 356'da uygulandı.
 
-### Full-Duplex Client (full-duplex.html) Pitfalls (12 Tem 2026)
+### Full-Duplex Client (full-duplex.html) Pitfalls (17 Tem 2026)
 
-- **Konuşma ortasında kesilme (13 Tem 2026 — AÇIK SORUN):** Kullanıcı cümlesini bitirmeden Vanitas susuyor veya "anladım" deyip cevap üretiyor. Muhtemel sebepler: (1) Soniox endpoint detection (`max_endpoint_delay_ms=1000`) çok agresif — 1sn sessizlikte cümleyi bitmiş sayıyor. (2) Silero VAD threshold konuşma bitişini erken algılıyor. (3) Flush timeout (`delayed_flush(2.5)`) çok kısa. **Geçici çözüm:** Daha uzun endpoint delay veya daha yüksek VAD threshold. **Kesin çözüm:** RECORD_SESSION=true ile kayıt al, transkriptte hangi noktada kesildiğini tespit et, ona göre parametre ayarla.
+- **🚨 MOBİL SESSİZ MİKROFON — En sık sebep (17 Tem 2026):** `getUserMedia()` ve `AudioContext.resume()` kullanıcı tıklaması dışında çağrılırsa iOS/Android sessizce reddeder. **Fix:** Bu çağrıları `startSession()` (tıklama handler'ı) içinde yap, WebSocket bağlantısını SONRA aç. Detay: Ses Yakalama → 🚨 MOBİL KRİTİK bölümü.
+- **iOS AudioWorklet Blob URL:** iOS Safari `addModule(blobUrl)`'e izin vermez. `/audioworklet-processor.js` ayrı dosyasını kullan. iOS 17+'da ScriptProcessor da kalktığı için bu olmadan hiçbir ses gitmez.
+- **Sessiz mikrofon log teşhisi:** Log'da `User speech start detected` tek sefer görünüp `UserSpeechEndMessage` hiç gelmiyorsa → ses yakalama çalışmıyor (mikrofondan hiç PCM gitmiyor). `llm_first_token_ms` veya `llm_total_ms` hiç görünmüyorsa → LLM hiç tetiklenmemiş.
+
+- **Konuşma ortasında kesilme (17 Tem 2026 — ÇÖZÜLDÜ):** Sorunun kök nedeni VAD-based LLM tetikleyiciydi — VAD doğal Türkçe duraklamalarında (500-1000ms) `UserSpeechEndMessage` gönderiyor, LLM erken tetikleniyordu. **Çözüm:** VAD `UserSpeechEndMessage` handler'ından LLM tetikleme KALDIRILDI. Artık sadece Soniox `TranscriptionEndpointMessage` LLM'i başlatıyor. Ek olarak Soniox endpoint detection 1500ms'e yükseltildi. Barge-in hala VAD üzerinden çalışır (konuşma başlayınca LLM iptal).
 
 - **AudioWorklet ✅ birincil yakalama (13 Tem 2026 — ÇÖZÜLDÜ):** Artık birincil ses yakalama yöntemi. `audioCtx.audioWorklet.addModule(blobUrl)` ile inline Blob URL'den yüklenir. Ayrı thread'de çalıştığı için ana thread'i tıkamaz. iOS Safari 14.5+ destekler. Hata alınırsa ScriptProcessor fallback'i devreye girer. `captureBadge` hangi metodun kullanıldığını gösterir. Eski "ScriptProcessor mobilde güvenilmez" sorunu böylece çözülmüştür.
 
@@ -551,24 +609,27 @@ Bu hem AudioWorkletNode'un hem de ScriptProcessorNode'un çalışmasını sağla
 - **Full-duplex vs half-duplex teşhis stratejisi (12 Tem 2026):** Full-duplex çalışmıyorsa önce half-duplex'i test et (`/index.html`). Half-duplex çalışıyorsa sorun full-duplex client kodundadır (WebSocket, PCM, AudioContext), altyapıda DEĞİLDİR (Groq API, Soniox, ağ). Bu teşhis akışı saatler kazandırır.
 
 - **Sunucu/istemci izolasyon testi (12 Tem 2026 — EN GÜVENİLİR TEŞHİS):** Full-duplex "hiç cevap yok" durumunda sorunun sunucuda mı istemcide mi olduğunu KESİN olarak belirlemek için: (1) `edge-tts` ile Türkçe bir WAV oluştur, (2) `ffmpeg` ile 16kHz mono PCM s16le'ye çevir, (3) Python script ile direkt `ws://127.0.0.1:8765` bağlanıp PCM dosyasını chunk'lar halinde gönder, (4) transkripsiyon + LLM cevabı + TTS sesi alınıyorsa → **sunucu MÜKEMMEL çalışıyor, sorun %100 frontend ses yakalamada.** Bu test olmadan saatlerce yanlış yerde debugging yapılır. Test script örneği: `references/server-side-isolation-test.py`.
-- **Konuşma hafızası yok:** Her WebSocket session'ı sıfırdan başlar. LLMProcessor `self._messages` listesi sadece o session içinde geçerlidir. Session sona erince kaybolur. Kullanıcı "bağlamdan kopuk" şikayeti yaparsa açıkla: hafıza henüz entegre değil.
-- **LLM model seçimi (sesli görüşme için):** Groq modelleri arasında seçim yaparken hız + Türkçe kalitesi dengesi:
-  | Model | Hız | Türkçe | Not |
-  |-------|-----|--------|-----|
-  | `llama-3.3-70b-versatile` (mevcut) | 🟡 orta | 🟢 iyi | Dengeli ama yavaş kalabilir |
-  | `llama-4-scout-17b-16e-instruct` | 🟢 hızlı | 🟡 orta | Daha yeni, denenmedi |
-  | `llama-3.1-8b-instant` | 🟢 çok hızlı | 🟡 orta | En hızlı seçenek |
-  Kullanıcı "TTS geç cevap veriyor" derse → LLM latency büyük ihtimal. Groq'un 250ms TTFB'si ile soniox TTS'in toplamı ~1-1.5s olmalı. Daha yavaşsa `tools=[]` + `tool_choice="auto"` kombinasyonunu kontrol et (yukarıdaki pitfall).
+- **Konuşma hafızası — session içi ✅, cross-session ❌:** Her WebSocket session'ı kendi `self._messages` listesini tutar. Aynı session içinde LLM önceki konuşmaları hatırlar (3-5 mesaj döngüsü). Session sona erince liste kaybolur. Kullanıcı "bağlamdan kopuk" derse: cross-session hafıza henüz entegre değil.
+- **LLM model seçimi (sesli görüşme için):** Groq modelleri arasında seçim yaparken hız + Türkçe kalitesi dengesi. **17 Tem 2026 kararı:** Edel'in talebi üzerine kapsamlı benchmark yapıldı (`references/groq-model-benchmarks-17-tem-2026.md`). Sonuç: `llama-3.3-70b-versatile` Türkçe kalitesinde açık ara en iyisi ve inference süresi (~150ms) sesli görüşme için fazlasıyla yeterli. `llama-3.1-8b-instant` daha hızlı (51ms) ama Türkçe kalitesi ve Vanitas kişiliğini taşıma kapasitesi düşük. 8B sesli görüşme için "parametresi düşük" kalıyor. Qwen3 serisi ise `` etiketi ile çalıştığı için kullanılamaz.
+  | Model | Inference | Queue | Toplam | Türkçe | Karar |
+  |-------|-----------|-------|--------|--------|-------|
+  | `llama-3.3-70b-versatile` | 145ms | 52ms | **197ms** | 🟢 MÜKEMMEL | ✅ **SEÇİLDİ** |
+  | `llama-3.1-8b-instant` | 32ms | 19ms | **51ms** | 🟡 ORTA | ❌ Düşük kalite |
+  | `llama-4-scout-17b` | 61ms | 17ms | **78ms** | 🟡 KARIŞIK | ❌ Kelime hataları |
+  | `qwen/qwen3-32b` | 222ms | 88ms | **310ms** | 🔴 `` | ❌ Kullanılamaz |
+  | `qwen/qwen3.6-27b` | 156ms | 47ms | **204ms** | 🔴 `` | ❌ Kullanılamaz |
+  | `openai/gpt-oss-20b` | - | - | - | 🔴 BOŞ | ❌ Çalışmıyor |
 
 ## File Locations
 
 | Dosya | Yol |
 |-------|-----|
+| AudioWorklet processor (iOS-compat) | `~/vanitas-web/public/audioworklet-processor.js` |
 | Node.js HTTP+WS sunucu | `~/vanitas-web/server.mjs` |
 | Python Soniox server | `~/vanitas-web/soniox-server/main.py` |
 | Session Recorder (debug) | `~/vanitas-web/soniox-server/session_recorder.py` |
 | Vanitas persona + tool defs | `~/vanitas-web/soniox-server/tools.py` |
-| Full-duplex frontend | `~/vanitas-web/public/full-duplex.html` |
+| Test Observer — session analyzer | `~/vanitas-web/soniox-server/voice_test_analyzer.py` |
 | Half-duplex frontend | `~/vanitas-web/public/index.html` |
 | Keeper script | `~/vanitas-web/start_server_wrapper.sh` |
 | Keeper script (cron) | `~/.hermes/scripts/start_vanitas_server.sh` |
@@ -584,5 +645,10 @@ Bu skill yüklendiğinde:
 4. Gerekiyorsa `references/version-history.md` — eski sürüm referansı
 5. Gerekiyorsa `references/voice-system-prompt-11-tem-2026.md` — sesli görüşme system prompt'u referansı
 6. Gerekiyorsa `references/voice-quality-diagnostics-11-tem-2026.md` — LLM/TTS/echo kalite sorunları teşhisi (⚠️ EN SIK: echo loop → "beni duymuyor")
-\n7. Gerekiyorsa `references/audioworklet-migration-13-tem-2026.md` 🆕 — AudioWorklet ses yakalama mimarisi ve fallback detayı\n8. Gerekiyorsa `references/soniox-tts-voices.md` — ses listesi, cloning, Grace/Emma/Mina alternatifleri\n9. Gerekiyorsa `references/gpt-live-competitive-research-13-tem-2026.md`
-10. Gerekiyorsa `scripts/vanitas_tunnel.sh` — cloudflared tunnel keeper (container içi, cron no_agent, URL değişince bildirim)
+7. Gerekiyorsa `references/audioworklet-migration-13-tem-2026.md` — AudioWorklet ses yakalama mimarisi ve fallback detayı
+7. Gerekiyorsa `references/groq-model-benchmarks-17-tem-2026.md` 🆕 — 6 Groq modelinin Türkçe kalite + hız benchmarkı (llama-3.3-70b seçim gerekçesi)
+8. Gerekiyorsa `references/soniox-tts-voices.md` — ses listesi, cloning, Grace/Emma/Mina alternatifleri
+9. Gerekiyorsa `references/test-observer-system-17-tem-2026.md` 🆕 — otomatik session kaydı, kalite metrikleri, anomali tespiti
+10. Gerekiyorsa `references/gpt-live-competitive-research-13-tem-2026.md`
+10. Gerekiyorsa `references/code-audit-17-tem-2026.md` — tüm açık hatalar listesi, VAD doğrulama, dual-prompt karşılaştırması, GET / flood, keeper timeout
+11. Gerekiyorsa `scripts/vanitas_tunnel.sh` — cloudflared tunnel keeper (container içi, cron no_agent, URL değişince bildirim)

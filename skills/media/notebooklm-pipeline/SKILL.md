@@ -354,6 +354,10 @@ Eğer sonuç dönerse duplicate'tir, işleme. Emin değilsen web_extract'e geçm
 - **Tam kalite standardı:** `references/apa-deep-read-standards.md` — doğrudan alıntı, sayısal veri, araştırmacı isimleri, kalite kontrol listesi.
 - **Çoklu bülten taraması (7+ kanal):** `references/apa-cross-channel-synthesis.md` — Gmail + Monitor + Press Releases + Events paralel tarama, çapraz tema tespiti, rapor yapısı, maliyet yönetimi.
 
+### ⚡ Bulk E-posta Batch Processing — references/bulk-email-batch-processing.md
+
+Editor's Choice, Science Spotlight gibi bültenler **tek e-postada 5-10 makale özeti** içerir. Bunları batch halinde işle: Gmail API ile tam gövdeyi çek, tek wiki dosyası oluştur, tek NotebookLM source ekle, tek satır index güncelle. Detay: skill içindeki referans dosyası.
+
 **Öncelik:**
 1. 🤖 AI + psikoloji makaleleri → her zaman ilk işle
 2. 🏥 Klinik uygulama → ikinci öncelik

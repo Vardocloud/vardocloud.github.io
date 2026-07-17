@@ -3,13 +3,18 @@
 ## Audit Command
 
 ```bash
-# Find all world-readable credential files in ~/.hermes
-find ~/.hermes -type f \( -name '*key*' -o -name '*token*' -o -name '*secret*' -o -name '*password*' -o -name '*cred*' \) -perm /o+r 2>/dev/null | grep -v '/\.git/' | grep -v 'backup-'
+# Full scan: find world-readable files matching credential or env patterns
+find ~/.hermes -type f \( \
+  -name '*key*' -o -name '*token*' -o -name '*secret*' -o \
+  -name '*password*' -o -name '*cred*' -o -name '*.env' -o -name '.env*' \
+\) -perm /o+r 2>/dev/null | grep -v '/\.git/' | grep -v 'backup-' | grep -v 'node_modules' | sort
 ```
 
-## Findings from 16 July 2026 Audit
+## Findings from 17 July 2026 Audit (after fix)
 
-### CRITICAL — World-Readable (777 / 644)
+All previously world-readable credential files have been fixed to **600** (owner read/write only).
+
+### CRITICAL — Fixed to 600
 
 | File | Permission | Content |
 |------|-----------|---------|
@@ -25,7 +30,10 @@ find ~/.hermes -type f \( -name '*key*' -o -name '*token*' -o -name '*secret*' -
 | `serper_key_fallback.txt` | 777 | Serper backup API key |
 | `tavily_key.txt` | 777 | Tavily API key |
 | `brave_key.txt` | 777 | Brave Search API key |
-| `google_client_secret.json` | 644 | Google OAuth client secret |
+| `google_client_secret.json` | 777 | Google OAuth client secret | ✅ 17 Jul |
+| `.env.bak-*` files | 777 | Old env backups (API keys) | ✅ 17 Jul |
+| `.env.example` | 777 | Example env (may contain keys) | ✅ 17 Jul |
+| `bardo_instagram.env` | 777 | Instagram automation credentials | ✅ 17 Jul |
 
 ### OK — Properly Restricted (600)
 
@@ -42,7 +50,9 @@ find ~/.hermes -type f \( -name '*key*' -o -name '*token*' -o -name '*secret*' -
 | `.nb_totp_secret_pro` | 600 | NotebookLM PRO TOTP secret |
 | `.git-credentials` | 600 | GitHub credentials |
 
-## Fix Command
+## Remediation Steps
+
+For each world-readable credential or env file, run the permission restriction command (owner read/write only). Include env backup files and example files — they often carry live credentials.
 
 ```bash
 cd ~/.hermes
@@ -52,6 +62,18 @@ chmod 600 serper_key.txt serper_key_fallback.txt tavily_key.txt brave_key.txt 2>
 chmod 600 google_client_secret.json 2>/dev/null
 ```
 
+## Known Gaps
+
+| File | Permission | Owner | Issue |
+|------|-----------|-------|-------|
+| `linkedin-poster/.env` | 777 | root:root | Needs root to fix permissions |
+
+## Pitfalls
+
+- **The audit scan catches named patterns only.** A file named `backup.env.20260528` won't match `*key*` — include `.env*` patterns.
+- **Environment backup files (.env.bak, .env.example) often contain live credentials.** Treat them with same severity as the primary `.env` file.
+- **Secrets leak through backups.** 600-permission files may be included in backup archives with broader permissions. Exclude credential paths from backup scripts.
+
 ## Verification
 
-After fix, `find ~/.hermes -type f -perm /o+r` should show NO credential files.
+After fix, `find ~/.hermes -type f -perm /o+r` shows no credential files.

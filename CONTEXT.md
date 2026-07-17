@@ -449,3 +449,103 @@ Ayni mesaji 3 farkli bellek katmanina enjekte ettik:
 - Model eski aliskanliga kayarsa prefill "HAYIR nb_keepalive calistir" der
 - Compass okumazsa SOUL.md (her zaman yuklu) gorur
 - SOUL.md ozet okursa Compass detaya iner
+
+# Provider Model Picker Gorunurluk Fix (17 Tem 2026)
+
+## Sorun
+
+Telegram `/model` picker'inda buyuk provider'larda (ornegin NVIDIA ~119 model) istenen
+model `max_models=50` truncation'i nedeniyle listede gorunmuyordu. `z-ai/glm-5.2`
+alfabetik sirada ~113. oldugu icin ilk 50'de cikmiyordu.
+
+Sebep zinciri:
+1. Hermes, models.dev tarafindan tercih edilen (`_MODELS_DEV_PREFERRED`) provider'lar
+   icin `cached_provider_model_ids()` fonksiyonunu kullanir
+2. Bu fonksiyon models.dev katalogundaki TUM modelleri dondurur (119 adet)
+3. Picker `max_models=50` ile ilk 50'yi gosterir
+4. `z-ai/glm-5.2` alfabetik sirada 113. → truncate → gorunmez
+
+**Not:** Model vardi ve `/model glm-5.2` yazarak secilebiliyordu, ama picker'da
+gorunmedigi icin kesfedilemiyordu.
+
+## Cozum: `usercustomize.py` Monkey-Patch
+
+`site-packages/usercustomize.py` dosyasi, Python'un `sys.meta_path` mekanizmasini
+kullanarak `hermes_cli.models` modulunun yuklenmesini intercept eder. Modul
+yuklendikten sonra iki patch uygular:
+
+1. **`_PROVIDER_MODELS['nvidia']`** — curated listeye `z-ai/glm-5.2` ekler
+2. **`cached_provider_model_ids()`** — NVIDIA icin model listesinin BASINA `z-ai/glm-5.2`'yi
+   tasir. Bu sayede picker'da HER ZAMAN ilk sirada gorunur.
+
+### Calisma Prensibi
+
+```python
+# sys.meta_path uzerinden hermes_cli.models yuklenmesini yakala
+class _NvidiaPatcherFinder(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path, target=None):
+        if fullname != "hermes_cli.models":
+            return None
+        # Gercek spec'i bul, loader'i bizim patcher ile sar
+        ...
+
+# Modul yuklendikten sonra:
+def exec_module(self, module):
+    self._real.exec_module(module)
+    
+    # Patch 1: curated listeye ekle
+    nv = module._PROVIDER_MODELS.get("nvidia")
+    nv.append("z-ai/glm-5.2")
+    
+    # Patch 2: cached_provider_model_ids'i override et
+    # → NVIDIA'da z-ai/glm-5.2'yi liste basina tasi
+    _orig = module.cached_provider_model_ids
+    def _patched(provider):
+        result = list(_orig(provider))
+        if provider == "nvidia" and "z-ai/glm-5.2" in result:
+            result.remove("z-ai/glm-5.2")
+            result.insert(0, "z-ai/glm-5.2")
+        return result
+    module.cached_provider_model_ids = _patched
+```
+
+### Yeni Model Eklemek Icin
+
+Baska bir modeli picker'da ust siralara tasimak gerekirse:
+
+1. `usercustomize.py` icindeki `_patched_cached()` fonksiyonuna yeni model ekle
+2. Model adini (ornegin `z-ai/glm-5.2`) `insert(0, ...)` ile basa ekle
+3. Container restart
+
+```python
+# Ornek: minimax-m3'u de basa ekle
+if provider == "nvidia":
+    for mid in ["z-ai/glm-5.2", "minimaxai/minimax-m3"]:
+        if mid in result:
+            result.remove(mid)
+            result.insert(0, mid)
+```
+
+### Kalicilik
+
+- Dosya: `/home/ubuntu/.local/lib/python3.11/site-packages/usercustomize.py`
+- Host yedegi: `C:\VanitasDocker\data\hermes\scripts\usercustomize.py`
+- Container restart'ta otomatik yuklenir (Python site-customize mekanizmasi)
+- Hermes imaji guncellense bile calisir (ayri bir dosya, pip install override etmez)
+- **Dikkat:** Python minor versiyonu degisirse (3.11 → 3.12) dosya yolu guncellenmeli
+
+### Ilgili Dosyalar
+
+| Container | Host | Amac |
+|-----------|------|------|
+| `~/.local/lib/.../usercustomize.py` | `scripts/usercustomize.py` | Monkey-patch |
+| `hermes_cli/models.py` | (hermes paketi) | `cached_provider_model_ids` |
+| `hermes_cli/model_switch.py` | (hermes paketi) | `list_picker_providers` |
+| `gateway/run.py` line ~11080 | (hermes paketi) | `max_models=50` |
+
+## Changelog (Model Picker)
+
+| Date | Change | Reason |
+|------|--------|--------|
+| 2026-07-17 | `usercustomize.py` enhanced | `cached_provider_model_ids` monkey-patch ile glm-5.2 basa tasindi |
+| 2026-07-17 | CONTEXT.md updated | Yontem dokumante edildi, Vanitas'a referans |

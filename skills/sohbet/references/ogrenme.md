@@ -2098,3 +2098,76 @@
   "genel_ozet": "Doğallık yüksek ama referans eksik, boş mesajlar ve soru yönetimi zayıf."
 }
 ```
+
+## 2026-07-17 10:00 — Konuşma Değerlendirme
+
+```json
+{
+  "konusmalar": [
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Model sağlayıcı hatası nedeniyle Vanitas hiç yanıt veremedi, tüm kriterler geçersiz."
+    },
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Model sağlayıcı hatası nedeniyle Vanitas hiç yanıt veremedi, tüm kriterler geçersiz."
+    },
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Model sağlayıcı hatası nedeniyle Vanitas hiç yanıt veremedi, tüm kriterler geçersiz."
+    },
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Edel'in teknik sorusuna rağmen Vanitas model hatası verdi, bağlamı tamamen kaçırdı."
+    },
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Model sağlayıcı hatası nedeniyle Vanitas hiç yanıt veremedi, tüm kriterler geçersiz."
+    }
+  ],
+  "ortalama": {
+    "M": 1.0,
+    "T": 1.0,
+    "A": 1.0,
+    "B": 1.0,
+    "R": 1.0,
+    "D": 1.0
+  },
+  "genel_ozet": "Tüm konuşmalarda Vanitas model sağlayıcı hatası verdiği için hiçbir taktiği uygulayamamış, değerlendirme yapılamamıştır."
+}
+```

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-16T04:01:10.498419",
+  "timestamp": "2026-07-17T04:00:58.555395",
   "working_models": [
     "deepseek-v4-flash",
     "deepseek-v4-pro",
@@ -22,7 +22,8 @@
     "qwen3.7-plus"
   ],
   "changes": [
-    "Cron \"linkedin_sabah\": minimaxai/minimax-m3 -> deepseek-v4-flash"
+    "Cron \"\ud83d\udcc8 Ekonomi Zekas\u0131 \u2014 Sabah B\u00fclteni\": minimaxai/minimax-m3 -> deepseek-v4-flash",
+    "Cron \"\ud83d\udcc8 Ekonomi Zekas\u0131 \u2014 Ak\u015fam B\u00fclteni\": minimaxai/minimax-m3 -> deepseek-v4-flash"
   ],
   "skipped": [
     "glm-5.1 (PROTECTED)",
@@ -30,6 +31,7 @@
     "gemma (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
+    "deepseek-v4-flash (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
@@ -39,8 +41,6 @@
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
-    "deepseek-v4-flash-free (PROTECTED)",
-    "nvidia-free-m3 (strike 1/3)",
-    "nvidia-free-m3 (strike 2/3)"
+    "deepseek-v4-flash-free (PROTECTED)"
   ]
 }

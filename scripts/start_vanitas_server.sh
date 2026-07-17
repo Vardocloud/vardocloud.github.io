@@ -40,8 +40,8 @@ node server.mjs >> "$LOGFILE" 2>&1 &
 NODE_PID=$!
 echo "[$(date)] Node.js PID: $NODE_PID" >> "$LOGFILE"
 
-# Wait for ports (up to 30s for VAD warmup)
-for i in $(seq 1 30); do
+# Wait for ports (up to 45s for VAD warmup)
+for i in $(seq 1 45); do
   port_3005=$(check_port_3005)
   port_8765=$(check_port_8765)
 

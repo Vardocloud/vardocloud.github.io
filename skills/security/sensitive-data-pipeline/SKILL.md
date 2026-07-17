@@ -393,3 +393,9 @@ Oracle Cloud IPs are blocked by Cloudflare on Upwork. All browser automation fai
 ### API Integration Process (Don't Scatter)
 → `references/process-api-integration-method.md`
 Methodical approach for complex OAuth2/API auth integrations. Research docs first, check GitHub issues, consult Hermes source, test one hypothesis at a time. Prevents the scattered trial-and-error that wastes time and frustrates the user.
+
+## Absorbed Skills
+
+| Skill | Key Content | Reference |
+|---|---|---|
+| `bitwarden-secrets-manager` | bws CLI CRUD operations, OAuth2 client_credentials, naming conventions, provider visibility sandboxing | `references/absorbed-bitwarden-secrets-manager.md` |

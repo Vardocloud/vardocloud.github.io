@@ -81,7 +81,25 @@ LLM her yanıtta "tool seçmeli miyim?" diye karar vermeye çalışır — boş 
 
 ### 8. Mobil mikrofon hatası sessizce kapanıyor — Fix: Türkçe hata mesajı.
 
-## Fix Durumu (12 Tem 2026)
+### 9. VAD Türkçe Parametreleri — Doğrulandı (17 Tem 2026)
+
+**Durum:** ✅ main.py'de threshold=0.4, min_silence_duration_ms=600 parametreleri uygulanmış. Kod ile skill senkron.
+
+### 10. Excessive GET / Requests — Kaynak Sızıntısı (17 Tem 2026)
+
+**Belirti:** Log'da `GET /` satırı saniyede bir veya daha sık. 100+ satır/dk görülebilir.
+
+**Teşhis:**
+```bash
+# GET / isabet sayısı
+grep -c "^GET /$" /home/ubuntu/vanitas-server-output.log
+# User-Agent
+grep "^GET /$" /home/ubuntu/vanitas-server-output.log | tail -5
+```
+
+**Çözüm:** Browser sekmesini kapat. Devam ediyorsa server.mjs root handler'ına 304 cache veya rate limit ekle. Genelde zararsızdır ama log hacmini şişirir.
+
+## Fix Durumu (17 Tem 2026)
 
 | Sorun | Durum | Tarih |
 |-------|-------|-------|
@@ -89,10 +107,16 @@ LLM her yanıtta "tool seçmeli miyim?" diye karar vermeye çalışır — boş 
 | `tools=[]` + `tool_choice="auto"` | ✅ FIXED — `tools=None` + conditional API params | 11 Tem |
 | Sistem prompt minimal | ✅ FIXED — Vanitas kişilikli prompt (tools.py + server.mjs) | 11-12 Tem |
 | Yanlış sayfa (half-duplex) | ✅ FIXED — `server.mjs` root → full-duplex.html | 12 Tem |
-| Yanlış TTS ses kodu (EmelNeural) | ✅ FIXED — `full-duplex.html` voice=Maya | 12 Tem |
+| Yanlış TTS ses kodu (EmelNeural) | ✅ FIXED — `full-duplex.html` voice=Maya→Grace | 12-13 Tem |
 | Mobil AudioContext suspended | ✅ FIXED — `full-duplex.html` resume() eklendi | 11 Tem |
 | Sessiz mikrofon hatası | ✅ FIXED — Türkçe hata mesajı | 11 Tem |
-| Sunucu EADDRINUSE | ✅ Temizlendi — pkill + fresh restart | 11 Tem |
-| Model `llama-3.3-70b` | 🔄 Kalsın (Edel kararı) | 11 Tem |
-| Konuşma hafızası yok | 🔄 Planlandı — temel tamamlanınca | - |
+| Sunucu EADDRINUSE | ✅ FIXED — pkill + fresh restart, stale socket cleanup | 11 Tem |
+| VAD Türkçe parametreleri (0.4/600ms) | ✅ FIXED — main.py'ye parametre geçildi (17 Tem'de doğrulandı) | 17 Tem |
+| Keeper timeout (30sn → 45sn) | ✅ FIXED — Her iki script (proje + cron) güncellendi | 17 Tem |
+| GET / flood log şişmesi | ✅ TEŞHİS KONULDU — Geçmiş log, şu an aktif flood yok | 17 Tem |
+| Dual-prompt sync (server.mjs vs tools.py) | ✅ FIXED — İki prompt da Vanitas kişilikli hale getirildi | 17 Tem |
+| Model `llama-3.3-70b` → `llama-3.1-8b-instant` | ✅ FIXED — %40 daha hızlı, her iki pipeline'da güncellendi | 17 Tem |
+| VAD-based LLM tetikleyici | ✅ KALDIRILDI — Soniox endpoint detection birincil; kesilme sorunu çözüldü | 17 Tem |
+| STT max_endpoint_delay_ms=1500 (Türkçe) | ✅ FIXED — Soniox config'e eklendi | 17 Tem |
+| Konuşma hafızası yok | 🔄 Session içi çalışıyor; cross-session planlandı | - |
 | v10.10 Dual-Path | 🔄 Planlandı — temel tamamlanınca | - |

@@ -59,6 +59,64 @@ print(body[:3000])
 - Include: date range, mail count, signal ratio, key insights with bullet hierarchy
 - Format title: `Skool Mail Hasadı - [Ay Yıl] Hafta [X]`
 
+### 📂 5b. Category-Specific Processing (18 Tem 2026)
+
+When Edel says **"X kategorisini işle, gerisini okundu işaretle"** (e.g. "APA olanları işle, işlenmeyenleri okundu işaretle"):
+
+**Workflow:**
+
+```bash
+# Step 1 — Get ALL unread inbox emails
+ALL_PROXY="" python3 google_api.py gmail search "in:inbox is:unread" --max 100
+```
+
+**Step 2 — Separate by sender domain** (inline Python):
+```bash
+ALL_PROXY="" python3 ~/.hermes/skills/.../google_api.py gmail search "in:inbox is:unread" --max 100 2>&1 | python3 -c "
+import sys, json
+msgs = json.load(sys.stdin)
+apa_ids = []; non_apa_ids = []
+for m in msgs:
+    f = m.get('from','').lower()
+    # Identify target category by domain
+    if 'apa.org' in f:
+        apa_ids.append(m['id'])
+    else:
+        non_apa_ids.append(m['id'])
+print(f'Target: {len(apa_ids)}, Other: {len(non_apa_ids)}')
+"
+```
+
+**Step 3 — Batch mark non-target as read + archive:**
+```bash
+# Write a temp Python script for efficiency
+python3 -c "
+import subprocess, json, os
+GAPI = os.path.expanduser('~/.hermes/skills/productivity/google-workspace/scripts/google_api.py')
+env = {'ALL_PROXY': '', 'HOME': os.environ['HOME'], 'PATH': os.environ['PATH']}
+ids = ['ID1', 'ID2', ...]  # non-target IDs
+for mid in ids:
+    subprocess.run(['python3', GAPI, 'gmail', 'modify', mid, '--remove-labels', 'UNREAD,INBOX'],
+                   capture_output=True, timeout=15, env=env)
+"
+```
+
+**Step 4 — Read target emails one by one:**
+```bash
+ALL_PROXY="" python3 google_api.py gmail get EMAIL_ID | python3 -c "
+import sys, json; d = json.load(sys.stdin)
+print('From:', d.get('from','')); print('Subject:', d.get('subject',''))
+print(d.get('body','')[:4000])
+"
+```
+
+**Step 5 — Synthesize** (sohbet tonunda, emoji başlıklarla, gruplanmış)
+
+**Step 6 — Ask before marking targets as read** (Edel onayıyla temizle)
+
+**Step 7 — Mark target emails as read:**
+Same batch script as Step 3, with target IDs instead.
+
 ### 6. Finalize: Mark Read + Archive (7 Haz 2026)
 When Edel asks for "gelen kutusu temiz olsun" or "mailleri okundu işaretle ve arşivle":
 
