@@ -1,7 +1,7 @@
 ---
 name: skool-community-monitor
 description: "Skool topluluklarını düzenli tarama, video/dosya içeriğini işleme (YouTube transcript, Whisper, Google Drive, NotebookLM), Vanitas gelişimi için bilgi toplama. Günlük cron job'lar ve içerik analizi workflow'u."
-version: 1.22.0
+version: 1.23.0
 metadata:
   hermes:
     tags: [skool, community, monitoring, cron, notebooklm, youtube, transcript]
@@ -167,8 +167,11 @@ browser_navigate("https://www.skool.com/login")
 browser_type(ref=e5, text="isimgorulsunn@gmail.com")
 browser_type(ref=e6, text="41y%#Y8#Htts*kx3*amf5YJNU37^mn")
 
-# 3. LOG IN butonuna tikla (enable oldugunu kontrol et)
-browser_click(ref=e5)
+# 3. LOG IN butonuna tikla — ÖNCE yeni snapshot al (type'dan sonra ref'ler degismis olabilir)
+browser_snapshot()
+# Snapshot'ta LOG IN butonunun ref'ini bul (genelde e7 veya e8 civari)
+# Not: type'dan onceki snapshot'taki e5 (email field) LOG IN butonu DEGILDIR, yeni ref al
+browser_click(ref=e7)  # ref'i snapshot'tan oku, e7 ornektir
 
 # 4. Login kontrolu - URL /login'den herhangi bir Skool sayfasina dondu mu?
 browser_console(expression="document.location.href")
@@ -693,8 +696,8 @@ Değerlendirme rubric'i ve karar ağacı Adım 6'da (Bulgu Değerlendirme) uygul
 - "Vanitas:" ön eki kullanma — bağlam zaten belli.
 
 **Sessiz kalma kuralı (ZORUNLU):**
-- Yeni işlenen post/gönderi sayısı 0 ise hiçbir çıktı verme. Sessizce bitir.
-- Sadece en az 1 yeni içerik işlendiyse rapor hazırla.
+- **bulgu-degerlendirme değerlendirmesi sonucu hiçbir bulgu Adaptable/Try etiketi almadıysa** hiçbir çıktı verme. Sadece `[SILENT]` döndür. Bu kural, yeni post işlenmiş olsa bile geçerlidir — post sayısı değil, Adaptable/Try sayısı belirleyicidir.
+- Sadece en az 1 bulgu Adaptable veya Try etiketi aldıysa rapor hazırla.
 
 **Araç hatalarını gizle (ZORUNLU):**
 - Patch/write_file/terminal hatalarını asla çıktıya yansıtma.
@@ -795,7 +798,7 @@ Yeni kurulumda wiki'deki mevcut skool dosyalarını tara, URL'leri ve dosya adla
 | NotebookLM auth stale | Cookie expire (~7 gün) | `python3 ~/.nlm/refresh_cookies.py` çalıştır |
 | **Community switcher ile geçiş** | Bazı toplulukların slug'ı yok (client-side routing) | Sol sidebar üstünde dropdown ok → menüden seç |
 | **Skool araması topluluk içi** | Search box sadece aktif toplulukta arar | Önce switcher'dan geçiş yap, sonra ara |
-| **Skool video player + YouTube link yok** | Video Skool'a yüklenmiş, YouTube embed'i değil | web_search ile video başlığı + yazar ara, WisdomAI'den özet çek |\n| **yt-dlp \"Sign in to confirm\" bot koruması** | YouTube bot detection | Aşama 2'ye geç: web_search ile link bul, sonra WisdomAI/analyzeVideo dene |\n| **Pinned post'ları atla** | İlk görünen postlar sabitlenmiş karşılama postlarıdır | Scroll yap, pinned etiketi olmayan postlara bak |
+| **Skool video player + YouTube link yok** | Video Skool'a yüklenmiş, YouTube embed'i değil | web_search ile video başlığı + yazar ara, WisdomAI'den özet çek |\n| **yt-dlp \"Sign in to confirm\" bot koruması** | YouTube bot detection | Aşama 2'ye geç: web_search ile link bul, sonra WisdomAI/analyzeVideo dene |\n| **Login redirect — zaten login olunmus** | `/login` sayfasina navigate edince, eger gecerli cookie varsa Skool otomatik community feed'ine yonlendirir. Sonra browser_type/browser_click login sayfasinda degil, community sayfasinda calisir — sessizce basarisiz olur | browser_type'dan ONCE `browser_console("document.location.href")` ile login sayfasinda oldugunu dogrula. Community'deysen (redirect), password login'i atla, direkt hedef URL'e git |\n| **Pinned post'ları atla** | İlk görünen postlar sabitlenmiş karşılama postlarıdır | Scroll yap, pinned etiketi olmayan postlara bak |
 | **`browser_console` surrogate character hatası** | Emoji dolu sayfalarda `'utf-8' codec can't encode character '\ud835'` | Expression'a `.replace(/[\\uD800-\\uDFFF]/g, '')` ekle veya text içermeyen expression kullan (sadece href çek) |
 | **`browser_snapshot` timeout (büyük topluluk)** | Büyük topluluklarda snapshot 30sn+ timeout | Snapshot yerine ÖNCE `browser_console` ile text çek. Snapshot sadece küçük topluluklarda dene |
 | **Classroom modülü tıklandı ama sayfa değişmedi** | Skool client-side routing kullanır — URL görünürde aynı kalır | `browser_console` ile `document.location.href` kontrol et. `classroom/{id}?md={md}` formatına döndü mü? |

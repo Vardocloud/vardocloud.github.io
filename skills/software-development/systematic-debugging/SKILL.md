@@ -119,6 +119,21 @@ Hata: Pollinations 128 tool limit
 → "Önceden çalışıyor muydu? enabled_toolsets bozulmuş olabilir mi?"  (DOĞRU)
 ```
 
+**Provider/API anti-pattern — "model switch first" (real example):**
+```
+Hata: opencode-zen deepseek-v4-flash-free 403 Forbidden
+→ "LiteRouter/NVIDIA/hy3-free'e geçelim!"  (YANLIŞ)
+→ "403 hangi koşulda? curl UA engelleniyor olabilir. 
+   API dökümanını oku, header'ları kontrol et."  (DOĞRU)
+
+Hata: content boş dönüyor (HTTP 200 ama yanıt boş)
+→ "Başka modele geçelim!"  (YANLIŞ)
+→ "max_tokens vs max_completion_tokens farkını kontrol et. 
+   Reasoning modellerde max_tokens content'i boş bırakır."  (DOĞRU)
+```
+
+**Lesson:** When a provider returns unexpected results (403, empty content, 401), the fix is almost always in the **request parameters** (headers, body params, auth), not in switching providers. Read the API docs before pivoting.
+
 **Action:**
 
 ```bash

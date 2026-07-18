@@ -1,9 +1,9 @@
 ---
 name: vanitas-voice-bridge
-version: 1.36.0
+version: 1.37.0
 title: Vanitas Voice Bridge — Multi-Backend Voice Agent
-description: 'v16 (ACTIVE). LLM=llama-3.3-70b-versatile (en iyi Türkçe, ~150ms Groq LPU). VAD-based LLM tetikleyici KALDIRILDI (kesilme sorunu). STT max_endpoint_delay_ms=1500 (Türkçe). Test Observer (otomatik session kaydı + analiz + cron raporu). AudioWorklet ayrı .js dosyası (iOS Safari Blob URL fix). getUserMedia+AudioContext resume tıklama anında. Keeper timeout 45sn. Dual-prompt sync.'
-tags: [voice, soniox, groq, stt, tts, cloudflared, edge-tts, soniox-client, vad, realtime-stt, websocket, heartbeat, tunnel, tailscale, v16, watchdog, keeper, test-observer]
+description: 'v17 (ACTIVE 18 Tem 2026). LLM=Mistral Small 4 (NVIDIA NIM, en iyi Türkçe, ~560ms). AudioContext 16kHz (Soniox resmi yaklaşım — downsample YOK). MetricsMessage @property fix (session crash çözüldü). Cloudflare tunnel binary frame corrupt — Tailscale Funnel tercih edilmeli. Speaker diarization + voice fingerprint plan. VAD-based LLM tetikleyici KALDIRILDI. Test Observer aktif.'
+tags: [voice, soniox, groq, nvidia-nim, mistral-small-4, stt, tts, cloudflared, edge-tts, vad, websocket, heartbeat, tunnel, tailscale, v17, watchdog, keeper, test-observer, speaker-diarization, voice-fingerprint]
 triggers:
   - tailscale
   - funnel
@@ -19,6 +19,16 @@ triggers:
   - duymuyor
   - tepkisiz
   - mikrofon çalışmıyor
+  - cevap üretmiyor
+  - cevap vermiyor
+  - konuşuyorum ama cevap yok
+  - tepkisiz
+  - sessiz session
+  - autoGainControl
+  - noiseSuppression
+  - getUserMedia
+  - track settings
+  - level meter
   - TTS geç
   - ses kalitesi
   - bağlamdan kopuk
@@ -40,11 +50,11 @@ triggers:
 
 # Vanitas Voice Bridge
 
-## v16 is CURRENT (17 Tem 2026) — Soniox Full-Duplex
+## v17 is CURRENT (18 Tem 2026) — Soniox Full-Duplex (Official Frontend Approach)
 
 > **Pipeline:** PCM (16kHz mono) → Silero VAD (barge-in) → Soniox stt-rt-v5 (streaming STT) → Groq **llama-3.3-70b-versatile** (LLM, ~150ms inference) → Soniox tts-rt-v1 (streaming TTS, voice=Grace) → 24kHz PCM → hoparlör
-> **17 Tem Güncelleme:** LLM modeli yeniden **llama-3.3-70b-versatile** seçildi — Türkçe kalitesi en iyisi, Groq LPU'da sadece ~150ms inference. **Kesilme sorunu çözüldü:** VAD-based LLM tetikleyici kaldırıldı, Soniox endpoint detection birincil. STT max_endpoint_delay_ms=1500 (Türkçe doğal duraklamalar). Dual-prompt sync (server.mjs + tools.py) tamamlandı. Keeper timeout 30→45sn.
-> **Referanslar:** `references/soniox-voice-bot-demo.md` (mimari), `references/nodejs-integration.md` (Node.js proxy), `references/voice-quality-diagnostics-11-tem-2026.md` (teşhis)
+> **18 Tem Güncelleme (v17):** İki kök neden bulundu ve düzeltildi: (1) **MetricsMessage AttributeError crash** — `session.py` `message.metric_type` çağırıyordu ama `MetricsMessage` private `_metric_type` kullanıyordu → LLM cevap üretmesine rağmen session crash → TTS sesi hiç gelmiyordu. Fix: `@property` eklendi. (2) **Frontend ses seviyesi sıfıra yakın** — AudioContext native rate (48kHz) + manuel nearest-neighbor downample sesi bastırıyordu (peak %0.43). Fix: Soniox resmi yaklaşımına geçildi — `new AudioContext({ sampleRate: 16000 })` ile downsample tamamen kaldırıldı. Ayrıca `noiseSuppression`/`autoGainControl` sadece Firefox'ta aktif (Chrome/Safari'de kapalı — mobilde mikrofonu bastırıyor).
+> **Referanslar:** `references/soniox-voice-bot-demo.md` (mimari), `references/soniox-official-frontend-18-tem-2026.md` 🆕 (Soniox resmi frontend karşılaştırması), `references/nodejs-integration.md` (Node.js proxy), `references/voice-quality-diagnostics-11-tem-2026.md` (teşhis), `references/code-audit-17-tem-2026.md` (tüm açık hatalar)
 > **⚠️ v10.10 Dual-Path HENÜZ entegre DEĞİL:** Şu an sadece tek patika (Groq direkt). Edel kararı: önce temel mekanizma tamamlanacak.
 
 ## Architecture
@@ -75,16 +85,20 @@ Client (Browser)
 
 **Önemli:** Ana sayfa (`/`) full-duplex `full-duplex.html`'e yönlendiriyor. Half-duplex `index.html` fallback olarak `/index.html` adresinde duruyor.
 
-### Ses Yakalama: AudioWorklet (birincil) + ScriptProcessor (fallback)
+### Ses Yakalama: ScriptProcessor @ 16kHz (Soniox Resmi Yaklaşım — v17, 18 Tem 2026)
 
-`full-duplex.html` 17 Tem 2026 itibarıyla **AudioWorklet** kullanır:
-1. **AudioWorkletProcessor** (`PCMCaptureProcessor`) — `/audioworklet-processor.js` ayrı dosyasından yüklenir (iOS Safari Blob URL kısıtlaması nedeniyle)
-2. Sesi **Float32'den PCM s16le'ye** çevirir + **downsample** yapar (native rate → 16kHz)
-3. **Transferable** `postMessage` ile sıfır kopyalı gönderim (zero-copy)
-4. **AudioWorklet başarısız olursa** (çok eski tarayıcı) → ScriptProcessor fallback
-5. Her iki yol da aynı `handlePcmData()` fonksiyonuna gider — seviye göstergesi + byte sayacı ortak
-6. Echo önleme: `GainNode(0)` ile sessiz çıkış her iki yolda da uygulanır
-7. Hangi metodun aktif olduğu `captureBadge` ile gösterilir
+`full-duplex.html` 18 Tem 2026 itibarıyla **Soniox resmi frontend** yaklaşımını takip eder:
+
+1. **`new AudioContext({ sampleRate: 16000 })`** — AudioContext direkt 16kHz oluşturulur. **Downsample YOK.** Tarayıcı kendisi 16kHz'de çalışır, PCM zaten hedef formatta. Bu, ses seviyesinin manuel downsample'da kaybolmasını önler.
+2. **ScriptProcessor** — AudioWorklet kaldırıldı (gereksiz karmaşıklık). ScriptProcessor yeterli ve Soniox'un resmi kodu da bunu kullanır.
+3. **`processor.connect(micCtx.destination)`** — direkt destination'a bağlanır. **GainNode(0) YOK.** Echo önleme `echoCancellation: true` (getUserMedia constraint) + `isSpeaking` flag (TTS oynarken PCM göndermeme) ile yapılır.
+4. **Float32 → PCM s16le dönüşümü** — AudioContext 16kHz olduğu için downsample adımı atlanır, sadece format dönüşümü yapılır.
+5. **Ayrı playback context** — TTS için ayrı `new AudioContext({ sampleRate: 24000 })` kullanılır. Mic ve playback farklı context'lerde — context leak ve karışma yok.
+6. **`noiseSuppression` / `autoGainControl` sadece Firefox'ta** — Chrome/Safari'de kapalı (mobilde ses seviyesini öldürür). Soniox resmi kodu da bu pattern'i kullanır.
+
+**🚨 ESKİ YAKLAŞIM (v16 ve öncesi — ARTIK KULLANILMIYOR):** AudioContext native rate (48000Hz) → AudioWorklet/ScriptProcessor ile manuel nearest-neighbor downsample → GainNode(0) ile sessiz çıkış. Bu yaklaşım ses seviyesini 0.4% peak'e düşürüyordu (normal: 3-15%). v17 ile değiştirildi.
+
+**Tarayıcı 16kHz desteklemiyorsa:** `try/catch` ile fallback → default rate AudioContext, ama bu durumda downswap gerekir (henüz implement edilmedi — tüm modern tarayıcılar 16kHz destekler).
 
 **🚨 MOBİL KRİTİK — getUserMedia + AudioContext resume tıklama anında yapılmalı:**
 iOS Safari (ve bazı Android tarayıcılar) `getUserMedia()` ve `AudioContext.resume()` çağrılarının kullanıcı tıklaması (user gesture) İÇİNDE yapılmasını zorunlu kılar. `ws.onopen` gibi async callback'lerde bu çağrılar sessizce başarısız olur, hiçbir hata mesajı gösterilmez.
@@ -149,9 +163,13 @@ check_port() { cat /proc/net/tcp | grep -q ":0BBD.*0A" && echo 1 || echo 0; }
 
 **Ana sayfa routing:** `server.mjs` line 74: `if (urlPath === '/') urlPath = '/full-duplex.html';` — root path full-duplex'i açar. Half-duplex `/index.html` adresinde fallback.**
 
-## Dış Erişim: Cloudflared Quick Tunnel (PRIMARY — container içi)
+## Dış Erişim: Tailscale Funnel (PRIMARY) vs Cloudflared (⚠️ WebSocket Sorunlu)
 
-**Durum (13 Tem 2026):** Windows/Tailscale'e bağımlılık bitti. Cloudflared quick tunnel container içinde cron keeper ile çalışır. URL her restart'ta değişir — cron `vanitas-tunnel-keeper` (job_id `3582974cda8c`, `*/2 * * * *`, no_agent) tüneli canlı tutar ve URL değişirse bildirim gönderir.
+**🚨 18 Tem 2026 KRİTİK BULGU:** Cloudflare quick tunnel **binary WebSocket frame'lerini bozuyor.** Localhost'ta tam transkripsiyon alınırken (`"Merhaba Vanitas, nasılsın bugün?"`), Cloudflare tunnel üzerinden aynı PCM gönderildiğinde **0 transkripsiyon** alındı. Text mesajlar binary olarak geliyor (25 byte), binary PCM corrupt oluyor. **Real-time audio WebSocket için Cloudflare tunnel KULLANILAMAZ.** Detay: `references/cloudflared-tunnel-binary-websocket-issue.md`
+
+**Birincil yöntem:** Tailscale Funnel (`https://sakabato.tail9c7788.ts.net`) — Cloudflare katmanı yok, direkt HTTPS, binary WebSocket sorunu yok.
+
+**Cloudflare tunnel** sadece HTTP REST API (half-duplex `/index.html`) veya debugging için kullanılabilir.
 
 Script: `~/.hermes/scripts/vanitas_tunnel.sh`
 ```bash
@@ -278,14 +296,25 @@ Quick tunnel birincil yöntem değil (Tailscale Funnel tercih edilir). Ama Tails
 
 `~/vanitas-web/soniox-server/.env`:
 ```
-SONIOX_API_KEY=<shared-key>
-SONIOX_API_KEY_TTS=<same-or-different-key>  # AYRI SET EDİLMELİ — boş olursa TTS bağlanamaz
-OPENAI_API_KEY=<groq-api-key>               # isim karışıklığı: Groq key
-OPENAI_BASE_URL=https://api.groq.com/openai/v1
-OPENAI_MODEL=llama-3.3-70b-versatile         # En iyi Türkçe kalitesi, ~150ms inference
-WEBSOCKET_HOST=127.0.0.1                    # IPv6 sorunlarını önlemek için
+SONIOX_API_KEY=<Soniox key from BWS>
+SONIOX_API_KEY_TTS=<same or different>  # AYRI SET EDİLMELİ — boş olursa TTS bağlanamaz
+OPENAI_API_KEY=<NVIDIA or Groq key from BWS>  # isim karışıklığı: OpenAI-compatible
+OPENAI_BASE_URL=https://integrate.api.nvidia.com/v1  # v17: NVIDIA NIM | v16: https://api.groq.com/openai/v1
+OPENAI_MODEL=mistralai/mistral-small-4-119b-2603  # v17: NVIDIA Mistral Small 4 | v16: llama-3.3-70b-versatile
+WEBSOCKET_HOST=127.0.0.1  # IPv6 sorunlarını önlemek için
 WEBSOCKET_PORT=8765
 SCRIPTS_PATH=~/.hermes/scripts
+```
+
+### LLM Selection (18 Tem 2026)
+
+| Provider | Model | First Token | Turkish Quality | Decision |
+|----------|-------|------------|-----------------|----------|
+| NVIDIA NIM | `mistralai/mistral-small-4-119b-2603` | ~560ms | Excellent (no EN/RU leakage) | v17 SELECTED |
+| Groq | `llama-3.3-70b-versatile` | ~293ms | Mixed (EN/RU word leakage) | v16 fallback |
+| Groq | `openai/gpt-oss-120b` | ~500tps | Untested (key expired) | Candidate |
+
+Detail: `references/llm-turkish-benchmark-18-tem-2026.md`
 
 ## Test Observer — Otomatik Session Kaydı ve Analiz (17 Tem 2026)
 
@@ -347,7 +376,94 @@ Kullanıcı "TTS geç cevap veriyor", "çıktı kalitesi bağlamdan kopuk", veya
 
 Tam teşhis referansı: `references/voice-quality-diagnostics-11-tem-2026.md`
 
-### 0. Barge-in Echo Loop — "Beni duymuyor" (EN SIK — 12 Tem 2026)
+### 0.0 Sessiz Session — "Konuşmama rağmen cevap yok" (18 Tem 2026 — EN GÜVENİLİR İLK ADIM)
+
+**Belirti:** Kullanıcı "Konuşmayı başlatıyorum, konuşuyorum ama cevap üretmiyor" der. Session log'da `status=silent`, `vad_events: {speech_starts: 0, speech_ends: 0}`, `stt_metrics: {transcription_count: 0}`.
+
+**Bu, echo loop'dan FARKLIdır:** Echo loop'ta VAD sürekli tetiklenir (speech_starts=10+). Sessiz session'da **VAD hiç tetiklenmez** (speech_starts=0) — yani mikrofondan tanınabilir ses gelmiyor.
+
+**Teşhis sırası:**
+
+1. **Test Observer session.json kontrolü:**
+```bash
+ls -lt /tmp/vanitas-test-logs/ | head -5  # en son session
+cat /tmp/vanitas-test-logs/<session_id>/session.json | python3 -m json.tool
+```
+Eğer `status=silent` ve `vad_events.speech_starts=0` ise → Mikrofon sesi çok zayıf.
+
+2. **mic.wav peak/RMS analizi (KRİTİK):**
+```bash
+python3 -c "
+import wave, struct, math
+w = wave.open('/tmp/vanitas-test-logs/<session_id>/mic.wav', 'r')
+frames = w.readframes(w.getnframes())
+w.close()
+samples = struct.unpack(f'<{len(frames)//2}h', frames)
+peak = max(abs(s) for s in samples)
+rms = math.sqrt(sum(s*s for s in samples)/len(samples))
+print(f'peak={peak}/32768 ({peak/32768*100:.2f}%), rms={rms:.1f}')
+"
+```
+**Normal insan sesi:** peak 1000-5000+ (3-15%), rms 100+
+**Sessiz/arızalı:** peak <200 (<0.6%), rms <10
+
+3. **Sunucu-taraf izolasyon testi:** mic.wav'u direkt WebSocket'e replay et → sunucu tepki verirse sorun frontend'de, vermezse sunucuda.
+```bash
+python3 /tmp/voice_isolation_test.py  # 参考: references/silent-session-diagnosis.md
+```
+Eğer sunucu **tepkisiz** ama mic.wav peak zaten <0.6% ise → Sonixa zaten tanıyacak ses yok, sorun frontend mikrofon yakalamada.
+
+**Kök neden (18 Tem 2026):** `getUserMedia`'da `noiseSuppression: true` + `autoGainControl: true` mobil tarayıcılarda mikrofonu aşırı bastırıp ses seviyesini neredeyse sıfıra indirebilir. Özellikle düşük sesle konuşmada veya belirli telefon modellerinde.
+
+**Fix (full-duplex.html getUserMedia):**
+```javascript
+micStream = await navigator.mediaDevices.getUserMedia({
+  audio: {
+    echoCancellation: true,
+    noiseSuppression: false,  // ← false yap (true değil!)
+    autoGainControl: false,   // ← false yap (true değil!)
+    channelCount: 1,          // ← mono zorla
+    sampleRate: 16000,        // ← 16kHz zorla
+  }
+});
+// Track settings'i logla — tarayıcının gerçekten ne verdiği
+const track = micStream.getAudioTracks()[0];
+console.log('[Mic] Track settings:', JSON.stringify(track.getSettings()));
+```
+
+**Önemli:** `echoCancellation: true` kalmalı — echo loop olmadan TTS sesi mikrofona döner. Sadece NS ve AGC kapatılır.
+
+**Frontend restart gerekmez** — `full-duplex.html` statik dosya, tarayıcı sayfayı yenileyince yeni kod yüklenir. Ama mobil cache için gizli mod öner.
+
+### 0.5 Level Meter Hesaplama Hatası (18 Tem 2026 Fix)
+
+**Sorun:** Eski level meter kodu yanlış hesaplama yapıyordu:
+```javascript
+// YANLIŞ — asymmetrik normalizasyon + keyfi çarpan
+peak = Math.max(peak, Math.abs(view[i] / (view[i] < 0 ? 0x8000 : 0x7FFF)));
+const level = Math.min(100, Math.round(peak * 200));  // 200 keyfi
+```
+Bu kod peak'*200'i alıp 100'e clamp ediyor — düşük seslerde sıfır gösteriyor, yüksek seslerde doyuyor. Ayrıca negatif/pozitif için farklı bölücü kullanıyor (0x8000 vs 0x7FFF) ki bu Int16 için gereksiz.
+
+**Doğru (18 Tem 2026):**
+```javascript
+// DOĞRU — Int16 peak / 32768 =百分比
+peak = Math.max(peak, Math.abs(view[i]));  // raw Int16
+const level = Math.min(100, Math.round((peak / 32768) * 100));
+```
+Ayrıca RMS hesaplaması eklenmeli, ve ilk birkaç chunk için `console.log` ile gerçek peak/RMS değerlerini yaz — bu olmadan "ses gidiyor mu" sorusu cevapsız kalır.
+
+### 0.6 Track Settings Logging (18 Tem 2026)
+
+`getUserMedia()`'dan sonra tarayıcının **gerçekten verdiği** ayarları logla:
+```javascript
+const track = micStream.getAudioTracks()[0];
+console.log('[Mic] Track settings:', JSON.stringify(track.getSettings()));
+console.log('[Mic] Track constraints:', JSON.stringify(track.getConstraints()));
+```
+Çünkü tarayıcılar constraint'leri sessizce değiştirebilir — `sampleRate: 16000` istemissin ama tarayıcı 48000Hz vermiş olabilir. Bu olursa downsample mantığı yanlış çalışır. `getSettings()` tarayıcının gerçek değerlerini gösterir.
+
+### 0.7 Barge-in Echo Loop — "Beni duymuyor" (EN SIK — 12 Tem 2026)
 
 ```bash
 # Echo loop teşhisi: excessive VAD speech start events
@@ -477,12 +593,14 @@ Cevap: Voice agent low-latency için **Groq'a direkt gider** — Hermes üzerind
 - **WEBSOCKET_HOST:** Varsayılan `localhost` IPv6'ya çözülebilir → `127.0.0.1` override edilmeli
 - **Background stabilite:** Python asyncio server background'da stabil kalamayabilir → cron keeper gerekli
 - **EADDRINUSE port çakışması:** Keeper script bazen stale socket ile yeni process arasında çekişmeye girer. Bakınız: Voice Kalite Sorunu Teşhisi → EADDRINUSE bölümü.
+- **🚨 MetricsMessage AttributeError crash (18 Tem 2026 — CRITICAL FIX):** `messages.py`'de `MetricsMessage` constructor `self._metric_type` (private) kullanıyor ama `session.py` line 164 `message.metric_type` (public) çağırıyordu. LLM ilk token ürettiği anda `MetricsMessage("llm_first_token_ms", ...)` gönderilir → `process_messages()` loop'unda `message.metric_type` → **AttributeError** → `asyncio.wait(FIRST_COMPLETED)` bir task'in exception'ını görür → tüm pending task'leri cancel eder → **session crash → WebSocket 1005 close**. Belirti: LLM log'da `llm_first_token_ms: 293ms` görünüyor ama tarayıcıda hiç ses gelmiyor. **Fix:** `MetricsMessage`'a `@property def metric_type(self)` ve `@property def value_ms(self)` eklendi. **Doğrulama:** `python3 -c "from messages import MetricsMessage; m = MetricsMessage('test', 1.0); print(m.metric_type, m.value_ms)"` — AttributeError vermemeli.
 - **`tools=[]` + `tool_choice="auto"` latency (FIXED 11 Tem 2026):** Bu sorun `tools=None` ile çözüldü. Detay: Voice Kalite Sorunu Teşhisi → tools=[] Fix Durumu. Eğer tekrar ortaya çıkarsa `main.py` line 115'te `tools=get_tools()` ve `llm.py` line 200-203'ü kontrol et.
 
 - **STT `_receive_task_handler` sessiz çökme (KRİTİK — 12 Tem 2026 FIX):** `stt.py` `_receive_task_handler` içinde `content["tokens"]` direkt key access kullanır. Soniox bazen `tokens` içermeyen mesajlar gönderebilir (sadece `final_audio_proc_ms` gibi timing bilgisi). Bu durumda `KeyError` alır ve **catch-all exception handler olmadığı için arka plan task'i SESSİZCE ölür.** Belirti: VAD konuşmayı algılar ama hiç transkripsiyon gelmez, LLM hiç tetiklenmez. **Fix:** `content.get("tokens")` kullan + `except Exception as e:` catch-all ekle + hata durumunda `ErrorMessage` gönder. Ayrıca Soniox'tan gelen mesajların `tokens` listesi boş olabilir (`[]`) — bu normaldir, sessizlik için boş token döner. `if tokens:` kontrolü ile boş listeyi atla.
 
 - **VAD-based LLM tetikleyici (17 Tem 2026 — DEĞİŞTİ):** `llm.py` `process()`'te `TranscriptionEndpointMessage` geldiğinde `_generate_llm_response()` çağırır — bu BİRİNCİL yoldur. VAD `UserSpeechEndMessage` handler'ı LLM'i tetiklemez (sadece log yazar). **Sebep:** VAD tabanlı tetikleme Türkçe doğal duraklamalarda (500-1000ms) LLM'i erken başlatıyor, kullanıcı cümle ortasında kesiliyordu. Soniox'un kendi endpoint detection'ı daha güvenilirdir. Barge-in (konuşma sırasında LLM iptali) hala VAD `UserSpeechStartMessage` üzerinden çalışır. **Test:** Bu değişiklikle kullanıcı cümlesini rahatça tamamlayabilmeli.
 
+- **MetricsMessage AttributeError — session crash 1005 (18 Tem 2026 FIX):** `session.py` line 164 `message.metric_type` çağırıyor ama `MetricsMessage` bunu `self._metric_type` (private) olarak saklıyor, `@property` yok. LLM ilk token'ı üretip `MetricsMessage("llm_first_token_ms", ...)` gönderildiğinde `session.py`'nin `process_messages()` handler'ı `message.metric_type` → **AttributeError** → task crash → `Cleaning up session` → WebSocket close 1005. Belirti: STT çalışıyor, transkripsiyon geliyor, LLM başlıyor (`llm_first_token_ms` log'lanıyor), ama **bağlantı aniden kopuyor** (1005). TTS sesi hiç gelmiyor. **Fix:** `messages.py`'de `MetricsMessage`'a `@property` ekle: `metric_type` ve `value_ms` için. Bu hata hem mic session'ları hem de LLM metric'leri için aynı şekilde crash yapar.
 - **Node.js API key injection (12 Tem 2026 FIX):** Python `.env` dosyasındaki API key'ler bayatlayabilir veya placeholder (`***`) olabilir. Node.js Bitwarden'dan güncel key'leri çekip `spawn({env: {...}})` ile Python'a geçirmeli. `startSonioxPythonServer()` fonksiyonu `async` yapılmalı, `getGroqKey()` ve `getSonioxKey()` await edilmeli. `.env`'deki `OPENAI_API_KEY` placeholder'ı Bitwarden'dan gelen gerçek key ile override edilir (dotenv `override=False` default). Ayrıca `SONIOX_API_KEY_TTS` çift tanımlanmasına dikkat — ikinci boş tanım birinciyi ezer.
 
 ### Server Restart Gerekliliği (KRİTİK — 13 Tem 2026)
@@ -514,7 +632,19 @@ cat /proc/net/tcp | grep -E ":0BBD|:223D"
 | `tools.py` | ✅ Evet (Python yeniden başlamalı) |
 | `server.mjs` | ✅ Evet (Node.js yeniden başlamalı) |
 | `llm.py`, `stt.py`, `tts.py`, `vad.py` | ✅ Evet |
+| `messages.py` | ✅ Evet (Python yeniden başlamalı) |
 | `.env` | ✅ Evet |
+
+**Pitfall — pkill -f self-kill (18 Tem 2026):** `pkill -f "node server.mjs"` bazen Hermes terminal process'ini de öldürebilir (exit -15). Güvenli yöntem: PID bul → kill:
+```bash
+NODE_PID=$(ps aux | grep "node server.mjs" | grep -v grep | awk '{print $2}' | head -1)
+PY_PID=$(ps aux | grep "soniox-server/main.py" | grep -v grep | awk '{print $2}' | head -1)
+kill $NODE_PID $PY_PID 2>/dev/null
+# Keeper cron ~60-90sn içinde yeniden başlatır
+sleep 60 && ps aux | grep -E "node server.mjs|main.py" | grep -v grep
+```
+
+**Node.js Bridge Debug Logging (18 Tem 2026):** server.mjs WebSocket proxy'sine mesaj byte-count logları eklendi. C→P ve P→C mesajlarını `C→P #1: 8192b binary=true` formatında loglar. Bu log olmadan Cloudflare tunnel'in binary frame'leri bozup bozmadığını teşhis etmek imkansız. Ayrıca `pythonWs.send(data, { binary: isBinary })` kullanmak — eski kod `pythonWs.send(data)` kullanıyordu; explicit binary flag geçmek daha güvenli.
 
 ### Node.js Server
 - **EADDRINUSE:** Port hemen serbest kalmayabilir → server.mjs'de built-in retry (3 deneme, 2sn ara)
@@ -576,6 +706,9 @@ Bu hem AudioWorkletNode'un hem de ScriptProcessorNode'un çalışmasını sağla
 
 ### Full-Duplex Client (full-duplex.html) Pitfalls (17 Tem 2026)
 
+- **🚨 autoGainControl + noiseSuppression mobil mikrofonu öldürüyor (18 Tem 2026 — EN KRİTİK YENİ PITFALL):** `getUserMedia({ audio: { noiseSuppression: true, autoGainControl: true }})` mobil tarayıcılarda mikrofon sesini **0.43% peak** seviyesine düşürebiliyor (normal: 3-15%). Belirti: session `status=silent`, VAD hiç tetiklenmiyor, STT hiç token üretmiyor, kullanıcı "konuşuyorum ama cevap yok" diyor. **Fix:** ikisini de `false` yap, `channelCount: 1` ve `sampleRate: 16000` zorla. Detay: Voice Kalite Sorunu Teşhisi → Adım 0.0.
+- **Level meter miscalculation (18 Tem 2026 Fix):** Eski kod `Math.abs(view[i] / (view[i] < 0 ? 0x8000 : 0x7FFF))` ve `peak * 200` kullanıyordu — bu düşük seslerde sıfır gösteriyor, yüksek seslerde doyuyor. Doğru kod: `peak / 32768 * 100`. Detay: Adım 0.5.
+- **Track getSettings() logging (18 Tem 2026):** `getUserMedia()`'dan sonra `track.getSettings()` logla — tarayıcı constraint'leri sessizce değiştirebilir. `sampleRate: 16000` istemissin ama tarayıcı 48000Hz vermiş olabilir. Detay: Adım 0.6.
 - **🚨 MOBİL SESSİZ MİKROFON — En sık sebep (17 Tem 2026):** `getUserMedia()` ve `AudioContext.resume()` kullanıcı tıklaması dışında çağrılırsa iOS/Android sessizce reddeder. **Fix:** Bu çağrıları `startSession()` (tıklama handler'ı) içinde yap, WebSocket bağlantısını SONRA aç. Detay: Ses Yakalama → 🚨 MOBİL KRİTİK bölümü.
 - **iOS AudioWorklet Blob URL:** iOS Safari `addModule(blobUrl)`'e izin vermez. `/audioworklet-processor.js` ayrı dosyasını kullan. iOS 17+'da ScriptProcessor da kalktığı için bu olmadan hiçbir ses gitmez.
 - **Sessiz mikrofon log teşhisi:** Log'da `User speech start detected` tek sefer görünüp `UserSpeechEndMessage` hiç gelmiyorsa → ses yakalama çalışmıyor (mikrofondan hiç PCM gitmiyor). `llm_first_token_ms` veya `llm_total_ms` hiç görünmüyorsa → LLM hiç tetiklenmemiş.
@@ -608,7 +741,11 @@ Bu hem AudioWorkletNode'un hem de ScriptProcessorNode'un çalışmasını sağla
 
 - **Full-duplex vs half-duplex teşhis stratejisi (12 Tem 2026):** Full-duplex çalışmıyorsa önce half-duplex'i test et (`/index.html`). Half-duplex çalışıyorsa sorun full-duplex client kodundadır (WebSocket, PCM, AudioContext), altyapıda DEĞİLDİR (Groq API, Soniox, ağ). Bu teşhis akışı saatler kazandırır.
 
-- **Sunucu/istemci izolasyon testi (12 Tem 2026 — EN GÜVENİLİR TEŞHİS):** Full-duplex "hiç cevap yok" durumunda sorunun sunucuda mı istemcide mi olduğunu KESİN olarak belirlemek için: (1) `edge-tts` ile Türkçe bir WAV oluştur, (2) `ffmpeg` ile 16kHz mono PCM s16le'ye çevir, (3) Python script ile direkt `ws://127.0.0.1:8765` bağlanıp PCM dosyasını chunk'lar halinde gönder, (4) transkripsiyon + LLM cevabı + TTS sesi alınıyorsa → **sunucu MÜKEMMEL çalışıyor, sorun %100 frontend ses yakalamada.** Bu test olmadan saatlerce yanlış yerde debugging yapılır. Test script örneği: `references/server-side-isolation-test.py`.
+- **🚨 Ses seviyesi sıfıra yakın — AudioContext 16kHz (18 Tem 2026 — CRITICAL FIX):** Belirti: mikrofon 8192 byte PCM gönderiyor ama STT 0, VAD 0, LLM 0. Test kaydında peak %0.43. Kök neden: AudioContext native rate (48kHz) + manuel nearest-neighbor downsample sesi bastırıyor. **Çözüm:** `new AudioContext({ sampleRate: 16000 })` — downsample YOK. Soniox resmi `useMicrophone.ts` bu yaklaşımı kullanıyor. `noiseSuppression`/`autoGainControl` sadece Firefox'ta. `echoCancellation: true` + `processor.connect(micCtx.destination)` (GainNode(0) YOK). Ayrı 24kHz AudioContext TTS için. **Doğrulama:** edge-tts Türkçe PCM → ws://127.0.0.1:8765 → STT+LLM+TTS %100 çalıştı (159,744 byte TTS). Detay: `references/soniox-official-frontend-18-tem-2026.md`
+
+- **Sunucu/istemci izolasyon testi (12 Tem 2026 — EN GÜVENİLİR TEŞHİS):** Full-duplex "hiç cevap yok" durumunda sorunun sunucuda mı istemcide mi olduğunu KESİN olarak belirlemek için: (1) `edge-tts` ile Türkçe bir WAV oluştur, (2) `ffmpeg` ile 16kHz mono PCM s16le'ye çevir, (3) Python script ile direkt `ws://127.0.0.1:8765` bağlanıp PCM dosyasını chunk'lar halinde gönder, (4) transkripsiyon + LLM cevabı + TTS sesi alınıyorsa → **sunucu MÜKEMMEL çalışıyor, sorun %100 frontend ses yakalamada.** Bu test olmadan saatlerce yanlış yerde debugging yapılır. Test script örneği: `references/server-side-isolation-test.py`. **18 Tem 2026 doğrulaması:** edge-tts "Merhaba Vanitas, nasılsın bugün?" → STT tam yakaladı, LLM "İyiyim, senin nasılım?" cevap verdi, TTS 159,744 byte üretti — pipeline %100 çalışıyor.
+- **Cloudflare tunnel WebSocket binary corrupt (18 Tem 2026):** Cloudflare quick tunnel text WebSocket frame'lerini binary'e çeviriyor (`{"type":"session_start"}` text olarak gönderildi ama 25 byte BIN olarak geldi). Localhost pipeline mükemmel, Cloudflare üzerinden tepkisiz. Tailscale Funnel birincil dış erişim yöntemi olmalı.
+- **Groq LLM çalışıyor — hata varsayma (18 Tem 2026):** Log'da `llm_first_token_ms: 293ms` görünüyorsa Groq mükemmel çalışıyor. "Cevap gelmiyor" sorunu her zaman frontend (ses yakalama) veya session crash (MetricsMessage AttributeError) kaynaklı. Groq'u şüphelendirme — izolasyon testi ile doğrula önce.
 - **Konuşma hafızası — session içi ✅, cross-session ❌:** Her WebSocket session'ı kendi `self._messages` listesini tutar. Aynı session içinde LLM önceki konuşmaları hatırlar (3-5 mesaj döngüsü). Session sona erince liste kaybolur. Kullanıcı "bağlamdan kopuk" derse: cross-session hafıza henüz entegre değil.
 - **LLM model seçimi (sesli görüşme için):** Groq modelleri arasında seçim yaparken hız + Türkçe kalitesi dengesi. **17 Tem 2026 kararı:** Edel'in talebi üzerine kapsamlı benchmark yapıldı (`references/groq-model-benchmarks-17-tem-2026.md`). Sonuç: `llama-3.3-70b-versatile` Türkçe kalitesinde açık ara en iyisi ve inference süresi (~150ms) sesli görüşme için fazlasıyla yeterli. `llama-3.1-8b-instant` daha hızlı (51ms) ama Türkçe kalitesi ve Vanitas kişiliğini taşıma kapasitesi düşük. 8B sesli görüşme için "parametresi düşük" kalıyor. Qwen3 serisi ise `` etiketi ile çalıştığı için kullanılamaz.
   | Model | Inference | Queue | Toplam | Türkçe | Karar |
@@ -652,3 +789,8 @@ Bu skill yüklendiğinde:
 10. Gerekiyorsa `references/gpt-live-competitive-research-13-tem-2026.md`
 10. Gerekiyorsa `references/code-audit-17-tem-2026.md` — tüm açık hatalar listesi, VAD doğrulama, dual-prompt karşılaştırması, GET / flood, keeper timeout
 11. Gerekiyorsa `scripts/vanitas_tunnel.sh` — cloudflared tunnel keeper (container içi, cron no_agent, URL değişince bildirim)
+12. Gerekiyorsa `references/silent-session-diagnosis.md` 🆕 — "konuşuyorum ama cevap yok" sessiz session teşhisi (mic.wav peak analizi, AGC/NS pitfall, izolasyon testi)
+13. Gerekiyorsa `references/cloudflared-tunnel-binary-websocket-issue.md` 🆕 — Cloudflare quick tunnel binary WebSocket frame'lerini bozuyor (18 Tem 2026)
+14. Gerekiyorsa `references/soniox-official-frontend-comparison-18-tem-2026.md` 🆕 — Soniox resmi frontend karşılaştırması + AudioContext 16kHz stratejisi
+15. Gerekiyorsa `references/llm-turkish-benchmark-18-tem-2026.md` 🆕 — Mistral Small 4 (NVIDIA NIM) vs llama-3.3-70b (Groq) Türkçe kalite + hız benchmarkı
+16. Gerekiyorsa `references/speaker-diarization-voice-fingerprint-plan-18-tem-2026.md` 🆕 — Soniox speaker diarization + MFCC voice fingerprint entegrasyon planı (çoklu konuşmacı tespiti)

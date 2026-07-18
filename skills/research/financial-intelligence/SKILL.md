@@ -111,7 +111,36 @@ web_extract([
 - Bloomberg HT: BIST canlı, piyasa verileri, döviz kurları
 - Dünya Gazetesi: Türkiye ekonomisi haberleri, şirket haberleri
 
-#### c) Google News — web_search ile üçüncül kaynak
+#### c) Türk Medya Kaynakları — web_search ile URL tarih-deseni keşfi
+
+**Para Dergisi (paradergi.com.tr)** — Haftalık ekonomi dergisi, hisse önerileri, halka arz haberleri, sektör analizleri.
+```
+# 1) Ana sayfa + son haberler
+web_extract(["https://www.paradergi.com.tr/"])
+
+# 2) URL tarih-deseni keşfi: Türk haber siteleri /kategori/YYYY/MM/slug yapısı kullanır
+web_search("site:paradergi.com.tr 2026/07")   # bu ayki makaleler
+web_search("site:paradergi.com.tr 2026/06")   # geçen ay
+
+# 3) Spesifik makale çekme
+web_extract(["https://www.paradergi.com.tr/finans/2026/07/16/uzun-vade-icin-onerilen-23-hisse"])
+```
+
+**X/Twitter Hesabı (@ParaDergisi)** — Dergi kapağı duyuruları, metin detayı genelde yok.
+```
+# Yöntem 1: web_search ile tweet URL keşfi
+web_search("from:@ParaDergisi since:2026-07-01")  # son tweet'leri bul
+
+# Yöntem 2: Direkt tweet URL'den içerik çek
+web_extract(["https://x.com/ParaDergisi/status/<ID>"])
+
+# NOT: X ana sayfası (browser_navigate) çoğu zaman eski tweet'leri gösterir
+#      (pinned/eski tweet'ler). Güncel içerik için doğrudan tweet URL'i kullan.
+```
+
+**Dünya Gazetesi (dunya.com)** — Türkiye ekonomi haberleri, şirket bazlı gelişmeler.
+
+#### d) Google News — web_search ile üçüncül kaynak
 Her sorgu için ayrı web_search çağrısı:
 - "BIST 100 endeksi bugün"
 - "Türkiye ekonomisi haberleri"
@@ -120,7 +149,7 @@ Her sorgu için ayrı web_search çağrısı:
 - Sabah ek: "Asya piyasaları" + "ABD vadeli işlemler"
 - Akşam ek: "BIST kapanış" + "emtia fiyatları"
 
-#### c) yfinance Canlı Veri
+#### e) yfinance Canlı Veri
 ```bash
 python3 /home/ubuntu/.hermes/scripts/makro_veri.py --json
 ```
@@ -128,7 +157,7 @@ python3 /home/ubuntu/.hermes/scripts/makro_veri.py --json
 - Makro Panel'de kullanılır
 - Hata durumunda diğer kaynaklarla devam et
 
-#### d) 🐝 Bitcoin Arısı — Kripto Drop & Birikim Fırsatları (@BitcoinArisi)
+#### f) 🐝 Bitcoin Arısı — Kripto Drop & Birikim Fırsatları (@BitcoinArisi)
 - **Kaynak:** @BitcoinArisi Telegram kanalı (t.me/s/BitcoinArisi)
 - **Tarama:** Günde 1 kere (sabah 09:00) — no_agent cron job
 - **Script:** `~/.hermes/scripts/bitcoin-arisi-tarayici.py --cron`
@@ -137,22 +166,24 @@ python3 /home/ubuntu/.hermes/scripts/makro_veri.py --json
 - **Kategoriler:** DROP fırsatı, UCUZ yatırım, Hedef fiyat
 - **Kullanım:** Ekonomi bülteninde "🐝 Kripto Drop & Birikim Fırsatları" bölümü
 
-#### e) 🪙 Coin Listesi (Investing.com + CoinGecko)
+#### g) 🪙 Coin Listesi (Investing.com + CoinGecko)
 - **Script:** `~/.hermes/scripts/coin-listesi.py`
 - **Kapsam:** 250 coin (BTC, ETH, XRP, SOL, ADA, DOGE vb.)
 - **Güncelleme:** Her gün 07:00 (cron: 67f6794f67f7)
 - **Veri kaynağı:** CoinGecko API (ücretsiz, API key gerekmez)
 
-#### f) Bundle Entegrasyonu
+#### h) Bundle Entegrasyonu
 Mevcut "Bundle Gündem" cron'u (günde 3 kere) genel haber akışını toplar. Ekonomi kategorisi filtrelenerek kullanılabilir. Ancak ekonomi cron'u Bundle'a bağımlı DEĞİLDİR — BBC + Google News ile bağımsız çalışır.
 
-#### g) YouTube Ekonomi Kanalları (CRON AKTİF — 07:00)
+#### i) YouTube Ekonomi Kanalları (CRON AKTİF — 07:00)
 5 ekonomi/yatırım kanalı düzenli olarak taranır. Cron job `e0ab298fccc8` her sabah 07:00'de çalışır:
 - Kayıt Dışı İktisat (Ceyhun Elgin) — makro ekonomi analizi
 - Yatırım 101 — finansal okuryazarlık, portföy yönetimi
 - Kendine Milyoner — bireysel yatırım, altın/gümüş
 - Borsadan Hisse — BIST, teknik analiz, temel analiz
-- Mark Tilbury — uluslararası yatırım, zenginlik stratejileri
+5. **Mark Tilbury** — uluslararası yatırım, zenginlik stratejileri
+
+> ⚠️ **GAP (18 Tem 2026):** Bu veriler toplanıyor ama Ekonomi Zekası bülten prompt'unda KULLANILMIYOR. YouTube transkriptleri `~/.hermes/data/youtube/transcripts/` dizininde bekliyor. Bültene entegre edilmesi için prompt'a "📺 YouTube'dan Öne Çıkanlar" bölümü eklenmeli.
 
 ### Veri Çekme Yöntemi (API anahtarı gerekmez)
 
@@ -204,7 +235,35 @@ BIST100, USD/TRY, Altın, Bitcoin, vd.
 ⚠️ Yatırım tavsiyesi değildir.
 ```
 
-### Telegram Format Kuralları
+### 🎯 Tavsiye Değerlendirme Formatı — Her Öneri İçin ZORUNLU
+
+Hisse önerisi, halka arz, sektör analizi veya herhangi bir yatırım tavsiyesi raporunda **HER öneri için** "Edel için uygunluk" yorumu eklenmelidir.
+
+**Format:**
+```
+📌 Edel için uygunluk: [UYGUN / KISMEN / DEĞİL] — [kısa gerekçe, maks 2 cümle]
+```
+
+**Değerlendirme Kriterleri (sırayla):**
+1. **Risk toleransı:** Yüksek volatilite, kısa vadeli trade, yeni halka arz → temkinli yaklaş
+2. **Bilanço gücü:** Düşük borç, yüksek marj, düzenli temettü → daha uygun
+3. **Sektör durumu:** Faiz indirim döngüsünde banka/finans pozitif, emtia değişken
+4. **Likidite:** Giriş-çıkış kolaylığı (işlem hacmi yüksek hisseler tercih)
+5. **Uygunluk seviyesi:**
+   - **UYGUN** — Defansif, güçlü bilanço, uzun vade pozitif
+   - **KISMEN** — Potansiyeli var ama riskleri de mevcut (açıkla)
+   - **DEĞİL** — Yüksek risk, spekülatif, düşük likidite, uygun fiyat değil
+
+**Örnek:**
+```
+📌 Edel için uygunluk: UYGUN — THY jeopolitik risklere rağmen güçlü operasyonel performans sergiliyor,
+hem uzun vadeli listede hem model portföyde yer alması kurumsal güven işareti.
+```
+
+### Per-Recommendation Suitability Format — MANDATORY
+
+For each stock pick, IPO analysis, or sector call report, append a suitability note.
+See Turkish version above for criteria.
 - Kısa ve okunabilir: her haber için max 4 satır
 - Emoji kullan: 📈 📋 🎯 ⚡ 🔮 📊 🟢 🔴 ⚪
 - Tablo kullanma (Telegram tablo desteği yok)
@@ -355,11 +414,11 @@ python3 ~/.hermes/scripts/kaldirac-simulator.py --hedef-coinler XRP,SOL,ADA,DOGE
 
 | Provider | Durum | Açıklama |
 |----------|-------|----------|
-| `opencode-zen` (deepseek-v4-flash-free) | ⚠️ Free limit ortak | Diğer cron job'larla + Hermes yardımcı sistemleriyle aynı günlük kotayı paylaşır |
+| `opencode-zen` (deepseek-v4-flash-free) | ❌ ÇALIŞMIYOR (403 Forbidden) | 33 watchdog FAILED (403 Forbidden, error code 1010). API key geçersiz. Protected olduğu için otomatik değişmedi. Etkilenen cron job'lar elle opencode-go'ya çekilmeli. |
 | `NVIDIA` (deepseek-ai/deepseek-v4-flash) | ❌ Güvenilmez | Ara sıra 200 dönse de çoğu istek timeout. Kullanma. |
 | `custom:opencode-go` (port 19998, deepseek-v4-flash) | ✅ En güvenilir | Ücretli proxy ama ana sohbet zaten kullanıyor. Rate limit yok. Ek maliyet minimal. |
 
-**Güncel:** NVIDIA'ya geçildi ama timeout sorunu yaşatıyor → opencode-go'ya geçilmesi düşünülüyor.
+**Güncel (18 Tem 2026):** opencode-zen (deepseek-v4-flash-free) ❌ çalışmıyor (403). opencode-go (deepseek-v4-flash) ✅ en güvenilir. Etkilenen cron job'lar: Vanitas Rüya, Skool Daily Check, Skool İstihbarat, LinkedIn Kuyruk Besle.
 
 ### 🐝 Bitcoin Arısı Tarama
 **Job ID:** `9d515802f2b2` | **Zaman:** 09:00 | **no_agent**
@@ -407,6 +466,7 @@ Detaylı cron prompt'u için: `references/ekonomi-cron-prompt-working.md`
 - `references/ekonomi-cron-prompt-working.md` — Çalışan cron prompt'unun tam metni
 - `references/youtube-ekonomi-kanallari.md` — Takip edilen YouTube kanalları ve kanal ID'leri
 - `references/turkish-market-data-sources.md` — Bloomberg HT vs yfinance veri kaynakları karşılaştırması
+- `references/para-dergisi-scanning.md` — Para Dergisi kaynak tarama workflow'u, Twitter/X yedekleme stratejisi, URL tarih-deseni keşfi, Edel uygunluk yorum formatı
 - `references/turkiye-bist-dca.md` — Türkiye BIST DCA stratejisi, SPK düzenlemeleri, küçük bütçeyle portföy planlaması (Temmuz 2026)
 - `references/telegram-kanali-veri-kaynagi.md` — Telegram kanalı scrape edip Ekonomi Zekası'na veri kaynağı olarak ekleme
 - `references/kaldirac-simulasyonu.md` — Kaldıraçlı işlem simülasyonu backtest sonuçları

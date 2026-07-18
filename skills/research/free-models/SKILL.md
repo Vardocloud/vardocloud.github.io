@@ -11,14 +11,15 @@ metadata:
 
 **Amaç:** Kullanılabilir free provider'lar ve modellerin yeteneklerini, hangi işlerde kullanılacağını ve seçim stratejisini tanımlar. Her provider'ın durumu değişebilir — test etmeden kabul etme.
 
-## 🚨 Güncel Durum (13 Tem 2026)
+## 🚨 Güncel Durum (18 Tem 2026)
 
 | Provider | Durum | Açıklama |
 |----------|-------|----------|
-| **LiteRouter** | ✅ Çalışıyor | deepseek-v3.2:free Türkçe'de en iyisi |
-| **NVIDIA (build.nvidia.com)** | ✅ Çalışıyor | minimaxai/minimax-m3 Türkçe LinkedIn için en iyisi (TEST EDİLDİ) |
-| **opencode-zen** | ❌ Bozuk | deepseek-v4-flash-free content boş döndürür, reasoning token var ama çıktı yok |
-| **Pollinations** | ❌ Terk edildi | [14 Tem 2026] Para yüklemeden çalışmıyor. Tüm referanslar temizlendi |
+| **LiteRouter** | ✅ Yedek | deepseek-v3.2 Türkçe'de iyi. opencode-zen düzelince yedek konuma düştü, aktif kullanılmıyor. |
+| **literouter** (custom provider) | ✅ Yedek | deepseek-v3.2 + gemma-3-27b. opencode-zen çözülene kadar geçici kullanıldı, şimdi yedek. |
+| **NVIDIA (build.nvidia.com)** | ✅ Çalışıyor | minimaxai/minimax-m3, deepseek-ai/deepseek-v4-flash (worker queue sorunu olabilir) |
+| **opencode-zen** | ✅ Çalışıyor | [18 Tem 2026] deepseek-v4-flash-free opencode.ai/zen/v1 üzerinde çalışıyor. **İki fix uygulandı:** (1) Cloudflare WAF curl User-Agent'ı engelliyor → provider extra_headers'e Chrome UA + Origin + Referer eklendi. (2) deepseek-v4-flash-free reasoning model olduğu için `max_tokens` parametresi content'i boş bırakıyor → extra_body'de `max_tokens: null` + `max_completion_tokens: 8192` ile çözüldü. Rate limit testi: 10/10 başarılı. Tüm cron job'lar opencode-zen/deepseek-v4-flash-free kullanıyor. |
+| **Pollinations** | ❌ Terk edildi | [14 Tem 2026] Para yüklemeden çalışmıyor. |
 
 **Önemli:** Provider durumları değişir. Cron job atamadan önce test et.
 
@@ -96,13 +97,11 @@ Free model atamadan önce mutlaka DOĞRUDAN API testi yap:
 1. **API'yi belirle:** Provider'ın base_url + auth header'ını bul (config.yaml veya .env)
 2. **Model adını bul:** Provider'ın catalog/list endpoint'inden
 3. **Türkçe test prompt'u gönder:** curl ile API endpoint'ine POST, model adı ve mesaj ile. max_tokens=50 yeterli.
-4. **Kontrol et:** HTTP 200 + content dolu mu? Yoksa reasoning token var ama content boş mu? (opencode-zen hatası)
+4. **Kontrol et:** HTTP 200 + content dolu mu? Reasoning modellerde (opencode-zen deepseek-v4-flash-free gibi) `max_tokens` parametresi content'i boş bırakır, `max_completion_tokens` kullanılmalı. content boşsa `max_completion_tokens` dene.
 5. **LinkedIn/post testi:** Basit merhaba çalışsa bile complex prompt'ta boş dönebilir (step-3.7-flash). Gerçek kullanım senaryosuna yakın prompt ile tekrar test et.
 6. **Timeout kontrolü:** 15-20sn'den uzun süren modeller cron için uygun değil.
 7. **Toplu karşılaştırma:** En iyi modeli bulmak için aynı prompt'u 5-10 modelde dene, çıktıları yan yana karşılaştır. Tek model test edip "bu iyi" deme — en iyisini bulana kadar dene.
 8. **Prompt kalitesi testi:** LinkedIn/post gibi gerçekçi bir prompt kullan (2-3 cümle, konu belirt, ton belirt). Sadece "merhaba de" testi aldatıcı olabilir.
-
-### 🧠 Model Seçim Kriterleri (Auxiliary Task'lar İçin)
 
 Bir modeli auxiliary task'a atarken şu kriterleri sırayla değerlendir:
 
@@ -128,6 +127,14 @@ Bir modeli auxiliary task'a atarken şu kriterleri sırayla değerlendir:
 8. **Prompt kalitesi testi:** LinkedIn/post gibi gerçekçi bir prompt kullan (2-3 cümle, konu belirt, ton belirt). Sadece "merhaba de" testi aldatıcı olabilir.
 
 ## 📦 Cron Job Model Atama
+
+### opencode-zen (birincil — deepseek-v4-flash-free)
+```python
+cronjob(action='update', job_id='JOB_ID',
+    model={'provider': 'opencode-zen', 'model': 'deepseek-v4-flash-free'})
+```
+
+Config'de extra_headers (Cloudflare) ve extra_body (reasoning fix) otomatik uygulanır.
 
 ### LiteRouter
 ```python
@@ -168,6 +175,17 @@ cronjob(action='update', job_id='JOB_ID',
 
 ## ⚙️ API Key Yönetimi
 
+### opencode-zen
+- **Key:** BWS'de `OPENCODE_ZEN_API_KEY` olarak saklanır
+- **Endpoint:** `https://opencode.ai/zen/v1`
+- **Model:** `deepseek-v4-flash-free` (config'de provider mapping ile)
+- **Cloudflare fix:** extra_headers gerekli (Chrome UA + Origin + Referer)
+- **Reasoning fix:** extra_body'de `max_tokens: null` + `max_completion_tokens: 8192`
+- **Rate limit:** Test edildi, 10 ardışık istekte sorun yok
+- **Dokümantasyon:** `https://opencode.ai/docs/zen/`
+- **Model listesi:** `https://opencode.ai/zen/v1/models`
+- **Detaylı fix referansı:** `references/opencode-zen-reasoning-fix.md`
+
 ### LiteRouter
 - Key: Bitwarden secret'dan alınır, `/tmp/.or_key`'e yazılır (chmod 600)
 - `/tmp` ephemeral — reboot'ta silinir. Bitwarden'dan yeniden çek.
@@ -202,7 +220,7 @@ cronjob(action='update', job_id='JOB_ID',
 
 ## 🚨 Pitfall'lar
 
-1. **opencode-zen content boş döner** — HTTP 200 alırsın, reasoning_content dolu gelir ama content="" olur. Bu model ölü demo. Kullanma.
+1. **opencode-zen reasoning content boş sorunu** — deepseek-v4-flash-free opencode.ai/zen'de reasoning model olduğu için `max_tokens` parametresi gönderilince content boş, reasoning_content dolu geliyor. **Çözüm:** provider extra_body'de `max_tokens: null` + `max_completion_tokens: 8192` gönder. Ayrıca Cloudflare WAF curl User-Agent'ı engelliyor → extra_headers'e Chrome UA (`Mozilla/5.0 (Macintosh; ...) Chrome/146.0.0.0 Safari/537.36`) + `Origin: https://opencode.ai` + `Referer: https://opencode.ai/zen` ekle. Detaylı referans: `references/opencode-zen-reasoning-fix.md`.
 2. **Step 3.7 Flash tuzağı** — Basit "Merhaba" testinde çalışır ama complex LinkedIn prompt'ta content=null döner. Basit test yetmez, gerçek prompt ile test et.
 3. **Pollinations terk edildi** — [14 Tem 2026] Tüm kullanım durduruldu. Image generation boşluğu için Segmind veya OpenRouter Gemini image modellerine geçildi.
 4. **NVIDIA model adları case-sensitive** — API'deki tam adı kullan. Catalog'dan birebir kopyala.
@@ -224,6 +242,7 @@ Pollinations terk edildi. Şu an çalışan ücretsiz image generation API key'i
 | **Groq** | ❌ | ✅ Vision var | Zaten kullanılıyor |
 
 ## 📁 Referans Dosyaları
+- `references/opencode-zen-reasoning-fix.md` — [18 Tem 2026] deepseek-v4-flash-free reasoning content boş sorunu ve Cloudflare WAF çözümü. 2 adım: extra_headers + extra_body fix. Test sonuçları ve config örneği.
 - `references/image-generation-providers.md` — Pollinations sonrası test edilen tüm sağlayıcılar ve durumları
 - `references/nvidia-free-models.md` — NVIDIA API test sonuçları (hangi modeller çalıştı, HTTP kodları, Türkçe kalitesi)
 - `references/nvidia-free-tier-research.md` — [14 Tem 2026] NVIDIA NIM free tier: 3 limit katmanı, model stabilite testleri (GLM 5.2 %100, M3 %80), abonelik bilgisi, rate limit yönetimi

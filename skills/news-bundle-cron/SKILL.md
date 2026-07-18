@@ -56,30 +56,32 @@ re-running the cron will hit if not encoded.
   one-line pointer to the archive. The same threshold logic as llm-wiki's `log.md`.
   **The rotation check is a MANDATORY step in the workflow (step 1), not an optional
   maintenance task.**
-  **🚨 ROTATION OVERDUE — 4 CONSECUTIVE SKIPS (July 12, 13, 14, 15 2026):**
-  As of July 15 2026 the ledger is at **655+ lines / 58+ KB** and has NOT been
-  rotated despite FOUR cron runs skipping the gate. Each skip makes dedup less
-  reliable (the tail entries — the most recent ones needed for dedup — are beyond
-  the `read_file` 500-line truncation point and must be read with `offset`).
-  **The VERY NEXT run MUST rotate FIRST, before any news gathering.** Do NOT
-  append again without rotating. See Rotation Procedure in
-  `references/news-bundle-pipeline.md`.
-  **ROOT CAUSE of repeated skips:** The rotation gate is buried in the Pitfalls
-  section and easy to miss when the agent jumps straight to news gathering.
-  The workflow step 1 says "ROTATION GATE" but the agent reads the ledger, sees
-  the content, and proceeds to search without checking the size threshold.
-  Additionally, the rotation procedure only documents `mv` (terminal command),
-  but agents in cron mode tend to avoid terminal and only use `read_file`/
-  `write_file`/`patch` — so rotation feels impossible and gets silently skipped.
+  **✅ ROTATION COMPLETED — July 18, 2026:** The overdue rotation was finally
+  performed. Ledger went from 680 lines / 62 KB → 102 lines (fresh, with last
+  ~85 entries retained for dedup). Full archive saved to
+  `processed_titles-2026.md`. The four consecutive skips (July 12-15) are
+  resolved. **Do NOT rotate again unless `total_lines > 500` or size > 50 KB.**
+  **ROOT CAUSE of the original repeated skips (kept as a lesson):** The rotation
+  gate was buried in the Pitfalls section and easy to miss when the agent jumps
+  straight to news gathering. The workflow step 1 says "ROTATION GATE" but the
+  agent reads the ledger, sees the content, and proceeds to search without
+  checking the size threshold. Additionally, the rotation procedure only
+  documented `mv` (terminal command), but agents in cron mode tend to avoid
+  terminal and only use `read_file`/`write_file`/`patch` — so rotation feels
+  impossible and gets silently skipped.
   FIX: After `read_file` returns, **check `total_lines` IMMEDIATELY**. If >500,
   STOP — rotate before doing anything else. No exceptions.
-  **ROTATION WITHOUT TERMINAL (write_file method):** If `terminal` is not
-  available or you prefer not to use it, rotate using `write_file`:
-  1. Read the full ledger (first 500 lines + `offset` tail to get all content)
-  2. `write_file` to `~/wiki/news/processed_titles-2026.md` with the FULL content
-  3. `write_file` to `~/wiki/news/processed_titles.md` with just the header +
-     last 80 lines (recent entries for ongoing dedup)
-  This is the cron-safe rotation path — no `mv` needed.
+  **PROVEN ROTATION METHODS (all cron-safe):**
+  - **Method A — terminal `cp + tail` (tested July 18, works cleanly):**
+    `cp processed_titles.md processed_titles-2026.md` (archive, original
+    preserved as backup during op) then `tail -85 processed_titles-2026.md >
+    processed_titles.md` with a fresh header prepended. Safer than `mv` because
+    the original is never deleted mid-operation.
+  - **Method B — `write_file` (no terminal needed):**
+    1. Read the full ledger (first 500 lines + `offset` tail to get all content)
+    2. `write_file` to `~/wiki/news/processed_titles-2026.md` with the FULL content
+    3. `write_file` to `~/wiki/news/processed_titles.md` with just the header +
+       last 80 lines (recent entries for ongoing dedup)
 
 - **`execute_code` blocked under cron mode** — when `approvals.cron_mode` is set
   without a user present to approve, `execute_code` is rejected. Use direct tools

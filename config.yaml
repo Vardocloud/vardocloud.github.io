@@ -262,12 +262,16 @@ custom_providers:
   api_mode: chat_completions
   base_url: https://opencode.ai/zen/v1
   models:
-    big-pickle: big-pickle
     deepseek-v4-flash-free: deepseek-v4-flash-free
-    mimo-v2.5-free: mimo-v2.5-free
-    nemotron-3-ultra-free: nemotron-3-ultra-free
-    north-mini-code-free: north-mini-code-free
   name: opencode-zen
+  extra_headers:
+    User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36
+      (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+    Origin: https://opencode.ai
+    Referer: https://opencode.ai/zen
+  extra_body:
+    max_tokens: null
+    max_completion_tokens: 8192
 - api_key_env: GROQ_API_KEY
   api_mode: chat_completions
   base_url: https://api.groq.com/openai/v1
@@ -292,6 +296,16 @@ custom_providers:
     google/gemini-3.1-flash-lite: google/gemini-3.1-flash-lite
     qwen/qwen3.7-plus: qwen/qwen3.7-plus
   name: Zenmux
+- api_key_env: LITEROUTER_API_KEY
+  api_mode: chat_completions
+  base_url: https://api.literouter.com/v1
+  models:
+    deepseek-v3.2: deepseek-v3.2
+    gemma-3-27b: gemma-3-27b:free
+    deepseek-v4-flash-free: deepseek-v4-flash:free
+  name: literouter
+  extra_headers:
+    User-Agent: Vanitas/1.0
 dashboard:
   basic_auth:
     password: ''
@@ -472,6 +486,9 @@ mcp_servers:
   notebooklm:
     command: /home/ubuntu/.hermes/scripts/start-notebooklm-mcp-pro.sh
     enabled: true
+  notebooklm_legacy:
+    command: /home/ubuntu/.hermes/scripts/start-notebooklm-mcp-legacy.sh
+    enabled: true
   puppeteer:
     args:
     - -a
@@ -486,9 +503,6 @@ mcp_servers:
     - --db-path
     - /home/ubuntu/.hermes/data/vanitas.db
     command: uvx
-  notebooklm_legacy:
-    command: /home/ubuntu/.hermes/scripts/start-notebooklm-mcp-legacy.sh
-    enabled: true
 memory:
   memory_char_limit: 2200
   memory_enabled: true
@@ -631,9 +645,6 @@ quick_commands:
   linkedin-durum:
     target: /linkedin
     type: alias
-  uptime:
-    command: uptime -p
-    type: exec
   restart:
     target: /gateway restart
     type: alias
@@ -644,6 +655,9 @@ quick_commands:
   transcript:
     command: python3 /home/ubuntu/.hermes/scripts/yt_transcript.py
     description: 'Get YouTube transcript. Usage: /transcript VIDEO_ID [lang]'
+    type: exec
+  uptime:
+    command: uptime -p
     type: exec
 secrets:
   bitwarden:
@@ -707,7 +721,7 @@ slack:
   require_mention: true
 streaming:
   buffer_threshold: 24
-  cursor: " \u2589"
+  cursor: ' ▉'
   edit_interval: 0.8
   enabled: false
   fresh_final_after_seconds: 60.0

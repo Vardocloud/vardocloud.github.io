@@ -166,22 +166,25 @@ and `write_file`, both of which work in cron mode without approval.
   lost ~4.4 KB of mid-file entries.)
 
 - **Ledger rotation not performed** — The rotation check is MANDATORY in
-  step 1 of the workflow, not optional maintenance. As of July 15 2026 the
-  ledger is at **655+ lines / 58+ KB** and has NOT been rotated despite FOUR
-  cron runs (July 12, 13, 14, 15) skipping the gate. Each skip worsens dedup
-  reliability because the tail entries (most recent, most needed for dedup)
-  are beyond the `read_file` 500-line truncation point.
-  **ROOT CAUSE:** The agent reads the ledger content, sees familiar entries,
-  and proceeds to news gathering without checking `total_lines` against the
-  threshold. Additionally, the rotation procedure only documented `mv`
-  (terminal), but cron-mode agents tend to avoid terminal — so rotation
-  feels impossible and gets silently skipped.
-  **The VERY NEXT run MUST rotate FIRST.** See Rotation Procedure below.
-  **write_file-based rotation (no terminal needed):**
-  1. Read the full ledger (first 500 lines + `offset=<total_lines-80>` tail)
-  2. `write_file` to `~/wiki/news/processed_titles-2026.md` with the FULL content
-  3. `write_file` to `~/wiki/news/processed_titles.md` with just the header +
-     last 80 lines (recent entries for ongoing dedup)
+  step 1 of the workflow, not optional maintenance.
+  **✅ Resolved July 18, 2026:** The overdue rotation (skipped July 12-15) was
+  finally performed — 680 lines → 102, archive at `processed_titles-2026.md`.
+  Do NOT rotate again unless `total_lines > 500` or size > 50 KB.
+  **ROOT CAUSE (kept as lesson):** The agent reads the ledger content, sees
+  familiar entries, and proceeds to news gathering without checking
+  `total_lines` against the threshold. Additionally, the rotation procedure
+  only documented `mv` (terminal), but cron-mode agents tend to avoid terminal
+  — so rotation feels impossible and gets silently skipped.
+  **PROVEN ROTATION METHODS:**
+  - **Method A — terminal `cp + tail` (tested July 18 2026, works cleanly):**
+    `cp processed_titles.md processed_titles-2026.md` then prepend a fresh
+    header + `tail -85 processed_titles-2026.md > processed_titles.md`.
+    Safer than `mv` — original preserved as backup during the operation.
+  - **Method B — `write_file` (no terminal needed):**
+    1. Read the full ledger (first 500 lines + `offset=<total_lines-80>` tail)
+    2. `write_file` to `~/wiki/news/processed_titles-2026.md` with the FULL content
+    3. `write_file` to `~/wiki/news/processed_titles.md` with just the header +
+       last 80 lines (recent entries for ongoing dedup)
   This is the cron-safe rotation path.
 
 - **web_extract URL limit** — Max 5 per call. Split into multiple calls.

@@ -97,20 +97,50 @@ for c in combinations:
         unique.append(c)
 ```
 
-### 5. Vision Integration
-Two-tier input strategy:
-1. **Manual input** (fastest) — user types tiles, you run the solver
+### 5. Input Strategy — Three-Tier
+
+For board/card/tile game solvers, there are three input approaches ranked by speed:
+
+1. **Manual input** (fastest during development) — user types tile codes, you run the solver
 2. **Photo → vision** — user sends photo, you use vision_analyze to extract tiles, then run solver
+3. **Mobile web app** (fastest at the game table) — Flask app served over Tailscale, user taps tiles on their phone
+
+#### Tier 2: Photo → vision
 
 For the photo path, the flow is:
 ```
 User → sends photo + "okey şu taş" → 
-You → vision_analyze(image_path, question="list tiles in format K5, S11, ...") →
+You → vision_analyze(image_path, question="list tiles in format K5, Y11, M3, ...") →
 You → parse extracted tiles → run solver →
 You → send strategy result
 ```
 
 **Always ask for the okey/joker info when photo is involved** — it's rarely visible in the photo.
+
+**Vision pitfalls specific to tile games:**
+- Color ambiguity under artificial light (Mavi looks like Siyah — use the "3 copies rule" to detect: each tile appears exactly twice in the deck)
+- Lighting shifts yellow → orange (user might say "turuncu" for yellow)
+- The false joker has a distinctive star symbol
+
+See `references/101-okey-algorithm.md` → "Vision Integration — Pitfalls for 101" for the full prompt template and detection strategies.
+
+#### Tier 3: Mobile web app (Tailscale + Flask)
+
+When the user must input tiles in seconds during live play:
+```
+User phone → Tailscale → Flask server (your machine) → solver engine
+```
+
+The frontend is a single HTML page with big tap targets (color buttons + number grid). The backend is a Flask app that calls the same solver functions and returns JSON.
+
+Key design for the app:
+- 4 color buttons (🔴K 🟡Y 🔵M ⚫S) — tap to select
+- 7-column number grid (1-13 + OKEY) — tap to add tile
+- Tile list shows entered tiles, tap to remove
+- Okey dropdown shown as a badge
+- All logic in a single Flask file; no database, no state
+
+See `references/101-okey-algorithm.md` → "Web App for Mobile Input" for setup instructions and the full frontend/backend description.
 
 ## Pitfalls
 
@@ -120,11 +150,14 @@ You → send strategy result
 - **Pair counting != occurrence counting** — a "pair" is two identical tiles (same number AND same color). Count `(number, color)` combos, then integer-divide by 2
 - **Sort candidate sets by points descending** — this makes the first-found combination the most-points-per-set one, and the search finds better ones by exploring further
 - **Combinatorial explosion guard** — with 21+ tiles, prune aggressively (limit lookahead to ~10 sets, skip sets that overlap with used tiles)
-- **Vision output needs parsing** — LLM vision responses are free-form. Use a specific prompt template requesting "K5 S11 M3" format
+- **Vision output needs parsing** — LLM vision responses are free-form. Use a specific prompt template requesting "K5 Y11 M3" format
+- **Color naming must be unambiguous** — don't use `S` for both "Sarı" and "Siyah". Use K/Y/M/S: K(Kırmızı), Y(Sarı), M(Mavi), S(Siyah). Never use `R` for Siyah — Turkish speakers won't guess it.
+- **Python module names can't start with digits** — `101_analyzer.py` cannot be imported (`from 101_analyzer import ...` is a syntax error). Rename to start with a letter (e.g., `okey_analyzer.py`)
+- **Cloudflared path** — the binary is at `~/.hermes/bin/cloudflared`, not in the general PATH. Use the full path or add `~/.hermes/bin` to PATH when deploying tunnels.
 
 ## Reference Files
 
-- `references/101-okey-algorithm.md` — full implementation details for 101 Okey, including the O(tiles × sets) backtracking solver, pair/grup/per detection, and çifte gitme analysis
+- `references/101-okey-algorithm.md` — full implementation details for 101 Okey: game rules, K/Y/M/S color convention, backtracking solver, pair/grup/per detection, çifte gitme analysis, Flask web app setup, vision integration pitfalls, and Cloudflare Tunnel deployment
 
 ## Related Skills
 

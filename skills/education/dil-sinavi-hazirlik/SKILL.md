@@ -1,9 +1,10 @@
 ---
 name: dil-sinavi-hazirlik
 description: >-
-  Dil yeterlilik sınavı hazırlığı (PTE Academic, TOEFL, IELTS).
+  Dil yeterlilik sınavı hazırlığı (PTE Academic, TOEFL).
   Teşhis-odaklı yaklaşım: mock test → zayıf alan → template + pratik.
   Kaynak keşfi, template oluşturma, çalışma planı.
+  Türkiye'deki lisansüstü başvurular için ÖSYM eşdeğerlik bilgilerini içerir.
 ---
 
 # Dil Sınavı Hazırlık Rehberi
@@ -52,3 +53,40 @@ description: >-
 - Sınav ücretleri bölgeye göre değişir — Türkiye fiyatı için ayrıca kontrol et
 - Voucher stok durumu değişkendir — satın almadan önce kontrol et
 - Extra time/özel düzenleme talepleri sınavdan en az 6 hafta önce yapılmalı (Pearson kuralı)
+
+## Türkiye Lisansüstü Başvuruları İçin Dil Sınavı Bilgileri
+
+### ÖSYM Eşdeğerlik Tablosu (11 Mart 2025)
+
+Türkiye'deki devlet üniversitelerinin lisansüstü programları, yabancı dil yeterliliğini değerlendirirken ÖSYM'nin uluslararası yabancı dil sınavları eşdeğerlik tablosunu kullanır.
+
+**Geçerli sınavlar:**
+- **YDS / e-YDS** — 5 yıl geçerli, en yaygın kabul
+- **YÖKDİL / e-YÖKDİL** — 5 yıl geçerli, YDS ile eşdeğer
+- **TOEFL IBT** — 2 yıl geçerli (YDS karşılığı girilir)
+- **PTE Academic** — 5 yıl geçerli (YDS karşılığı girilir)
+- **Oxford Test of English (OTE)** — 5 yıl geçerli
+- **Cambridge C1 Advanced / C2 Proficiency** — 5 yıl geçerli
+
+**Geçersiz sınavlar:**
+- **IELTS** — ❌ 2014'ten beri ÖSYM tablosunda yer almaz, başvurularda kullanılamaz
+
+### Önemli Uyarı: Üniversite Politikaları Farklılık Gösterebilir
+
+ÖSYM tablosundaki tüm sınavlar her üniversite tarafından kabul edilmeyebilir. Örneğin:
+- İKÇÜ'nün eşdeğerlik sayfasında sadece YDS, YÖKDİL ve TOEFL IBT listelenmiştir (PTE/OTE/Cambridge teyit gerektirir)
+- DEÜ'de PTE Academic 45 kabul edilmektedir
+
+**Her zaman üniversitenin kendi eşdeğerlik sayfasını kontrol et, emin değilsen mail at.**
+
+### Genel Puan Eşikleri (YDS karşılığı)
+
+| YDS Eşdeğeri | TOEFL IBT | PTE Academic | OTE Standard |
+|-------------|-----------|-------------|-------------|
+| 50 | ~60 | ~45 | ~86-90 |
+| 55 | ~66 | ~47-50 | ~91-95 |
+| 60 | 72 | 55 | — |
+| 70 | 84 | — | 121-125 |
+| 80 | 96 | 78 | 136-140 |
+
+*Detaylı tablo için: `university-application-research` skill'inin `references/osym-esdegerlik-tablosu-2025.md` dosyasına bak.*

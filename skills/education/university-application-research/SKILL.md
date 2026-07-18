@@ -132,16 +132,25 @@ Edel'in açık talimatı: *"Diğer şehirlere ben söylemeden sürekli araştır
 
 **Amaç:** Edel'in geçmiş oturumlarda elediği üniversiteleri tekrar karşısına çıkarmamak. Bu güven meselesi.
 
-## 🔴 KRİTİK PITFALL: Dil Sınavı Puan Karşılaştırmaları ve Anti-Hallüsinasyon (1 Tem 2026)
+## 🔴 KRİTİK PITFALL: Dil Sınavı Puan Karşılaştırmaları ve Anti-Hallüsinasyon (1 Tem 2026, güncelleme: 18 Tem 2026)
 
-**Kural:** Farklı dil sınavlarının puanlarını karşılaştırırken ASLA "X sınavı Y sınavından daha kolay/daha zor" deme. Her sınavın puan skalası farklıdır ve doğrudan karşılaştırılamaz.
+**Kural (temel):** Farklı dil sınavlarının puanlarını karşılaştırırken ASLA "X sınavı Y sınavından daha kolay/daha zor" diyerek **karşılaştırmayı sen başlatma**. Her sınavın puan skalası farklıdır ve doğrudan karşılaştırılamaz.
 
 **Hatalı örnek (yaptığım):**
 - "PTE 45 en kolay baraj" ❌ — PTE 10-90 ölçeğinde 45, OTE 51-140 ölçeğinde 91 ile karşılaştırılamaz
 - "OTE 91 = B2 seviyesi" ❌ — Bunu resmi Oxford University Press dokümanından teyit etmeden söyledim
 - "YÖKDİL 45 ≈ B1" ❌ — YÖKDİL'in CEFR eşleştirmesi resmi olarak yayınlanmamış
 
-**Doğru yaklaşım:**
+**18 Temmuz 2026 güncellemesi — Kullanıcının kendi geçmiş sonucunu onaylaması:**
+
+Bu kuralın istisnası: Kullanıcı kendisi geçmiş bir karşılaştırmayı hatırlatıp "X sınavı daha kolay sonucuna varmıştık değil mi?" derse:
+
+1. Kabul et ve neden o sonuca varıldığını verilerle göster: puan skalaları, eşdeğerlik tablosu, ÖSYM referansı
+2. Ama yine de karşılaştırmayı abartma — "daha kolay" yerine "eşdeğerlik tablosuna göre daha düşük puan gerekiyor" gibi nesnel ifadeler kullan
+3. Kaynakları mutlaka göster (ÖSYM tablosu linki, sınavın resmi sitesi)
+4. Kullanıcının geçmiş sonucuyla çelişen bir şey söyleme — o hatırlıyorsa doğrudur
+
+**Doğru yaklaşım (kullanıcı sormadan):**
 1. Her sınavın puan skalasını resmi kaynaktan al (Pearson, Oxford University Press, ÖSYM)
 2. Skalaları yan yana koy ama karşılaştırma YAPMA
 3. Şu verileri sun: sınav adı, puan ölçeği, minimum puan, kaynak URL, sonuç süresi, ücret
@@ -149,7 +158,9 @@ Edel'in açık talimatı: *"Diğer şehirlere ben söylemeden sürekli araştır
 5. Kaynaksız hiçbir puan/seviye iddiasında bulunma
 6. Kullanıcı yorumu isterse: Ekşi Sözlük, Reddit, Şikayetvar, Trustpilot'tan topla, olumlu/olumsuz ayrı listele, kendi yorumunu ekleme
 
-**Referans dosyası:** `references/kp-yl-turkiye-01-temmuz-2026.md` — tüm canlı/elenen üni listesi, her üniversitenin detaylı koşulları ve notlar
+**Referans dosyaları:**
+- `references/osym-esdegerlik-tablosu-2025.md` — ÖSYM'nin güncel İngilizce sınav eşdeğerlikleri
+- `references/kp-yl-turkiye-01-temmuz-2026.md` — tüm canlı/elenen üni listesi
 
 **Test:** Eğer "daha kolay", "daha zor", "daha düşük baraj" gibi bir karşılaştırma ifadesi kullanıyorsan ve yanında iki sınavın resmi puan skalalarını ve kaynaklarını vermiyorsan, anti-hallüsinasyon protokolünü ihlal ediyorsundur.
 
@@ -491,6 +502,33 @@ Bazı üniversite program sayfaları (özellikle KKTC'dekiler) tüm içeriği te
 2. Instagram duyurularını da kontrol et — bazı üniversiteler önce Instagram'da yayınlıyor
 3. PDF 404 veriyorsa enstitü ana sayfasının duyurular/ilanlar bölümünü browser ile tara
 4. Aynı ilanın farklı storage path'lerde kopyası olabilir
+
+## 🟡 Başvuru Kriterleri Sayfaları — Resmî İlandan Önce Güncellenebilir (18 Tem 2026)
+
+**Pattern:** Türk üniversitelerinde başvuru kriterleri/kontenjan sayfaları (`/tezli-yuksek-lisans-basvuru-kriterleri-ve-kontenjanlar`, `/basvuru-kosullari` gibi) bazen resmî ilan/duyuru yayınlanmadan **önce** güncellenir.
+
+**Örnek (İKÇÜ, 18 Tem 2026):**
+- Sosyal Bilimler Enstitüsü duyuru sayfasında 2026-2027 Güz ilanı henüz yok
+- Ama başvuru kriterleri sayfasında "2026-2027 Güz: 10-28 Ağustos 2026" yazıyor
+- Duyuru sayfasındaki son ilanlar: sadece 2025-2026 Bahar sonuçları ve akademik takvim
+
+**Workflow:**
+1. Duyuru sayfasında aranan dönemin ilanı yoksa, **başvuru kriterleri/kontenjan sayfasını** ayrıca kontrol et
+2. URL pattern: genelde `/S/<id>/tezli-yuksek-lisans-basvuru-kriterleri-ve-kontenjanlar` veya benzeri
+3. Navigasyon menüsünden "Tezli Yüksek Lisans Başvuru Kriterleri ve Kontenjanlar" linkine tıkla
+4. Sayfada dönem bazlı tarih listesi varsa en güncel dönemi oku
+5. Online başvuru linki (UBYS/OBS) genelde her dönem aynı kalır — önceki dönem ilan sayfasından bulunabilir
+
+**Pitfall:** Başvuru kriterleri sayfası güncel tarihi gösteriyor olsa bile resmî ilan yayınlanana kadar başvuru sistemi açık olmayabilir. Tarihi not al ama resmî ilanı da takip et.
+
+**İKÇÜ referans dosyası:** `references/ikcu-sosyal-bilimler-2026-2027.md` — başvuru tarihleri, kabul edilen dil sınavları, online başvuru linki, geçen yılki kriterler
+
+**Online başvuru linki keşfi:**
+- Önceki dönem ilan sayfasını `web_extract` veya browser ile aç
+- İlan metninde "Başvuru Linki" veya "Başvuru için tıklayınız" ibaresini bul
+- Link genelde `ubs.uni.edu.tr/AIS/ApplicationForms/...` formatında olur
+- Bu link her dönem aynı kalır (sadece `apptype` parametresi değişebilir)
+- Yeni dönem ilanı yayınlanana kadar bu linkten başvuru durumu kontrol edilebilir
 
 ## 🟡 SBÜ Hamidiye — Klinik Psikoloji ABD Yapısı (1 Tem 2026)
 

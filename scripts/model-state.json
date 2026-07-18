@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-17T04:00:58.555395",
+  "timestamp": "2026-07-18T04:01:23.989817",
   "working_models": [
     "deepseek-v4-flash",
     "deepseek-v4-pro",
@@ -10,7 +10,6 @@
     "gpt-5.4-mini",
     "kimi-k2.5",
     "kimi-k2.6",
-    "mimo-v2.5",
     "mimo-v2.5-pro",
     "minimax",
     "minimax-m2.5",
@@ -21,10 +20,7 @@
     "qwen3.7-max",
     "qwen3.7-plus"
   ],
-  "changes": [
-    "Cron \"\ud83d\udcc8 Ekonomi Zekas\u0131 \u2014 Sabah B\u00fclteni\": minimaxai/minimax-m3 -> deepseek-v4-flash",
-    "Cron \"\ud83d\udcc8 Ekonomi Zekas\u0131 \u2014 Ak\u015fam B\u00fclteni\": minimaxai/minimax-m3 -> deepseek-v4-flash"
-  ],
+  "changes": [],
   "skipped": [
     "glm-5.1 (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
@@ -41,6 +37,8 @@
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
-    "deepseek-v4-flash-free (PROTECTED)"
+    "deepseek-v4-flash-free (PROTECTED)",
+    "deepseek-v4-flash (PROTECTED)",
+    "deepseek-v4-flash (PROTECTED)"
   ]
 }
