@@ -67,9 +67,23 @@ Parsec in Trackpad Mode is the best solution. Full details in `references/remote
 
 ---
 
+## Pre-Install Diagnostic: RAM Compatibility
+
+Before choosing a distro, verify the RAM is compatible. Vintage laptops (2005-2010, DDR2 era) are picky about speed, rank, and chipset limits. A "no display after RAM upgrade" is almost always an incompatibility, not a hardware failure.
+
+**Quick check:** Boot any live Linux USB, run `free -h` then `sudo dmidecode --type memory | grep -i speed`. If the machine doesn't POST with your RAM, see `references/vintage-laptop-ram-compatibility.md` for full testing methodology.
+
+**Chipset rules of thumb (Intel 945 family, very common in 2006-2009 laptops):**
+- **945GM** → max DDR2-667, max **4 GB** (64-bit OS)
+- **945GSE** (Atom netbooks) → max DDR2-667, max **2 GB** total — 4 GB is impossible
+- 800 MHz sticks may downclock solo but fail in pairs with 667 MHz sticks
+- Mixed ranks (2Rx8 + 2Rx16) often refuse to POST together
+
+Test every stick **solo first**, then in pairs.
+
 ## Old Hardware Distro Selection
 
-For machines with 4 GB RAM or less:
+For machines with 4 GB RAM or less (after confirming RAM is compatible):
 
 | Distro | Idle RAM | Min RAM | Notes |
 |--------|----------|---------|-------|
@@ -111,10 +125,17 @@ See `scripts/xubuntu-hp-companion.sh` for the ready-to-run HP 2730p version.
 
 ## Pitfalls
 
-- **UEFI Secure Boot warnings on pre-2012 machines:** Core 2 Duo era uses Legacy BIOS. Ventoy's key enrollment warnings don't apply.
-- **USB not detected at boot:** Enter BIOS (F2/F10/F12/Del), change boot order, disable Secure Boot.
+- **UEFI Secure Boot warnings on pre-2012 machines:** Core 2 Duo era (Acer Aspire 5570Z, HP EliteBook 2730p, etc.) uses **Legacy BIOS**, not UEFI. Ventoy's key enrollment warnings don't apply. There is no Secure Boot to disable on these machines.
+- **USB not detected at boot — BIOS key varies by brand:**
+  - **Acer** → F2 (BIOS setup), F12 (boot menu — enable in BIOS first if missing)
+  - **HP** → F10 (BIOS setup), F9 (boot menu), Esc then F9
+  - **ASUS** → F2 or Del (BIOS setup), Esc (boot menu)
+  - **Dell** → F2 (BIOS setup), F12 (boot menu)
+  - See `references/acer-legacy-boot-details.md` for old Acer-specific quirks (Vista-era, Legacy BIOS-only, COA sticker key recovery).
+- **Disable Secure Boot references on old hardware:** Pre-2012 machines don't have Secure Boot. Don't look for it — the option simply doesn't exist in the BIOS. Legacy BIOS uses MBR partitioning, not GPT.
 - **Ventoy Install erases all data:** No undo. Verify the correct device.
 - **ISO copy alone is not bootable:** Ventoy must be installed to USB first.
-- **64-bit on old CPUs:** Core 2 Duo and later support 64-bit. Pentium M / early Atom may need 32-bit ISOs.
+- **64-bit on old CPUs:** Core 2 Duo (2006+) supports 64-bit fine. Pentium M / early Atom (N270, N450) may need 32-bit ISOs.
 - **Offline installs:** Uncheck "Download updates while installing" — it hangs without internet. Use phone USB tethering post-install.
+- **Windows COA sticker on bottom of old laptops:** Contains the Windows product key. Photograph it before wiping — useful if dual-boot or re-activation is needed later.
 - **"isteyeyim mi" hatası:** Soru sorarken 1. tekil istek kipi değil, 2. tekil geniş zaman soru kipi kullan: "ister misin?", "bakayım mı?" değil "bakmamı ister misin?".

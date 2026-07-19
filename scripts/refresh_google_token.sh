@@ -2,8 +2,11 @@
 # Google token canlı tutma — her gün 03:00
 # SADECE Gmail API token'ını kontrol eder
 # NotebookLM auth'u nb_keepalive.py tarafından yönetilir (her 20dk)
-
-set -e
+#
+# NOT: Bilerek set -e KULLANILMADI çünkü google_api.py token expired
+# olduğunda exit code 1 döner. Script alttaki grep mantığıyla hangi
+# tür hata olduğunu ayırt edip uygun exit code ile çıkmalıdır.
+# set -e olsaydı grep kontrollerine ulaşamadan script çıkardı.
 
 TOKEN_FILE="$HOME/.hermes/google_token.json"
 GAPI="python3 $HOME/.hermes/skills/productivity/google-workspace/scripts/google_api.py"

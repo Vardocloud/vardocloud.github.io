@@ -103,14 +103,24 @@ re-running the cron will hit if not encoded.
   Subagents are counterproductive for this task. This rule was violated on July 13
   and the exact predicted failure occurred. Do NOT repeat.**
 
-- **News aggregator date lag** — ScienceDaily and SciTechDaily often feature peer-
-  reviewed studies on their front page months or even 1-2 years after original
-  publication. On July 13 2026, the prune bone-density study (DOI: Feb 2024) and
-  the dark matter DAMA refutation (PRL: Sep 2025) appeared as "latest" despite
-  being old. This is acceptable for a news bundle (the aggregator coverage IS the
-  news), but: (a) check the DOI/journal date when extracting details, (b) do NOT
-  describe an old study as "new research" if the publication date is >6 months old,
-  (c) if a story seems too old to include, skip it in favor of genuinely recent work.
+- **Date lag in search results (aggregators AND `web_search`)** — ScienceDaily
+  and SciTechDaily often feature peer-reviewed studies on their front page months
+  or even 1-2 years after original publication. On July 13 2026, the prune
+  bone-density study (DOI: Feb 2024) and the dark matter DAMA refutation (PRL:
+  Sep 2025) appeared as "latest" despite being old. **`web_search` has the same
+  problem**: a July 19 2026 search for "science news July 2026" returned items
+  dated 2024, March 2026, and May 2026 alongside genuinely current stories.
+  Rules: (a) check the DOI/journal date AND the article publication date when
+  extracting details, (b) do NOT describe an old study as "new research" if the
+  publication date is >6 months old, (c) if a story seems too old to include,
+  skip it in favor of genuinely recent work, (d) when a search targets "this
+  week's" news, filter results to the last 7-10 days before including — many
+  results will be older and must be discarded.
+- **Wikipedia `YYYY in science` as a discovery source** —
+  `en.wikipedia.org/wiki/YYYY_in_science` maintains a month-by-month list of
+  dated scientific discoveries and is an effective free aggregator for finding
+  genuinely recent breakthroughs (vs. search engines that mix dates). Useful as
+  a complement to ScienceDaily/SciTechDaily in the discovery wave.
 
 - **Day-summary file skipped (recurring)** — On July 14 AND July 15 2026, the cron
   wrote per-item/category batch files under `news/<category>/` but did NOT write the

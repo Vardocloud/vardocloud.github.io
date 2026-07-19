@@ -282,6 +282,66 @@ himalaya envelope list --output json
 himalaya envelope list --output plain
 ```
 
+## Google OAuth Fallback Pattern
+
+When Google OAuth token expires (`invalid_grant` in google_token.json), Himalaya IMAP is the
+reliable fallback for email operations. Gmail App Passwords don't expire like OAuth tokens.
+
+### Detection
+
+```bash
+# Google OAuth check fails → switch to Himalaya
+ALL_PROXY="" python3 $HOME/.hermes/skills/productivity/google-workspace/scripts/setup.py --check
+# If "REFRESH_FAILED" → OAuth dead, use Himalaya for email
+```
+
+### The refresh_google_token.sh Behavior
+
+The daily token check script (`~/.hermes/scripts/refresh_google_token.sh`) reports:
+- Exit 0: Token valid → Gmail API active
+- Exit 1: No token file → setup needed
+- Exit 2: Expired/revoked → Himalaya fallback active (Calendar/Drive still need re-auth)
+- Exit 3: Other API error
+
+When exit 2 occurs, the cron health report shows it as "⚠️ OAuth expired → email'de Himalaya fallback aktif"
+instead of a hard error. Calendar/Drive operations require a fresh OAuth flow.
+
+### Workflow
+
+```bash
+# 1. Check Himalaya is configured
+himalaya account list
+
+# 2. Test connection
+himalaya envelope list --page 1 --page-size 3
+
+# 3. Search important emails
+himalaya envelope list from "apa.org" flag unseen
+himalaya envelope list from "skool.com" order by date
+
+# 4. Read full content
+himalaya message read <ID> --account gmail
+```
+
+### Hybrid Mode
+
+| Service | Primary | Fallback | Requires |
+|---------|---------|----------|----------|
+| Email read/search | Himalaya IMAP | Gmail API | App Password |
+| Email send | Himalaya SMTP | Gmail API | App Password |
+| Calendar | Gmail API | N/A | OAuth refresh |
+| Drive | Gmail API | N/A | OAuth refresh |
+
+### Example: Cron Check Script
+
+```bash
+#!/bin/bash
+# gmail_check.sh — uses Himalaya IMAP, no OAuth dependency
+himalaya envelope list from "apa.org" after "$(date -d '48 hours ago' +%Y-%m-%d)" 2>&1
+```
+
+A working example lives at `~/.hermes/scripts/gmail_check.sh` (no_agent cron, every 180m).
+
 ## Pitfalls
 
 - **Wrong Google Account:** App Password çalışmazsa ("Invalid credentials"), kullanıcının doğru Gmail hesabında App Password oluşturduğundan emin ol. Kullanıcı birden fazla Gmail hesabı kullanıyorsa yanlış hesapta oluşturmuş olabilir. IMAP erişimi için Gmail ayarlarında "POP ve IMAP" → "IMAP etkin" seçili olmalı.

@@ -112,6 +112,20 @@ Cloudflare Bot Management **scores every request individually** (1-99). GET requ
 - Residential proxy + Camoufox combo is the most reliable approach
 - Some sites have additional backend security beyond Cloudflare
 
+## The HOME-IP Trap — symmetric risk (added 19 Jul 2026)
+
+The corollary to "datacenter IPs are flagged" is the **opposite trap**: home/residential IPs that run bot-driven automation get burned just as badly, with a different blast radius.
+
+**Scenario:** An agent lives on a household laptop. The home IP burns through DataDome / upstream WAF because the agent signs Upwork / LinkedIn / Instagram 200×/day at 3am. DataDome flags that subnet → every device on that ISP connection (phones, tablets, other laptops) hits "You've been blocked" on those sites.
+
+**Required mitigations for any agent-on-residential-IP deployment:**
+1. **WARP / VPN tunnel** — agent egress MUST NOT be the raw residential IP. Use Cloudflare WARP (skill: `warp-proxy`) or a reputable paid residential proxy with rotation. Hermit-style agent profiles are already WARP-masked by default; new field-agent machines must follow that pattern, not bypass it.
+2. **Throttle hard** — bot automation is flagged by *request frequency per ASN*, not per request. Fewer requests, longer pauses, humanized behavior (`bot-protected-pdf-extraction`, `protected-resource-download` cover the per-request discipline).
+3. **Burn monitoring** — if DataDome/CF flags the home ASN, **pause immediately and rotate**. The cost of leaving a flagged residential IP running is the entire household losing access, not just the agent.
+4. **Exit fallback** — primary control plane on dedicated/WARP'd infrastructure, residential IP only for the browser-uplink task that genuinely needs it.
+
+**Rule:** "Bot automation on a residential IP" is "datacenter IP flagged" with a different blast radius. Both are caused by automation without rate-discipline + WARP masking. Address them together. Don't frame "agent on home IP" as risk-free just because it's not a cloud datacenter.
+
 ## Pitfalls
 - ❌ Do NOT hardcode passwords in scripts — use `process.env.PW` or file reads
 - ❌ Do NOT use Puppeteer `waitForTimeout` — deprecated; use `Promise + setTimeout`

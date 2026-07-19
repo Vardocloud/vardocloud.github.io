@@ -37,6 +37,25 @@ confidence: high | medium | low
 
 ### Day summary (`news/YYYY-MM-DD-haber-ozeti.md`)
 
+Two acceptable formats — choose by item count:
+
+**Compact (8+ items):**
+```markdown
+# DD Month YYYY — Haber Özeti
+
+## 🧠 Bilim
+### [Title]
+- **Ne:** [what happened]
+- **Kim:** [who]
+- **Nerede/Nasıl:** [where/how]
+- **Neden önemli:** [why it matters]
+📎 [Source Name]
+
+## 📱 Teknoloji
+...
+```
+
+**Minimal (quick run):**
 ```markdown
 # DD Month YYYY — Haber Özeti
 
@@ -46,10 +65,12 @@ confidence: high | medium | low
 
 ## Teknoloji (N)
 3. [Title] — [one-line summary]
-
-## Ekonomi (N)
-4. [Title] — [one-line summary]
 ```
+
+The compact bullet-5N1K format (tested July 19 2026, 9 items) captures the
+5N1K structure in the wiki archive while staying readable — preferable to the
+minimal one-liner format when time allows, because it makes the day-summary
+self-contained for future wiki queries without needing to re-read source URLs.
 
 ### Ledger entry (appended to `processed_titles.md`)
 
@@ -151,6 +172,7 @@ and `write_file`, both of which work in cron mode without approval.
 | BBC Science & Environment | Science, Space | https://www.bbc.com/news/science_and_environment | ✅ Yes (tested July 14) |
 | TechCrunch | Tech, Startups | https://techcrunch.com/ | ✅ Yes (tested July 14) |
 | Reuters Tech | Tech, AI, Economy | https://www.reuters.com/technology/ | ⚠️ Anti-bot blocks extract; use web_search |
+| Wikipedia YYYY in science | Science (dated) | https://en.wikipedia.org/wiki/YYYY_in_science | ✅ Yes — month-by-month dated discovery list |
 
 ## Common Pitfalls
 
@@ -212,12 +234,18 @@ and `write_file`, both of which work in cron mode without approval.
   - `https://www.reuters.com/technology/` — Reuters tech (anti-bot may block extract;
     use `web_search` as fallback)
 
-- **News aggregator date lag** — ScienceDaily and SciTechDaily feature peer-
-  reviewed studies on their front pages months to years after original publication.
-  On July 13 2026: prune bone-density study (DOI: Feb 2024) and dark matter DAMA
-  refutation (PRL: Sep 2025) appeared as "latest." Check DOI/journal dates when
-  extracting. Acceptable to include (the aggregator coverage IS the news), but
-  do NOT describe an old study as "new research" if publication date >6 months old.
+- **News aggregator date lag (and `web_search` date mixing)** — ScienceDaily
+  and SciTechDaily feature peer-reviewed studies on their front pages months to
+  years after original publication. On July 13 2026: prune bone-density study
+  (DOI: Feb 2024) and dark matter DAMA refutation (PRL: Sep 2025) appeared as
+  "latest." **`web_search` has the same problem**: a "July 2026" search returns
+  items from 2024, March 2026, May 2026 mixed with current stories (confirmed
+  July 19 2026). Check DOI/journal dates AND article publication dates when
+  extracting. When targeting "this week's" news, filter results to the last
+  7-10 days. Acceptable to include older aggregator coverage (it IS the news),
+  but do NOT describe an old study as "new research" if publication date >6
+  months old. Use `en.wikipedia.org/wiki/YYYY_in_science` as a dated discovery
+  source to find genuinely recent breakthroughs.
 
 - **Headline-only inference** — Don't write 5N1K details from just the
   headline. Use `web_extract` to get the article body. If details are

@@ -111,7 +111,7 @@ def call_model(sys_prompt, user_content):
     client = OpenAI(
         api_key=_KEY,
         base_url=API_BASE,
-        timeout=httpx.Timeout(100.0, connect=20.0),
+        timeout=httpx.Timeout(85.0, connect=20.0),
     )
     resp = client.chat.completions.create(
         model=API_MODEL,

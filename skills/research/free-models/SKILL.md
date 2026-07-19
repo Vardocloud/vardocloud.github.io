@@ -11,14 +11,14 @@ metadata:
 
 **Amaç:** Kullanılabilir free provider'lar ve modellerin yeteneklerini, hangi işlerde kullanılacağını ve seçim stratejisini tanımlar. Her provider'ın durumu değişebilir — test etmeden kabul etme.
 
-## 🚨 Güncel Durum (18 Tem 2026)
+## Güncel Durum (19 Tem 2026)
 
 | Provider | Durum | Açıklama |
 |----------|-------|----------|
-| **LiteRouter** | ✅ Yedek | deepseek-v3.2 Türkçe'de iyi. opencode-zen düzelince yedek konuma düştü, aktif kullanılmıyor. |
-| **literouter** (custom provider) | ✅ Yedek | deepseek-v3.2 + gemma-3-27b. opencode-zen çözülene kadar geçici kullanıldı, şimdi yedek. |
+| **LiteRouter** | ✅ Aktif (konusma degerlendirme) | deepseek-v3.1:free birincil, gpt-4o-mini:free fallback. **19 Tem uyarisi:** Tüm free DeepSeek modeller gecici blok (20 Tem 00:00 GMT'ye kadar) |
+| **literouter** (custom provider) | ✅ Yedek | deepseek-v3.2 listeden kalkti, güncel model deepseek-v3.1:free. opencode-zen birincil. |
 | **NVIDIA (build.nvidia.com)** | ✅ Çalışıyor | minimaxai/minimax-m3, deepseek-ai/deepseek-v4-flash (worker queue sorunu olabilir) |
-| **opencode-zen** | ✅ Çalışıyor | [18 Tem 2026] deepseek-v4-flash-free opencode.ai/zen/v1 üzerinde çalışıyor. **İki fix uygulandı:** (1) Cloudflare WAF curl User-Agent'ı engelliyor → provider extra_headers'e Chrome UA + Origin + Referer eklendi. (2) deepseek-v4-flash-free reasoning model olduğu için `max_tokens` parametresi content'i boş bırakıyor → extra_body'de `max_tokens: null` + `max_completion_tokens: 8192` ile çözüldü. Rate limit testi: 10/10 başarılı. Tüm cron job'lar opencode-zen/deepseek-v4-flash-free kullanıyor. |
+| **opencode-zen** | ✅ Çalışıyor | [18 Tem 2026] deepseek-v4-flash-free opencode.ai/zen/v1 üzerinde çalışıyor. |
 | **Pollinations** | ❌ Terk edildi | [14 Tem 2026] Para yüklemeden çalışmıyor. |
 
 **Önemli:** Provider durumları değişir. Cron job atamadan önce test et.
@@ -69,7 +69,8 @@ Config dosyasında değişiklik yaparken DİKKAT:
 ### ✅ Türkçesi Kanıtlanmış
 | Model | Provider | Kullanım |
 |-------|----------|----------|
-| `deepseek-v3.2:free` | LiteRouter | Her şey — sohbet, post, analiz, email, değerlendirme |
+| `deepseek-v3.1:free` | LiteRouter | Her şey — sohbet, post, analiz, email, değerlendirme. **Fallback: gpt-4o-mini:free** |
+| `gpt-4o-mini:free` | LiteRouter | DeepSeek bloklandığında yedek. Konuşma değerlendirme, JSON çıktı |
 | `minimaxai/minimax-m3` | NVIDIA | **LinkedIn post, psikoloji içerik, Türkçe metin üretimi — EN İYİSİ (TEST EDİLDİ)** |
 | `gemma-3-27b:free` | LiteRouter | Çeviri, çok dilli içerik, görsel+metin |
 
@@ -136,10 +137,13 @@ cronjob(action='update', job_id='JOB_ID',
 
 Config'de extra_headers (Cloudflare) ve extra_body (reasoning fix) otomatik uygulanır.
 
-### LiteRouter
+### LiteRouter (no_agent cron script'ler icin)
 ```python
-cronjob(action='update', job_id='JOB_ID',
-    model={'provider': 'LiteRouter', 'model': 'deepseek-v3.2'})
+# Konusma degerlendirme script'i. Model: deepseek-v3.1:free, fallback: gpt-4o-mini:free
+# Not: Bu bir no_agent cron script'idir, provider mapping uzerinden degil,
+# script icinde dogrudan model adi kullanilir.
+cronjob(action='update', job_id='ce2dfc29da0b',
+    model={'provider': 'LiteRouter', 'model': 'deepseek-v3.1:free'})
 ```
 
 ### NVIDIA
@@ -168,8 +172,9 @@ cronjob(action='update', job_id='JOB_ID',
 | İş | Önerilen Model | Provider | Gerekçe |
 |----|---------------|----------|---------|
 | LinkedIn post (Türkçe) | `minimaxai/minimax-m3` | NVIDIA | TEST EDİLDİ: en doğal, samimi, profesyonel TR çıktı |
-| Gmail okuma/kontrol | `deepseek-v3.2` | LiteRouter | Türkçe mail için kanıtlanmış |
-| Günlük sentez/özet | `deepseek-v3.2` | LiteRouter | Uzun context, TR+EN karışımı |
+| Gmail okuma/kontrol | `deepseek-v3.1:free` | LiteRouter | Türkçe mail için kanıtlanmış |
+| Günlük sentez/özet | `deepseek-v3.1:free` | LiteRouter | Uzun context, TR+EN karışımı. Fallback: gpt-4o-mini:free |
+| Konuşma değerlendirme | `deepseek-v3.1:free` + `gpt-4o-mini:free` (fallback) | LiteRouter | no_agent cron script. DeepSeek bloklanırsa otomatik fallback |
 | JSON çıktı gerektiren | `llama-3.3-70b` | LiteRouter | Structured JSON %0 hata |
 | Hızlı EN işlem | `mistral-small` | LiteRouter | 150 t/s |
 
@@ -187,11 +192,13 @@ cronjob(action='update', job_id='JOB_ID',
 - **Detaylı fix referansı:** `references/opencode-zen-reasoning-fix.md`
 
 ### LiteRouter
-- Key: Bitwarden secret'dan alınır, `/tmp/.or_key`'e yazılır (chmod 600)
-- `/tmp` ephemeral — reboot'ta silinir. Bitwarden'dan yeniden çek.
-- **User-Agent zorunlu:** API 403 dönerse, `'User-Agent': 'Vanitas/1.0'` header'ını ekle
+- Key: Bitwarden secret'dan alinir (`LITEROUTER_API_KEY`), `/tmp/.or_key`'e yazilir (chmod 600)
+- `/tmp` ephemeral — reboot'ta silinir. Bitwarden'dan yeniden cek.
+- **User-Agent zorunlu:** `"User-Agent": "vanitas/2.0"` header'i lazim
 - **Endpoint:** `https://api.literouter.com/v1/chat/completions`
-- **Model adı:** `deepseek-v3.2:free` değil, **sadece `deepseek-v3.2`** kullan
+- **Model adi:** `deepseek-v3.1:free` (BIRINCIL), `gpt-4o-mini:free` (FALLBACK)
+- **19 Tem 2026:** deepseek-v3.2:free listede yok, deepseek-v3.1:free var
+- **Blok uyarisi:** Tüm free DeepSeek modeller LiteRouter'da gecici olarak bloklanabiliyor (503). Fallback model sart
 
 ### NVIDIA
 - Key: `.env` dosyasında `NVIDIA_API_KEY` env var'ında tutulur
@@ -226,7 +233,8 @@ cronjob(action='update', job_id='JOB_ID',
 4. **NVIDIA model adları case-sensitive** — API'deki tam adı kullan. Catalog'dan birebir kopyala.
 5. **Cron job model passthrough** — Mapping'de olmayan model adları passthrough edilir. API'nin kabul edip etmediğini test et.
 6. **API key redaction Python syntax hatası** — `write_file` veya `terminal` ile Python script'i yazarken `auth = "Authorization: Bearer " + key` şeklinde yaz. `"Authorization: Bearer ***"` yazarsan güvenlik sistemi key'i `***` ile değiştirir ve Python syntax hatası alırsın. Çözüm: string parçalarını ayır — concat et.
-7. **Timeout olan modelleri cron'a koyma** — 15-20sn'den uzun süren modeller cron için uygun değil. Agent loop'u bloke eder.
+8. **LiteRouter free DeepSeek bloku** — [19 Tem 2026] LiteRouter tüm free DeepSeek modelleri gecici olarak bloklayabiliyor (503). Blok genelde 1-2 gun icinde cozulur. Cozum: no_agent script'lerde `PRIMARY_MODEL`/`FALLBACK_MODEL` deseni kullan. `gpt-4o-mini:free` calisan bir alternatif. Detayli pattern: `no-agent-cron-scripts` skill'inde "LiteRouter Fallback Pattern" bolumu.
+9. **deepseek-v3.2:free listede yok** — [19 Tem 2026] LiteRouter model listesinde deepseek-v3.2:free kalkmis. Sadece deepseek-v3.1:free mevcut. Script'lerde model adi guncellenmeli.
 
 ## 🖼️ Image Generation Provider Durumu (14 Tem 2026)
 

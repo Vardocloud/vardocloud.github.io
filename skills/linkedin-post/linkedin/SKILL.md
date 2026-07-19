@@ -33,7 +33,10 @@ Edel'in Bardo Psychology LinkedIn hesabı için psikoloji içerikli Türkçe pos
 ### Post Paylaşım
 
 ```bash
-# Metin post
+# Metin post (archive_id ile — otomatik arşiv güncellemesi)
+python3 ~/.hermes/scripts/linkedin_api.py post "Post metni buraya" --archive-id "post-id-buraya"
+
+# Metin post (archive_id olmadan — eski davranış)
 python3 ~/.hermes/scripts/linkedin_api.py post "Post metni buraya"
 
 # Görselli post (1 Haz 2026 — test edildi ✅)
@@ -66,6 +69,7 @@ Python'dan:
 ```python
 from linkedin_api import create_post
 create_post("metin", image_path="/tmp/image.jpg")
+create_post("metin", archive_id="post-id")  # arşiv otomatik güncellenir
 ```
 
 ### Post Silme

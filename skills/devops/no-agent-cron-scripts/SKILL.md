@@ -448,46 +448,90 @@ Alternatif NVIDIA modelleri:
 - deepseek-ai/deepseek-v4-flash (33-82sn, orijinal model)
 ```
 
-### LiteRouter — Eskiden Aktif (20 Haz 2026, artık önerilmez)
+### LiteRouter — Güncel (19 Tem 2026)
 
-**Durum:** Routeway'deki kronik 502/504 sorunları (deepseek-v4-flash:free her seferde 502) ve free model çeşitliliğinin sınırlı olması (sadece step-3.5-flash çalışıyordu) nedeniyle **LiteRouter'a geçildi.**
+**Durum:** `konusma_degerlendirici.py` (no_agent cron script) tarafindan aktif olarak kullaniliyor. DeepSeek free modellerde zaman zaman LiteRouter kaynakli kesintiler olabiliyor.
 
 **LiteRouter** (`literouter.com`):
 - Endpoint: `https://api.literouter.com/v1/chat/completions`
 - OpenAI uyumlu (drop-in replacement)
 - Free modellerde **unlimited requests** (1 req/5sn soft limit)
-- Instant failover — bir provider 502 verirse otomatik başkasına geçer
-- 19 adet free model (`:free` suffix ile)
-- Free modeller ~~Pollinations sponsorluğunda~~ — Polen tüketmez
-- API key: Bitwarden secret ID'den alınır, `/tmp/.or_key`'e kaydedilir
+- Instant failover — bir provider 502 verirse otomatik baskasina gecer
+- 30+ adet free model (`:free` suffix ile)
+- **19 Tem 2026 uyarisi:** Tüm free DeepSeek modeller LiteRouter'da gecici olarak bloklandi (20 Tem 00:00 GMT'ye kadar)
+- API key: Bitwarden secret ID'den alinir, `/tmp/.or_key`'e kaydedilir (chmod 600)
 
-**Aktif Model: `deepseek-v3.2:free`** (20 Haz 2026 itibarıyla)
-- DeepSeek ailesi — Türkçede kanıtlanmış başarı (V4 Flash ile aynı soy)
-- **Non-thinking mod** → content DOLU gelir (step-3.5-flash'taki boş content sorunu yok)
-- **Resmi JSON Output** — `response_format={"type":"json_object"}` çalışıyor
-- GPT-5 seviyesinde benchmark
-- Tool calling var, "Thinking in Tool-Use" destekliyor
-- Hızlı yanıt
+**Aktif Model: `deepseek-v3.1:free`** (19 Tem 2026 itibariyla)
+- Not: `deepseek-v3.2:free` LiteRouter listesinde **artik yok** — sadece `deepseek-v3.1:free` mevcut
+- DeepSeek ailesi — Türkcede kanitlanmis basari
+- Content dolu gelir (non-thinking mod)
+- JSON output destekliyor
 
-**Test edilen diğer free modellerin durumu:**
-| Model | JSON | Türkçe | Content | Durum |
-|-------|------|--------|---------|-------|
-| deepseek-v3.2:free | ✅ resmi | ⭐⭐⭐⭐⭐ | Dolu | ✅ **AKTİF** |
-| grok-4.1-fast-reasoning:free | ✅ resmi | ❓ | kapatılabilir | ⏳ Yedek |
-| mistral-small-24b-instruct-2501:free | ⚠️ tool ile | ⭐⭐⭐⭐ | Dolu | ⏳ Yedek |
-| gemma-3-27b-it:free | ❓ | ⭐⭐⭐⭐ | Dolu | ⏳ Yedek |
+**Fallback Model: `gpt-4o-mini:free`**
+- DeepSeek bloklandiginda veya 503 verdiginde otomatik gecis yapilir
+- JSON output calisir, Türkce degerlendirme yapabilir
+- Test edildi ve dogrulandi (19 Tem 2026)
 
-**Routeway → LiteRouter kod değişimi:**
+**Test edilen diger free modellerin güncel durumu (19 Tem 2026):**
+- deepseek-v3.1:free — Türkce iyi — **GECICI BLOK** (20 Tem'de asilir)
+- gpt-4o-mini:free — Türkce iyi — ✅ **FALLBACK AKTIF**
+- gemini-2.5-flash:free — Türkce iyi — ⚠️ Rate limit katı (7sn/req)
+- deepseek-v3.2:free — ❌ Artik listede yok
+
+**LiteRouter Fallback Pattern (no_agent script'ler icin):**
+
+Free modellerin zaman zaman bloklanmasi veya 503 vermesi beklenen bir durumdur. Script'in tek bir modelde takilip kalmamasi icin fallback zinciri eklenir:
+
 ```python
-# ESKİ: Routeway
-BASE_URL = "https://api.routeway.ai/v1/chat/completions"
-MODEL = "step-3.5-flash:free"  # reasoning, content boş → regex extraction
+PRIMARY_MODEL = "deepseek-v3.1:free"
+FALLBACK_MODEL = "gpt-4o-mini:free"
+MODEL = PRIMARY_MODEL
 
-# YENİ: LiteRouter (20 Haz 2026)
-BASE_URL = "https://api.literouter.com/v1/chat/completions"
-MODEL = "deepseek-v3.2:free"  # non-thinking, content dolu → direkt JSON parse
-# Reasoning regex extraction KALDIRILDI (content dolu geldiği için)
-# Markdown code block temizleme EKLENDİ (bazen ```json``` içinde geliyor)
+def call_api(system_prompt: str, user_content: str) -> str:
+    global MODEL
+    key = get_api_key()
+    
+    body = {
+        "model": MODEL,
+        "messages": [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_content}
+        ],
+        "max_tokens": 4000,
+        "temperature": 0.0,
+    }
+    
+    with httpx.Client(timeout=httpx.Timeout(110)) as client:
+        resp = client.post(
+            "https://api.literouter.com/v1/chat/completions",
+            json=body,
+            headers={
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+                "User-Agent": "vanitas/2.0",
+            },
+        )
+    
+    if resp.status_code != 200:
+        error_text = resp.text[:500]
+        # Free DeepSeek bloku durumunda fallback'e gec
+        if resp.status_code == 503 or "Free DeepSeek models" in error_text:
+            if MODEL == PRIMARY_MODEL and FALLBACK_MODEL:
+                print(f"UYARI: {MODEL} bloklanmis, {FALLBACK_MODEL} deneniyor...")
+                MODEL = FALLBACK_MODEL
+                return call_api(system_prompt, user_content)
+        raise RuntimeError(
+            f"LiteRouter API {resp.status_code}: {error_text}"
+        )
+    
+    result = resp.json()
+    return result["choices"][0]["message"]["content"]
 ```
 
-**Key notu:** `/tmp/.or_key` artık LiteRouter API key'ini tutar. Bitwarden secret ID'den (`673ec835-9f80-4200-8e55-b46f00ecc30d`) alınır.
+**Pattern'in guvenlik mekanizmalari:**
+- `global MODEL` ile model adi recursive cagrida guncellenir
+- Sadece PRIMARY_MODEL'den FALLBACK_MODEL'e gecer, fallback'ten geriye donmez (MODEL == PRIMARY_MODEL kontrolu sayesinde)
+- Sonsuz recursive olmaz: fallback de basarisizsa ayni hata kontrolunden gecer ama MODEL == PRIMARY_MODEL kosulu FALSE olur, bu yuzden direkt RuntimeError firlatir
+- 503 disindaki hatalarda (400, 401, 500) fallback denenmez — bunlar kalici sorunlardir
+
+**Key notu:** `/tmp/.or_key` LiteRouter API key'ini tutar. Kaynak: Bitwarden `LITEROUTER_API_KEY` secret'i. Key file'da 3 yollu arama: BWS -> env var -> /tmp/.or_key.

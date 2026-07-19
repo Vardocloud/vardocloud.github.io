@@ -25,7 +25,10 @@ OUTPUT_FILE = os.path.expanduser(
 )
 
 API_URL = "https://api.literouter.com/v1/chat/completions"
-MODEL = "deepseek-v3.2:free"
+# Birincil model: DeepSeek (free). Bloklanırsa fallback'e geç.
+PRIMARY_MODEL = "deepseek-v3.1:free"
+FALLBACK_MODEL = "gpt-4o-mini:free"
+MODEL = PRIMARY_MODEL  # call_literouter tarafından kullanılır, fallback'te güncellenir
 # Cron no_agent script timeout default 120sn — altında kal
 TIMEOUT = 110
 
@@ -139,7 +142,8 @@ def clean_json_response(content: str) -> str:
 
 
 def call_literouter(system_prompt: str, user_content: str) -> str:
-    """LiteRouter API'ye httpx ile çağrı. Tek deneme, cron timeout'u aşmamak için."""
+    """LiteRouter API'ye httpx ile çağrı. 503/blok hatasında fallback modeli dener."""
+    global MODEL
     key = get_key()
 
     body = {
@@ -171,8 +175,15 @@ def call_literouter(system_prompt: str, user_content: str) -> str:
         )
 
     if resp.status_code != 200:
+        error_text = resp.text[:500]
+        # Free DeepSeek bloku: fallback'e geç
+        if resp.status_code == 503 or "Free DeepSeek models" in error_text:
+            if MODEL == PRIMARY_MODEL and FALLBACK_MODEL:
+                print(f"⚠️ {MODEL} bloklanmış, {FALLBACK_MODEL} deneniyor...")
+                MODEL = FALLBACK_MODEL
+                return call_literouter(system_prompt, user_content)
         raise RuntimeError(
-            f"LiteRouter API {resp.status_code}: {resp.text[:500]}"
+            f"LiteRouter API {resp.status_code}: {error_text}"
         )
 
     result = resp.json()
@@ -191,7 +202,7 @@ def call_literouter(system_prompt: str, user_content: str) -> str:
 
 
 def eval_conversation(conversations):
-    """LiteRouter (DeepSeek V3.2) ile değerlendir."""
+    """LiteRouter üzerinden modelle değerlendir. (Birincil: DeepSeek, fallback: GPT-4o-mini)"""
     with open(PROMPT_FILE) as f:
         system_prompt = f.read()
 

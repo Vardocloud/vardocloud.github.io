@@ -157,6 +157,67 @@ Kullanıcı: /compress
 - **ctx_doctor ile durumu kontrol et:** Sıkıştırma öncesi `mcp_context_mode_ctx_doctor()`
   çalıştırarak context-mode'un sağlıklı olduğunu doğrula.
 
+### session_search FTS5 Turkish Text Gap (19 Tem 2026)
+
+`session_search` tool'u bazen var olan session'ları bulamaz. FTS5 index'te veri vardır
+(direct SQLite sorgusu ile doğrulanabilir) ama FTS5 tokenizer Türkçe metinlerde
+şu durumlarda takılır:
+
+| Sorgu Tipi | Sorun | Örnek |
+|-----------|-------|-------|
+| **Kesme işareti** (`'`) | FTS5 "pc'de"yi iki token'a böler: "pc" + "de" | `lokal pc'de güvenli` → eşleşmez |
+| **Uzun AND sorguları** (5+ kelime) | Her token ayrı ayrı eşleşmeli, biri kaçarsa sonuç boş | `lokal PC taşıma konuşma geçmişi silme` → çok fazla koşul |
+| **Türkçe/İngilizce karışık** | Tokenizer beklendiği gibi çalışmayabilir | `qubernet sistemi gibi lokal pc'de` |
+
+**Belirti:** `session_search(query="belirli_kelime")` boş döner ama:
+```sql
+-- Direct SQLite sorgusu çalışır:
+SELECT count(*) FROM messages_fts WHERE messages_fts MATCH 'belirli_kelime';
+```
+
+#### Troubleshooting Akışı
+
+session_search boş döndüğünde şu sırayı izle:
+
+**1. Alternatif anahtar kelimeler dene** — Tek kelimeyle başla, yavaşça genişlet.
+   `karanlık` → çalıştı mı? → `karanlık ikiz` → çalıştı mı?
+
+**2. Wiki Session Index'e bak** — `~/wiki/references/session-index.md`
+   Önemli konuşmalar etiket+session ID ile indekslenir. Bu dosyayı `grep` ile
+   veya `search_files` ile tara:
+
+```bash
+search_files(pattern="etiket1 OR etiket2", path="~/wiki/references", file_glob="*index*")
+```
+
+**3. Direct SQLite sorgusu ile doğrula:**
+```bash
+# Session'ı bul (user mesajlarında ara — tool output'ları gürültü yapar)
+sqlite3 ~/.hermes/state.db "SELECT s.id, s.title FROM messages m 
+JOIN sessions s ON m.session_id = s.id 
+WHERE m.content LIKE '%kelime%' AND m.role='user' 
+GROUP BY s.id LIMIT 5;"
+
+# Session içeriğini oku
+sqlite3 ~/.hermes/state.db "SELECT m.role, substr(m.content,1,300) 
+FROM messages m WHERE m.session_id='SESSION_ID' ORDER BY m.id;"
+```
+
+**4. Bulunan session'ı session_search ile session_id'den oku:**
+```
+session_search(session_id="BULUNAN_ID")
+```
+
+**5. Eğer önemli bir konuşma sürekli bulunamıyorsa → session-index.md'ye ekle.**
+
+#### Known Affected Sessions
+
+| Session | Tarih | Mesaj | Sebep |
+|---------|-------|-------|-------|
+| `20260711_123750_3bff2c24` (sohbethakkındahersey11T) | 11 Tem 2026 | 46 | Kimlik/lokal PC planı. FTS5'te "karanlık" var (5 satır), "kimlik" (329 satır) ama uzun sorgularla bulunamadı. `karanlık` tek başına çalışır. |
+
+Veri kaybı DEĞİL, arama sınırlaması — tüm session'lar state.db'de sağlam.
+
 ## Sıkıştırma Davranışını Değiştirme
 
 Eğer threshold veya diğer compression ayarlarını değiştirmek gerekirse,

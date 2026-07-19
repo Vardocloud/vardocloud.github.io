@@ -51,6 +51,20 @@ Patterns under `/tmp/`: pip-unpack-*, pip-metadata-*, chatterbox_test*, vision_t
 - Hermes config, env, token files
 - Git repos in home directory
 
+### Session/DB Files (explicitly protected — 19 Jul 2026 fix)
+
+```python
+# These are in temp_cleanup.py SAFE_PREFIXES:
+str(HERMES / "state.db")        # Main session DB (919MB, 1,621 sessions)
+str(HERMES / "sessions.db")     # Secondary session index
+str(HERMES / "response_store.db") # Response cache
+str(HERMES / "kanban.db")       # Kanban board
+str(HERMES / "sessions")        # Session JSON dump directory
+str(HERMES / "data")            # Archive/queue JSON files
+```
+
+**⚠️ History:** Prior to 19 Jul 2026, `state.db` was NOT in SAFE_PREFIXES. It survived only by coincidence (script never walks the hermes root directly). Any future retention rule targeting `~/.hermes/` root could have deleted it. Added after Edel reported inaccessible conversation histories.
+
 ## Cron
 
 - **Job ID:** 97f19be6f7c6
@@ -72,3 +86,8 @@ Current Google OAuth token has only `drive.readonly` scope. Need `drive.file` fo
 - Safe list prevents accidental deletion of scripts and configs.
 - Build artifacts have zero retention — they are always cleaned regardless of age.
 - Container doesn't reboot, so /tmp is never auto-cleared. Retention cron is essential.
+- `state.db` was missing from SAFE list until 19 Jul 2026 (see `references/session-db-protection.md`). Always add new DB files to SAFE_PREFIXES when adding retention rules.
+
+## References
+
+- `references/session-db-protection.md` — Session DB protection audit, FTS5 search gap, and prevention measures (19 Jul 2026)

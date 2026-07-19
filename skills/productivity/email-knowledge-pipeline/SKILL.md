@@ -1,7 +1,7 @@
 ---
 name: email-knowledge-pipeline
 description: "Gmail'den gelen mailleri öncelik seviyesine göre işleyip NotebookLM ve wiki'ye bilgi olarak aktaran pipeline."
-version: 1.2.0
+version: 1.3.0
 metadata:
   hermes:
     tags: [gmail, email, notebooklm, knowledge, pipeline]
@@ -210,6 +210,26 @@ Bu bir meta-öğrenme kuralıdır. Her NBLM source'u veya wiki entry'si işlenir
 - Wiki'ye sadece kalıcı referans değeri olan bilgiler gider
 - Servis güncellemeleri, fiyat değişiklikleri, geçici duyurular → HİÇBİR YERE kaydedilmez
 - "Bunu 6 ay sonra arasam bulabilir miyim?" testini geçemeyen → kaydedilmez, işlenir geçilir
+
+## ⚠️ Email Backend Priority (19 Tem 2026 — Edel düzeltmesi)
+
+Google OAuth token'ı sık sık expire olur ve refresh de başarısız olabilir.
+**Bu durumda OAuth'u düzeltmeye çalışma — Himalaya IMAP'e geç.**
+
+| Backend | Kullanım | Kararlılık |
+|---------|----------|-----------|
+| **Himalaya IMAP** (App Password) | **Email (birincil)** | ✅ Kalıcı — App Password süresiz |
+| Google OAuth (google_api.py) | Calendar, Drive, Sheets | ⚠️ Token her 7 günde expire olur |
+
+**Kural:**
+- **Email işlemleri:** Önce Himalaya IMAP dene. Himalaya varsa (config + App Password dosyası mevcutsa), OAuth ile uğraşma.
+- OAuth sadece Calendar/Drive/Sheets işlemleri için gerekli. Email için OAuth'a ihtiyaç yok.
+- `refresh_google_token.sh` OAuth expired raporladığında: Himalaya çalışıyorsa sessiz geç, alarm verme.
+
+**Doğrulama:**
+```bash
+himalaya envelope list --page 1 --page-size 1  # çalışıyorsa IMAP hazır
+```
 
 ## ⚠️ Mevcut Durum — EKİP Pipeline DURDURULDU (Temmuz 2026)
 
@@ -879,6 +899,12 @@ Bu mailleri bulursan: sessizce okundu işaretle + arşivle. Edel'e bu maillerden
 
 ### 🚨 Auth failure — "Google failed" on cron (15 Haz 2026)
 
+**First action when Gmail API fails:** Check if Himalaya IMAP is configured.
+If yes, route email operations through Himalaya immediately — don't wait for OAuth fix.
+See `references/himalaya-gmail-fallback.md` and the `himalaya` skill for setup.
+
+### 🚨 Auth failure — "Google failed" on cron (15 Haz 2026)
+
 When the Gmail cron fails with any "Google failed" (`~/.hermes/google_token.json`), NOT NotebookLM auth. These are separate systems:
 
 | Auth Type | Where | Tool |
@@ -886,7 +912,18 @@ When the Gmail cron fails with any "Google failed" (`~/.hermes/google_token.json
 | Google Workspace OAuth | `~/.hermes/google_token.json` | `$GSETUP --check` |
 | NotebookLM auth | Chrome cookies | `nlm login` / `refresh_auth` |
 
-**Troubleshooting flow:**
+**ÖNCE HIMALAYA IMAP'İ KONTROL ET (19 Tem 2026 — Edel kuralı):**
+
+Email işlemleri için OAuth'u düzeltmeye çalışmadan önce Himalaya IMAP'in çalışıp çalışmadığını kontrol et:
+
+```bash
+himalaya envelope list --page 1 --page-size 1 2>&1
+```
+
+- ✅ Himalaya çalışıyorsa → **OAuth renewal'A GİRME.** Email için Himalaya yeterli. Sadece Calendar/Drive gibi OAuth gerektiren işlemler için OAuth gerekli. Cron raporunda "⚠️ OAuth expired → Himalaya IMAP fallback aktif" de, exit 0 ile çık.
+- ❌ Himalaya da çalışmıyorsa → OAuth troubleshooting'a geç (aşağıdaki akış).
+
+**OAuth troubleshooting (sadece Himalaya yoksa veya Calendar/Drive gerekiyorsa):**
 
 1. Check token status:
    ```bash

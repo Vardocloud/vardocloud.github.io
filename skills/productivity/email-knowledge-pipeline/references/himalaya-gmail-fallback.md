@@ -2,6 +2,19 @@
 
 Gmail OAuth token'ı her 7 günde bir expire olur. Refresh token da expired/revoked olduğunda (ör: oturum açma değişikliği, uzun süre kullanılmama), Google API'ye erişim tamamen kesilir. Bu durumda **Himalaya CLI + IMAP App Password** güvenilir alternatiftir.
 
+## Edel'in Kuralı (19 Tem 2026)
+
+> **"Google expire olduysa Himalaya IMAP kullanabilirsin."**
+
+OAuth token'ı expire olduğunda alarm verme, OAuth renewal'a girme. Önce Himalaya IMAP'in çalışıp çalışmadığını kontrol et:
+
+```bash
+himalaya envelope list --page 1 --page-size 1 2>&1
+```
+
+- ✅ **Himalaya çalışıyorsa** → Sessiz geç. `refresh_google_token.sh` exit 0, rapora "⚠️ OAuth expired → Himalaya IMAP fallback aktif" notu düş. Email işlemleri devam eder.
+- ❌ **Himalaya da çalışmıyorsa** → OAuth renewal gerekli.
+
 ## Ön Koşul
 
 Himalaya IMAP daha önce kurulmuş ve yapılandırılmış olmalı:
@@ -39,12 +52,13 @@ curl -sI "https://asıl-url" | grep -i "^http/"
 # 200 = public, 403 = üyelik gerekli
 ```
 
-## OAuth vs IMAP Seçim Kriteri
+## OAuth vs IMAP Seçim Kriteri (güncellenmiş — 19 Tem 2026)
 
 | Durum | Hangisini Kullan |
 |--------|-----------------|
-| OAuth token valid | `google_api.py` (standart pipeline) |
-| OAuth REFRESH_FAILED + Himalaya config var | Himalaya IMAP |
+| **Normal (herhangi biri çalışıyor)** | **Himalaya IMAP (birincil)** — App Password süresiz, OAuth'a göre daha kararlı |
+| OAuth valid + Himalaya da var | Himalaya (daha hızlı, refresh derdi yok) |
+| OAuth REFRESH_FAILED + Himalaya çalışıyor | **Himalaya kullan, OAuth'u düzeltmeye çalışma** — sadece Calendar/Drive gerekiyorsa OAuth renewal yap |
 | OAuth REFRESH_FAILED + Himalaya config yok | OAuth yenile (bkz: google-workspace skill) |
 | İkisi de çalışmıyor | Browser login dene (son çare) |
 
@@ -62,4 +76,7 @@ himalaya envelope list flag unseen
 
 # Belirli tarihten sonra
 himalaya envelope list from "apa.org" after 2026-07-01
+
+# Son 3 mesajı göster (hızlı sağlık kontrolü)
+himalaya envelope list --page 1 --page-size 3
 ```
