@@ -513,4 +513,6 @@ See `references/security-phase.md` for the security/circuit breaker phase templa
 See `references/cron-refinement-pattern.md` for iterative cron job refinement with real examples.
 See `references/multi-page-course-scraping.md` for systematic multi-page course/documentation scraping technique.
 See `references/upwork-job-research.md` for freelance platform (Upwork) job research with bot-detection workarounds and job-fit analysis templates.
+See `references/upwork-job-research.md` for freelance platform (Upwork) job research with bot-detection workarounds and job-fit analysis templates.
 See `references/ai-model-marketplace-research.md` for AI model marketplace research methodology (browser-based extraction from Zenmux/Pollinations/OpenRouter, model capability filtering, multi-criteria comparison).
+See `references/ganzfeld-ad-hoc-research.md` for the ad-hoc social-media-to-reference pattern — an Instagram Reel about the Ganzfeld Effect was researched, fact-checked, compared against hypnosis (2026 Cardeña study), and saved as a wiki reference. Use this when Edel shares a social/scientific claim that needs verification before filing.

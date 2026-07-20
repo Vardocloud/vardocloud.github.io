@@ -1,7 +1,7 @@
 ---
 name: bulgu-degerlendirme
 description: "Rigorous evaluation pipeline for cron-discovered items (Skool, GitHub, YouTube, RSS, etc.). Before assigning any label (Adaptable / Try / Watch / Skip), the evaluator MUST research Vanitas's relevant subsystems for conflict, overlap, necessity, and integration cost. English-only for rules and procedures."
-version: 2.0.0
+version: 2.1.0
 metadata:
   hermes:
     tags: [evaluation, triage, decision, rubric, research, conflict-analysis]
@@ -29,6 +29,17 @@ Research methods allowed:
 - `web_extract` on the source URL
 - `web_search` for reviews, alternatives, GitHub stars
 - Reading comments/discussion on the original post
+
+### 🔄 Batch Mode (5+ findings)
+
+When evaluating 5+ findings in one session (common in Skool/GitHub cron runs), **do NOT run full Phase 2 per finding** — it wastes tool-call budget. Instead:
+
+1. **Pre-triage by Phase 1 only:** Assign a preliminary Phase 4 label (Watch/Skip) based solely on Phase 1 discovery. If a finding is clearly off-topic, SaaS-only, or community chat, pre-label it Skip and skip Phase 2 entirely.
+2. **Batch Phase 2 research ONCE per category:** Run one session_search, one wiki search, one skills audit per thematic group (e.g., all "agent orchestration" posts share one research pass), not per individual finding.
+3. **Deep Phase 2 only for 🟢 ADAPTABLE / 🔵 TRY candidates:** Full per-finding research (2a–2e) is reserved for findings that survive pre-triage into the top two labels.
+4. **Track budget per BATCH, not per finding:** The ~20 tool call budget applies to the entire evaluation batch. If batch budget is exhausted before all findings are evaluated, remaining unlabeled findings default to 🟡 WATCH — don't fabricate labels beyond budget.
+
+This prevents 20+ findings × 5 research steps = 100+ tool calls. Findings correctly caught by pre-triage (challenge posts, SaaS promos, off-topic discussions) consume near-zero Phase 2 budget.
 
 ### Phase 2 — System Research (MANDATORY)
 

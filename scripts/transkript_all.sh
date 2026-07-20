@@ -1,15 +1,19 @@
 #!/bin/bash
 # transkript_all.sh — Tüm chunk'ları Groq ile transkript et
+# KULLANIM: LANG=en ./transkript_all.sh   (İngilizce için)
+#          LANG=tr ./transkript_all.sh     (Türkçe için, varsayılan)
+#          ./transkript_all.sh             (varsayılan: tr)
 GRKEY=$(grep GROQ_API_KEY /home/ubuntu/.hermes/.env | head -1 | cut -d= -f2-)
+LANG=${LANG:-tr}
 
 transcribe() {
   local file="$1" out="$2"
-  echo "📝 $(basename $file)..."
+  echo "📝 $(basename $file) [lang=$LANG]..."
   curl -s -X POST "https://api.groq.com/openai/v1/audio/transcriptions" \
     -H "Authorization: Bearer $GRKEY" \
     -F "file=@$file" \
     -F "model=whisper-large-v3" \
-    -F "language=tr" \
+    -F "language=$LANG" \
     -F "response_format=json" | python3 -c "import sys,json; print(json.load(sys.stdin).get('text',''))" > "$out"
   echo "   -> $(wc -c < $out) bytes"
   sleep 2

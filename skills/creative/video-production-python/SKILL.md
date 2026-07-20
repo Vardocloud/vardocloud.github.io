@@ -3,7 +3,7 @@ name: video-production-python
 description: "Programmatic video production with Python — MoviePy, FFmpeg, image/text/music assembly for social media Reels, ads, and promotional clips."
 category: creative
 tags: [moviepy, ffmpeg, video, reel, social-media, instagram, python]
-version: 1.0.0
+version: 1.1.0
 ---
 
 # Video Production with Python (MoviePy + FFmpeg)
@@ -260,6 +260,198 @@ See `references/reel-pipeline.md` for a complete working example (the Reel autom
 - `references/absorbed-video-reel.md` — Full original SKILL.md of absorbed sibling
 - `scripts/reel_olustur.py` — Main Reel creation script (from absorbed video-reel-automation)
 - `scripts/olustur.sh` — Easy-use wrapper (from absorbed video-reel-automation)
+
+## AI Storytelling Pipeline (YouTube Automation)
+
+Extend this skill when the user wants to generate short story-driven videos (fables, morals, parables) for YouTube Shorts/Reels using a fully pipelined approach with free AI tools.
+
+### When to Use
+
+- User wants a "story → video" pipeline with AI-generated narrative, images, and voiceover
+- Creating faceless YouTube channels (fables, storytelling, educational shorts)
+- Automating content production with n8n or similar orchestration
+- User is interested in passive income via YouTube content automation
+
+### Core Stack (Free Tools)
+
+| Step | Tool | Why | Free? |
+|------|------|-----|-------|
+| **Story generation** | LiteRouter API (`claude-haiku-4.5-cheap:free`) | 46 free models, Haiku is fast + cheap | ✅ |
+| **Image generation** | **Pollinations** (`image.pollinations.ai/prompt/...`), HuggingFace Inference API (SDXL), or Gemini Pro (browser) | Pollinations free endpoint still works (Pixar 3D style); HF rate-limited without token; Gemini Pro requires Pro account | ✅ |
+| **Voiceover** | Kokoro TTS (Santa voice) | Much more natural than Edge TTS; "Santa" has warm old-storyteller quality | ✅ |
+| **Background music** | Pixabay / YouTube Audio Library | Free royalty-free | ✅ |
+| **Video assembly** | MoviePy + FFmpeg | Already installed | ✅ |
+| **Orchestration** | n8n (self-hosted) | Free, runs locally | ✅ |
+
+### ⚠️ Tool Preference Notes (Edel-specific)
+
+| Rejected Tool | Why | Preferred Alternative |
+|---------------|-----|----------------------|
+| **Edge TTS** | "Basit ve kalitesiz" — robotic, unnatural | Kokoro TTS with **Santa** voice (warm, old storyteller) |
+| **Pollinations API** | No longer free — changed pricing model | HuggingFace Inference API (free tier) or Gemini Pro (with Pro account) |
+| **Viewmax** | Trustpilot 2.9/5, $14-49/mo, mediocre | Same output achievable with free tools |
+| **Emergent** | 3/5 Trustpilot, credit system burns fast | Custom Python pipeline (full control, $0) |
+
+### Pipeline Architecture
+
+```
+┌─────────────┐    ┌──────────────┐    ┌───────────┐    ┌────────────┐    ┌──────────┐
+│  LiteRouter │───→│  Image Gen   │───→│  Kokoro   │───→│  MoviePy   │───→│ YouTube  │
+│ Claude Haiku│    │ HF / Gemini  │    │ TTS Santa │    │ + FFmpeg   │    │ Upload   │
+│ → Story     │    │ → 4-6 images │    │ → Voice   │    │ → Video    │    │ API      │
+└─────────────┘    └──────────────┘    └───────────┘    └────────────┘    └──────────┘
+                                                                    ↑
+                                                          ┌──────────┴──────────┐
+                                                          │     n8n Workflow    │
+                                                          │ (trigger → orchestrate│
+                                                          │  → notify)          │
+                                                          └─────────────────────┘
+```
+
+### Story Generation (LiteRouter API)
+
+**Requires API key registration.** LiteRouter requires an API key (free registration at literouter.com). The free tier ("Basic" plan) gives 50 premium req/day + unlimited free-model req. Without an API key, the endpoint returns HTTP 403.
+
+```python
+import requests
+
+LITEROUTER_API = "https://literouter.com/api/chat/completions"
+HEADERS = {"Authorization": f"Bearer {LITEROUTER_API_KEY}"}  # Register at literouter.com
+
+payload = {
+    "model": "claude-haiku-4.5-cheap:free",  # Free tier model
+    "messages": [
+        {"role": "system", "content": "You are a master storyteller. Write short fables under 200 words with vivid visual language. Break into 4-6 scenes."},
+        {"role": "user", "content": "Aesop-style fable about patience"}
+    ],
+    "temperature": 0.8,
+    "max_tokens": 2000
+}
+resp = requests.post(LITEROUTER_API, json=payload, headers=HEADERS, timeout=60)
+```
+
+Alternative free models on LiteRouter: `deepseek-r1:free`, `gpt-4o-mini:free`, `qwen3.5-7b:free`.
+
+**No API key? Fallbacks:**
+- Google Gemini API (free tier via Pro account)
+- HuggingFace Inference API (free, no key needed for basic text generation)
+- Current Hermes provider model directly
+
+### Image Generation
+
+#### Option A: HuggingFace Free Inference API (Best for automation)
+```python
+import requests
+API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
+response = requests.post(API_URL, json={
+    "inputs": f"storybook illustration, digital art, {prompt}, warm colors, cinematic lighting"
+})
+# Free tier — rate limited but sufficient for a few images per story
+```
+#### Option B: Gemini Pro (Best quality, Pro account required)
+
+Use Playwright (already installed with Chromium) to automate Gemini's image generation when you have a Google account with Gemini Pro:
+
+```python
+# playwright + chromium already available
+# Strategy: open gemini.google.com → generate image with Imagen → download
+# Each Pro account has image generation limits + 3 video generations
+```
+
+**Setup notes:**
+- Playwright + Chromium must be installed: `pip install playwright && playwright install chromium`
+- Requires login session (cookie-based or fresh login per run)
+- Best for batch image generation when no API-only free option works
+
+### Voiceover (Kokoro TTS — Santa Voice)
+
+#### Full Dependency Chain
+
+Kokoro needs these packages in order — missing any will crash at import time:
+
+```bash
+pip install kokoro soundfile misaki spacy phonemizer espeakng_loader
+```
+
+| Package | Why needed | Notes |
+|---------|-----------|-------|
+| `kokoro` | Main TTS engine | v0.9.4+ |
+| `soundfile` | Audio file writing | WAV output |
+| `misaki` | Phoneme/grapheme processing | Kokoro uses misaki.en for English |
+| `spacy` | NLP pipeline (used by misaki) | Large download (~50MB on first pip install) |
+| `phonemizer` | Text-to-phoneme conversion | Uses espeak-ng backend |
+| `espeakng_loader` | Bundled espeak-ng library | ✅ Includes `libespeak-ng.so` + `espeak-ng-data` — **no `sudo apt install espeak-ng` needed** |
+
+**Important:** The `espeakng_loader` package ships with the compiled `.so` and voice data, so it works on systems without root/sudo access (WSL, Docker containers without root). First load downloads the Kokoro-82M model (~300MB from HuggingFace HF Hub repo `hexgrad/Kokoro-82M`). Model is cached in `~/.cache/huggingface/` for subsequent use. First download can take 1-3 minutes.
+
+```python
+from kokoro import KPipeline
+import soundfile as sf
+
+pipeline = KPipeline(lang_code='a')  # American English
+generator = pipeline(story_text, voice='Santa', speed=1.0)
+
+all_audio = []
+for gs, ps, audio in generator:
+    all_audio.append(audio)
+combined = np.concatenate(all_audio)
+sf.write("output.wav", combined, 24000)
+```
+
+**Santa voice:** Warm old-storyteller quality, perfect for fables and moral stories. Speed=0.95 to 1.0 is natural. Voice name is case-sensitive: `'Santa'` (alias) or `'am_santa'` (American male), `'em_santa'` (English male). Available voices from HF repo: `af_*` (American female), `am_*` (American male), `bf_*` (British female), `bm_*` (British male).
+
+### Full Video Assembly Script
+
+See `scripts/generate_story.py` for a complete working pipeline that:
+1. Calls LiteRouter → generates story with scene breakdown
+2. Generates 4-6 images per scene (HF API or Pollinations fallback)
+3. Generates Kokoro voiceover with Santa voice
+4. Assembles video with MoviePy (images + voiceover + optional background music)
+
+### n8n Orchestration
+
+```bash
+npm install -g n8n  # or: n8n (already installed)
+n8n start           # Web UI at localhost:5678
+```
+
+Sample workflow nodes:
+1. **Manual/Schedule trigger** — run daily/weekly
+2. **HTTP Request** → LiteRouter API → story JSON
+3. **Function node** → parse story, split into scenes
+4. **Loop** over scenes → **HTTP Request** → HuggingFace API → images
+5. **Execute Command** → Python script for video assembly (generate_story.py)
+6. **HTTP Request** → YouTube Data API v3 → upload video
+
+### YouTube Monetization Timeline (Realistic)
+
+| Period | Milestone | Income |
+|--------|-----------|--------|
+| Month 1-3 | Build content library, 0-100 subs | $0 |
+| Month 3-6 | Monetization (1K subs + 4K hours) | $50-300/mo |
+| Month 6-12 | Content + consistency | $200-1,000+/mo |
+| 12+ months | Multiple channels scaled | $500-3,000+/mo |
+
+**Reality check:** First 3-6 months are investment. Quality + consistency > tools.
+
+### Storytelling Content Strategy
+
+- **Format:** English, 60-90 second shorts, 9:16 vertical
+- **Theme:** Fables, moral stories, philosophical tales (Aesop's fables proven: 500-1K views per short in testing)
+- **Voice:** Kokoro Santa (warm, older narrator) creates emotional connection
+- **Key tactic:** Storytelling hooks + moral lesson + cliffhanger for engagement
+- **Source material:** Aesop's fables (Library of Congress — `read.gov/aesop/001.html` has 147 public domain fables), world folktales, original AI-generated stories with custom moral
+- **Pollinations image gen:** `https://image.pollinations.ai/prompt/{url_encoded_prompt}` — returns JPEG. Free, no key needed. Good for Pixar-style 3D CGI illustrations
+- **Background music (free):** SoundHelix (`https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3`), Pixabay, YouTube Audio Library
+- **MoviePy v2.x confirmed API:** `clip.resized(height=1920)`, `clip.with_position(("center", "center"))`, `clip.with_duration(s)`, `clip.with_effects([lambda x: x * 0.12])`, `concatenate_videoclips(clips, method="compose")`
+- **Style:** Images are storybook-style illustrations, not photorealistic — matches the fable genre
+- **Refer to:** Storytelling tactics document (if user has one) for hook/open-loop/moral techniques
+
+## References & Scripts
+
+### Added in v1.1.0 — AI Storytelling Pipeline
+- `scripts/generate_story.py` — Complete AI story-to-video pipeline (LiteRouter → images → Kokoro → MoviePy assembly)
+- This script lives at `~/bardoyt/scripts/generate_story.py` during active development
 
 ## Absorbed Skills
 

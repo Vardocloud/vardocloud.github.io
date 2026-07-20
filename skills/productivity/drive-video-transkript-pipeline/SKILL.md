@@ -5,6 +5,21 @@ description: "Google Drive'daki MP4 videolari API stream + ffmpeg + faster-whisp
 
 # Google Drive Video → Transkript Pipeline
 
+## ⚠️ KRİTİK: Whisper Dil Seçimi
+
+**Her transkripsiyondan ÖNCE içeriğin dilini belirle. Yanlış dilde transkripsiyon çıktıyı kullanılamaz hale getirir.**
+
+**Kural tablosu:**
+| İçerik Dili | `language=` parametresi |
+|-------------|------------------------|
+| 🇹🇷 Türkçe | `language=tr` |
+| 🇬🇧 İngilizce | `language=en` |
+| 🤔 Emin değilsen | Dosya adına bak veya 10 saniye dinle |
+
+**Bilinen hata (20 Tem 2026):** `language=tr` ile İngilizce içerik transkript edilince anlamsız fonetik dönüşüm olur.
+
+---
+
 ## Ne Zaman Kullanilir
 Google Drive'daki MP4 seminer/kayit videolarini transkript etmek icin.
 

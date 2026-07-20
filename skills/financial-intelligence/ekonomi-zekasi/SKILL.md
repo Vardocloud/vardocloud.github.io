@@ -74,13 +74,14 @@ Videodan ekonomi zekasına entegre edilen prensipler:
 - **"AI balonu dot.com ile kıyaslanıyor ama şirketler daha kârlı"** — ABD teknoloji hisselerinde temkinli iyimserlik
 - **"Nüfus yenileme eşiğinin altında (1.42)"** — Uzun vadeli yatırımlar yaşlanan nüfusa göre şekillenecek
 
-### Güncel Piyasa Referansları (Para Dergisi, 16 Temmuz 2026)
-- BIST: 14.251 (+%1,22) — Hedef: 19.500-20.000 (2027)
-- USD/TRY: 47,05
-- EUR/TRY: 53,93
-- Faiz: %41,10
-- Altın Ons: $3.982
-- Sanayi Üretimi: Aylık -%2,9 daralma
+### Güncel Piyasa Referansları (Para Dergisi, 20 Temmuz 2026)
+- BIST: 13.981 — Hedef: 19.500-20.000 (2027), Temmuz'da 14K altına gevşedi
+- USD/TRY: 47,18
+- EUR/TRY: 54,01
+- Faiz: %41,49
+- Altın Ons: $4.009
+- Brent Petrol: $88,10
+- Sanayi Üretimi: Aylık -%2,9 daralma (Mayıs)
 
 ### Para Dergisi 23 Hisse Listesi (Uzun Vade)
 TSKB, ISCTR, GARAN, ASTOR, SOKM, FROTO, KCHOL, SAHOL, MAVI, TURSG, ULKER, TAVHL, CIMSA, ARCLK, TUPRS, MPARK, MGROS, DOAS, TCELL, TOASO, PGSUS, THYAO, SISE

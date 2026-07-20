@@ -250,20 +250,16 @@ tail -20 ~/.hermes/cron/output/f4ea19bb906a/<en-son-dosya> | grep -i "APA\|Edito
   4. Bekleyen yoksa → hemen `[SILENT]`
   5. Bekleyen varsa işle (dosyayı oluştur), ama yeni scraping/keşif yapma
   **Neden:** APA hafta sonu yayın yapmaz. Her Pazar cron çalıştığında 5+ tool call'ı boşa harcamak yerine ilk adımda çık. Bu kural pre-check (Gmail pipeline çıktısını kontrol et) adımından DA ÖNCE uygulanır.
-- Cross-check: Output `.md` dosyasının son 20-30 satırına bak (`tail -20`), response genelde sonda.
+- **⚡ Gmail API token expired → Himalaya fallback:** `references/apa-cron-fallback-himalaya.md`
+**⚡ Podcast yayın tarihi belirleme:** `references/podcast-date-heuristic.md`
+
+**⚠️ Hafta sonu erken çıkış `.md` dosyasının son 20-30 satırına bak (`tail -20`), response genelde sonda.
 
 **Kural:** İki farklı cron job aynı kaynağı tarıyorsa, biri diğerinin çıktısını kullanarak iş tekrarını önler. Tool call bütçesi + API kotası + süre kazancı.
 
-**BEŞ KANALLI TARAMA (v5.0 — 25 Haz 2026):**
-Detay: `references/apa-v5-multichannel.md`
+**BEŞ KANALLI TARAMA (v5.0 — 25 Haz 2026):** → `references/apa-v5-multichannel.md`
 
-| Kanal | Kaynak | Bülten Türleri |
-|-------|--------|----------------|
-| **A — Gmail** | apa.org e-posta | Six Things (🥇), Science Spotlight (🥇), Practice Update (🥈), Editor's Choice (🥈), Media Watch (🥈), Advocacy (🥉) |
-| **B — Monitor** | web_search + Firecrawl | Monitor dergisi + Press Releases |
-| C — Speaking of Psych | Web sitesi (apa.org/news/podcasts/speaking-of-psychology) veya Media Watch cross-ref | Yeni podcast bölümü |
-| **D — Events** | apa.org/events | Sadece **ücretsiz** |
-| **E — Division** | Div 12 + Div 29 | Varsa işle |
+**⚡ Gmail API token expired → Himalaya fallback:** → `references/apa-cron-fallback-himalaya.md`
 
 Hepsi bağımsız. Membership/promo ATLA. Yeni içerik yok → [SILENT].
 - **Kanal A — Monitor + Press Releases:** Araştırma makaleleri, Yazar'a gönderilir
@@ -412,6 +408,9 @@ Browser console ile etkinlik linklerini topla:
 ```
 
 **Etkinlik [SILENT] kuralı:** Taranan tüm etkinlikler zaten `~/wiki/apa-etkinlikler/` içinde dosyalanmışsa (mevcut etkinlik listesi tek dosyada toplanmış olabilir) ve yeni etkinlik yoksa → o kanal için de boş geç. **Önemli:** Sadece MAKALELERDE değil, ETKİNLİKLERDE de duplicate kontrolü yap. "Haziran 2026 etkinlikleri" gibi tek dosyada toplanmışsa içeriğini oku, yeni etkinlik yoksa o kanalı da `[SILENT]` geç.
+
+**⚡ Gmail API token expired → Himalaya fallback:** `references/apa-cron-fallback-himalaya.md`
+**⚡ Podcast yayın tarihi belirleme:** `references/podcast-date-heuristic.md`
 
 **Wiki yapısı güncelleme:**
 ```

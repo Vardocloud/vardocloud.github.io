@@ -7,6 +7,7 @@
 | İçerik Türü | Örnek | Pipeline Seviyesi |
 |-------------|-------|-------------------|
 | **🔬 Araştırma makalesi** | Monitor dergisi makalesi, Editor's Choice, Press Release (yeni çalışma) | **TAM**: wiki kaydı (İngilizce, yapılandırılmış) → NBLM source → podcast → rapor |
+| **📊 By the Numbers / Data infographic** | Monitor'daki kısa veri sayfaları — 3-5 istatistik, uzun metin yok | **HAFİF+T**: wiki kısa kayıt → NBLM source (best-effort) → rapor. **Podcast atlanır** — 3 istatistikten 10 dk podcast anlamsız. |
 | **🧠 Klinik rehber/CE** | Practice Update'teki derin rehber, CE Corner, klinik protokol | **TAM** (aynı) |
 | **🎧 Podcast bölümü** | Yeni Speaking of Psychology | **ORTA**: NBLM source (text özet) → rapor, podcast oluşturma |
 | **📋 Bülten roundup'ı (ikincil haber)** | Media Watch, Six Things (haber odaklı), Member Update | **HAFİF**: rapora kısa not ekle, wiki/NBLM/podcast yapma |

@@ -1,7 +1,7 @@
 ---
 name: skool-community-monitor
 description: "Skool topluluklarını düzenli tarama, video/dosya içeriğini işleme (YouTube transcript, Whisper, Google Drive, NotebookLM), Vanitas gelişimi için bilgi toplama. Günlük cron job'lar ve içerik analizi workflow'u."
-version: 1.23.0
+version: 1.24.0
 metadata:
   hermes:
     tags: [skool, community, monitoring, cron, notebooklm, youtube, transcript]
@@ -258,7 +258,7 @@ Cron her çalıştığında, iki topluluğu da tara. Takip edilecek workflow:
 **Aşama 1 — Public Feed (AI Automation Society):**
 1. `browser_navigate("https://www.skool.com/ai-automation-society")` ile feed'e git (login gerekmez)
 2. `browser_console` ile tüm post linklerini çıkar (başlık + URL)
-3. `processed_urls` ile karşılaştır, sadece yeni (işlenmemiş) URL'leri listele
+3. **Bulk dedup kontrol:** 10+ slug'ı tek tek `search_files` ile kontrol etme — bunun yerine `references/cron-json-operations.md`'deki Pattern 1 (Batch URL Dedup Check) ile tek `terminal + python3 -c` çağrısında tümünü kontrol et. Çıktıda sadece `NEW` etiketli URL'leri işle.
 4. **Triage uygula:** Yeni URL'leri öncelik sırasına koy (aşağıdaki 3e bölümü):
    - Yüksek/Orta öncelikli → `web_extract` ile tam içerik çek, wiki'ye kaydet
    - Düşük öncelikli → sadece URL'yi not et, içerik çekme (zaman kazancı)
@@ -751,6 +751,8 @@ Her post'u sadece BİR KEZ işle. Aynı post'u ikinci kez görmek yasak.
 2. Post'u işlemeden önce:
    - URL'si `processed_urls`'te var mı kontrol et.
    - Başlığına denk gelen wiki dosyası `wiki_files`'ta var mı kontrol et.
+
+   **⚡ Bulk dedup (5+ post):** Her slug'ı ayrı `search_files` ile kontrol etme. Tüm slug'ları tek `terminal`+`python3 -c` çağrısında check et (detay: `references/cron-json-operations.md` → Pattern 1). 20 slug → 1 tool call.
 3. İkisinde de yoksa işle. Varsa atla.
 4. İşlenen her yeni post'un:
    - URL'sini `processed_urls`'e ekle

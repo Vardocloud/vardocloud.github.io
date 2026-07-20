@@ -19,6 +19,21 @@ transcribe with faster-whisper. No intermediate video file on disk.
 
 - `references/pipeline-detail.md` — exact code listings, sizes, pitfalls
 
+## ⚠️ KRİTİK: Whisper Dil Seçimi
+
+**Her transkripsiyondan ÖNCE içeriğin dilini belirle. Yanlış dilde transkripsiyon çıktıyı kullanılamaz hale getirir.**
+
+**Kural tablosu:**
+| İçerik Dili | `language=` parametresi |
+|-------------|------------------------|
+| 🇹🇷 Türkçe | `language=tr` |
+| 🇬🇧 İngilizce | `language=en` |
+| 🤔 Emin değilsen | Dosya adına bak veya 10 saniye dinle |
+
+**Bilinen hata (20 Tem 2026):** `language=tr` ile İngilizce içerik transkript edilince anlamsız fonetik dönüşüm olur.
+
+---
+
 ## Step 1: Find the folder and files
 
 First, locate the folder:

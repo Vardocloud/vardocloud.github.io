@@ -84,15 +84,18 @@ Tespit edilen sektör döngüsü:
 4. **Uzman Havuzu Analizi** — Hangi uzman hangi hisseyi ne sıklıkta öneriyor
 5. **Demografik Yatırım Çerçevesi** — Yaşlanan nüfus, genç nüfus azalışı
 
-### Güncellenen Piyasa Referansları (Temmuz 2026):
+### Güncellenen Piyasa Referansları (20 Temmuz 2026):
 | Gösterge | Değer | Para Dergisi Yorumu |
 |----------|-------|---------------------|
-| BIST-100 | 14.251 | Hedef 19.500-20.000 (2027) |
-| USD/TRY | 47,05 | Stabil, TCMB rezervleri destekliyor |
-| Faiz | %41,10 | Düşüş trendi, yıllık ~1000 baz puan indirim bekleniyor |
-| DİBS | En çok kazandıran | Kısa vadede cazibesini koruyor |
-| Altın | -%7,39 reel getiri | Külçe altın kaybettiriyor, seçici ol |
-| Sanayi Üretimi | Aylık -%2,9 | İç talep yavaşlaması üretimi frenliyor |
+| BIST-100 | 13.981 | Hedef 19.500-20.000 (2027), Temmuz'da 14.000 altına gevşedi |
+| USD/TRY | 47,18 | Stabil, TCMB rezervleri destekliyor |
+| EUR/TRY | 54,01 | EUR/USD paritesiyle birlikte hareket ediyor |
+| Faiz | %41,49 | Düşüş trendi, yıllık ~1000 baz puan indirim bekleniyor |
+| Altın Ons | $4.009,58 | Küresel belirsizlikler ons altını 4000$ üzerinde tutuyor |
+| Brent Petrol | $88,10 | Jeopolitik risklerle yukarı yönlü |
+| DİBS | En çok kazandıran (Haziran) | Kısa vadede cazibesini koruyor, dezenflasyon güçlendikçe BIST fırsatları doğacak |
+| Külçe Altın | -%7,39 reel getiri (Haziran) | TÜFE indirgeli altın reel kaybettiriyor |
+| Sanayi Üretimi | Aylık -%2,9 (Mayıs) | İç talep yavaşlaması üretimi frenliyor, imalat -%3,3 |
 
 ### Öne Çıkan Hisseler (Para Dergisi Uzman Konsensüsü):
 **En çok ortak önerilen:** ASELS, ASTOR, BIMAS, FROTO, GARAN, ISCTR, KCHOL, MAVI, MGROS, MPARK, PGSUS, SAHOL, TAVHL, TCELL, THYAO, TSKB, TUPRS

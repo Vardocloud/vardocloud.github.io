@@ -46,7 +46,27 @@ ERROR: Token exchange failed: (invalid_grant) code_verifier or verifier is not n
 **Why:** Google doesn't require/accept PKCE for localhost redirect URIs.
 **Fix:** Set `autogenerate_code_verifier=False` and handle `code_verifier=None` in the exchange flow.
 
-### 2. Token path confusion
+### 2. Pending OAuth missing PKCE data — stale flow detection
+
+When `--auth-code` fails with "Pending OAuth session is missing PKCE data":
+
+```
+cat ~/.hermes/google_oauth_pending.json
+# Stale:  {"state": "...", "redirect_uri": "http://localhost"}          ← NO code_verifier
+# Fresh:  {"state": "...", "code_verifier": "...", "redirect_uri": "http://localhost:1"}  ← from --auth-url
+```
+
+**Fix:** Run `--auth-url` to generate a fresh pending auth with PKCE data. The old auth code is now unusable (single-use) — the user must re-authorize.
+
+**Why the stale file exists:** The pending auth can be created by multiple paths:
+- A previous `--auth-url` call from the current (PKCE-enabled) version of setup.py
+- An older version of setup.py that didn't store PKCE data
+- A manual or third-party OAuth URL generator
+- A `refresh_google_token.sh` script or other automation that writes to `google_oauth_pending.json`
+
+Always check the file structure before asking the user to paste a callback URL.
+
+### 3. Token path confusion
 
 When two token files exist:
 - `google_token.json` — actively refreshed by daily keepalive cron
@@ -61,7 +81,7 @@ google.auth.exceptions.RefreshError:
 
 **Fix:** Ensure all scripts reference `google_token.json` (not `google_token_ubuntu.json`).
 
-### 3. gmail_check.sh JSON parsing failure
+### 4. gmail_check.sh JSON parsing failure
 
 When `no_agent` scripts parse `google_api.py` output:
 

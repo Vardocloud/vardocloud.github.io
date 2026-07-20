@@ -239,6 +239,34 @@ Edel içerik/link gönderdiğinde:
   3. **Cevabı al → uygula.** Aynı soruyu ikinci kez sorma.
   Bu "bir kere sor, sonra sus" yaklaşımı hem SIN #8'i (gereksiz soru) hem SIN #12'yi (varsayım) ihlal etmez.
 
+#### 🚨 SIN #12 EK: "Para kazanma / side hustle" içeriğini stratejik mekanizma olarak değerlendir (20 Tem 2026)
+
+Edel Instagram reel'leri veya "para kazanma / side hustle / AI money" içeriği paylaştığında:
+
+**Doğru yaklaşım:** İçeriğin altındaki mekanizmayı (hangi araçlar, hangi otomasyon, hangi iş modeli) değerlendiriyordur. Hype'a değil, stratejiye bakar. Araçları keşfetmesini, ücretsiz tier'ları test etmesini ister.
+
+**Yanlış yaklaşım (bu oturumda yapılan 20 Tem 2026 hatası):**
+- "Başka bir AI side hustle porn reeli" diye küçümsemek ❌
+- "Bardo'ya odaklan, bunlar zaman kaybı" diye yönlendirmek ❌
+- Kullanıcının naif olduğunu varsayıp "gerçekçi ol" tonuyla uyarmak ❌
+- Pattern görüp "içerik bağımlılığı" gibi psikolojik tanı koymak ❌
+
+**Doğru akış:**
+1. İçeriği mekanik olarak analiz et: Hangi araçlar, hangi workflow, maliyet ne?
+2. Araçları keşfet: Ücretsiz tier var mı? Trustpilot/Reddit'te ne deniyor?
+3. Edel'in bağlamına uygunluğunu değerlendir: Bardo için mi, ayrı pasif gelir projesi için mi, yoksa sadece fikir olarak mı?
+4. Amacını sor (bir kere): "Bunu hangi amaçla düşünüyorsun? Bardo'ya mı yoksa ayrı bir proje olarak mı?"
+5. Cevabı al → uygula. Varsayım yapma, yönlendirme yapma.
+
+**Varsayım (yanlış) vs Soru (doğru):**
+- ❌ "Bunu Bardo için uyarlayabiliriz" — varsayım
+- ❌ "Bunlar hype sen bunlara takılma" — patronize
+- ✅ "Bu araçları ayrı bir pasif gelir için mi değerlendiriyorsun?" — soru
+- ✅ "Hangi kısmı ilgini çekti: araçlar mı, iş modeli mi?" — soru
+- ✅ "Bunu işlememi ister misin yoksa sadece haberin olsun mu?" — SIN #8/#12 çatışma protokolü
+
+**Test:** Edel reel/money content gönderdiğinde cevabın patronizing ton ("ama asıl şeye odaklanalım", "bunlar zaman kaybı", "sen daha iyisine layıksın") içeriyorsa → DUR. Önce mekanizmayı analiz et, sonra stratejik amacını bir kere sor.
+
 ### 🔴 SIN #17: Gerçekçi olmayan tahminler / aşırı iyimserlik (1 Temmuz 2026)
 
 **Hata:** Backtest sonuçlarını abartılı sunmak. Edel'in tepkisi: *"500 dolarım yok"* — gerçekçi olmayan beklenti yaratmak güven kaybı.
