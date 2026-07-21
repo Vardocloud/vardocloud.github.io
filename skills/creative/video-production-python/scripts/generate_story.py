@@ -34,7 +34,7 @@ def tts(text, path, voice="Santa"):
     from kokoro import KPipeline
     import soundfile as sf
     p = KPipeline(lang_code="a")
-    chunks = [a for _, _, a in p(text, voice=voice, speed=1.0)]
+    chunks = [a for _, _, a in p(text, voice=voice, speed=0.85)]
     if chunks:
         sf.write(path, np.concatenate(chunks), 24000)
         return path

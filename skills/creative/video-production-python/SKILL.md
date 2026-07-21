@@ -3,7 +3,7 @@ name: video-production-python
 description: "Programmatic video production with Python — MoviePy, FFmpeg, image/text/music assembly for social media Reels, ads, and promotional clips."
 category: creative
 tags: [moviepy, ffmpeg, video, reel, social-media, instagram, python]
-version: 1.1.0
+version: 1.3.0
 ---
 
 # Video Production with Python (MoviePy + FFmpeg)
@@ -187,6 +187,19 @@ python3 -m yt_dlp --extractor-args "generic:impersonate" \
 ```
 
 Good Pixabay genres for ads: Corporate, Corporate Advertising, Upbeat, Modern.
+For storytelling/fable content (like Aesop's fables): Acoustic, Soft Piano, Cinematic, Ambient — **NOT** upbeat/rhythmic.
+
+### ⚠️ Music Selection for Storytelling Content (Edel's Feedback)
+
+The first BerZoo test used a random SoundHelix track that was:
+- **Alakasız** (irrelevant to the story's tone)
+- **Hızlı** (upbeat tempo clashed with the slow narration)
+- **Seslendirmeyi bastırdı** (voiceover became unintelligible)
+
+**Rules for storytelling/fable background music:**
+1. **Genre** must match the narrative tone — soft piano, acoustic guitar, or ambient pads for fables
+2. **Tempo** must be slow-to-moderate — fast/rhythmic music distracts from the spoken word
+3. **Volume ratio**: voiceover is PRIMARY, music is AMBIENT. For storytelling, keep bg music at **0.08-0.10** (NOT 0.12-0.15)
 
 ### Audio Loop Pattern
 
@@ -288,7 +301,7 @@ Extend this skill when the user wants to generate short story-driven videos (fab
 | Rejected Tool | Why | Preferred Alternative |
 |---------------|-----|----------------------|
 | **Edge TTS** | "Basit ve kalitesiz" — robotic, unnatural | Kokoro TTS with **Santa** voice (warm, old storyteller) |
-| **Pollinations API** | No longer free — changed pricing model | HuggingFace Inference API (free tier) or Gemini Pro (with Pro account) |
+| **Pollinations free endpoint** | Quality inconsistent — broken/glitched elements, overlapping objects, garbled compositions | Pollinations paid API (with key, `nanobanana`/`kontext` models) OR nanobanana.io standalone (pro account) OR HuggingFace Inference API (free tier) |
 | **Viewmax** | Trustpilot 2.9/5, $14-49/mo, mediocre | Same output achievable with free tools |
 | **Emergent** | 3/5 Trustpilot, credit system burns fast | Custom Python pipeline (full control, $0) |
 
@@ -339,7 +352,25 @@ Alternative free models on LiteRouter: `deepseek-r1:free`, `gpt-4o-mini:free`, `
 
 ### Image Generation
 
-#### Option A: HuggingFace Free Inference API (Best for automation)
+#### Option A: Pollinations Free Endpoint (Free, No Key)
+```python
+url = f"https://image.pollinations.ai/prompt/{requests.utils.quote(prompt)}"
+resp = requests.get(url, timeout=60)
+```
+
+**⚠️ Known quality issues (Edel's feedback):**
+- Images can be inconsistent — some have **broken/glitched elements**, overlapping objects, or garbled compositions
+- Always check `len(resp.content) > 5000` and verify visually before assembly
+- Multiple re-rolls may be needed for usable images (generate 2-3 variants per scene, pick the best)
+- Pixar/3D style works best when prompt includes: `3D Pixar animation style, cinematic quality, highly detailed` plus scene-specific lighting details
+- Prompt engineering is **critical** without Leonardo AI — the free endpoint needs very specific, well-structured prompts
+- **Image-to-video options** (newly available):
+  - **nanobanana.io Seedance 2.0** — multi-image input, 2-10s clips, best quality/control (pro account)
+  - **Google Gemini browser** — image-to-video from reference image, requires login session
+  - **Vibes.ai** — Meta's free tool, text-to-video with watermark
+  - **MoviePy fallback** — cross-dissolve + slow Ken Burns zoom/pan approximates motion without true video gen
+
+#### Option B: HuggingFace Free Inference API (Best for automation)
 ```python
 import requests
 API_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0"
@@ -348,20 +379,54 @@ response = requests.post(API_URL, json={
 })
 # Free tier — rate limited but sufficient for a few images per story
 ```
-#### Option B: Gemini Pro (Best quality, Pro account required)
 
-Use Playwright (already installed with Chromium) to automate Gemini's image generation when you have a Google account with Gemini Pro:
+#### Option C: nanobanana.io Standalone Platform (Best Quality, Pro Account)
 
-```python
-# playwright + chromium already available
-# Strategy: open gemini.google.com → generate image with Imagen → download
-# Each Pro account has image generation limits + 3 video generations
-```
+nanobanana.io is a **standalone Gemini-powered platform** (not just a Pollinations model) with:
+- **Nano Banana 2** — consistent high-quality image generation
+- **Seedream 5.0 Pro** — photorealistic image gen
+- **Seedance 2.0** — **image-to-video** support (2-10s clips from reference images)
 
-**Setup notes:**
-- Playwright + Chromium must be installed: `pip install playwright && playwright install chromium`
-- Requires login session (cookie-based or fresh login per run)
-- Best for batch image generation when no API-only free option works
+Requires Google sign-in at https://nanobanana.io with a pro account. Pro tier gives better quality and more credits. Use this when consistent image quality matters and the free Pollinations endpoint produces broken/glitched results.
+
+**Capabilities for BerZoo storytelling:**
+- Generate consistent character appearances across scenes (Nano Banana 2 excels at this)
+- Upscale to 4K for YouTube Shorts resolution
+- Image-to-video for animating still illustrations (Seedance 2.0)
+
+#### Option D: Google Gemini Browser (Image Gen + Image-to-Video)
+
+Google Gemini's web interface (gemini.google.com) offers both:
+- **Image generation** via Imagen (Gemini Pro account) — ✅ Excellent quality, Pixar 3D style works perfectly
+- **Image-to-video** generation — ✅ **Confirmed working (July 2026):** Prompting "create a short video of this mouse walking through the wheat field, cinematic motion, 5 seconds" on Gemini Flash model immediately accepted with "I'm generating your video. This could take a few minutes."
+
+**⚠️ PRACTICAL REALITY (21 Jul 2026):** Browser-based Gemini auth is unreliable for automated pipelines. Repeated login attempts trigger Google's anti-bot detection, each 2FA push generates a new code, Camofox sessions drop between tool calls, and CDP headless Chrome gets blocked. **For unattended/automated pipelines, prefer Pollinations API (already configured, free) or nanobanana.io standalone.** Reserve browser-based Gemini for interactive/supervised sessions where the user is present to approve 2FA in real time and monitor session health.
+
+Requires browser automation with an active Google login session. Best for supervised interactive image gen + short video clips when no API-based free option works.
+
+**Login workflow (tested July 2026):**
+1. Password for kenshin4155@gmail.com is in Bitwarden as `google-pro`
+2. Retrieve via bw-serve: `curl -s 'http://127.0.0.1:8087/list/object/items?search=pro'`
+3. Navigate to gemini.google.com/app?hl=tr → Oturum aç → enter email + password
+4. 2FA via SMS (phone ending 59) — ask user for code
+5. Pro account activates automatically — "Kenshın Himura" + "Pro" badge visible
+6. Prompt directly in chat — no special mode switching needed
+
+**⚠️ Session stability:** The headless browser can drop the session (blank page). Retry with `browser_navigate` if this happens.
+
+**See also:** `image-generation` skill for the complete Gemini workflow
+
+#### Option E: Vibes.ai (Meta's Free AI Video Tool)
+
+Meta's AI video tool at vibes.ai is currently **free** (may become paid later):
+- Text-to-video generation
+- Voice + music overlay
+- ⚠️ **Known issues:** Watermark on output, comments report eventual paywall
+- Best for: quick video prototyping, not production-ready for faceless channels
+
+#### Option F: nim.video
+
+Video production acceleration tool at nim.video — works alongside Claude/other LLMs for faster video ideation and assembly. Free tier available.
 
 ### Voiceover (Kokoro TTS — Santa Voice)
 
@@ -398,7 +463,11 @@ combined = np.concatenate(all_audio)
 sf.write("output.wav", combined, 24000)
 ```
 
-**Santa voice:** Warm old-storyteller quality, perfect for fables and moral stories. Speed=0.95 to 1.0 is natural. Voice name is case-sensitive: `'Santa'` (alias) or `'am_santa'` (American male), `'em_santa'` (English male). Available voices from HF repo: `af_*` (American female), `am_*` (American male), `bf_*` (British female), `bm_*` (British male).
+**Santa voice:** Warm old-storyteller quality, perfect for fables and moral stories.
+
+**⚠️ Speed preference (Edel-specific):** The default `speed=1.0` or `0.95` is too fast for storytelling. Edel prefers **`speed=0.85`** for Santa's voice — it gives a slower, more deliberate narration that sounds natural for fable reading. Always default to 0.85 for story content unless stated otherwise.
+
+Voice name is case-sensitive: `'Santa'` (alias) or `'am_santa'` (American male), `'em_santa'` (English male). Available voices from HF repo: `af_*` (American female), `am_*` (American male), `bf_*` (British female), `bm_*` (British male).
 
 ### Full Video Assembly Script
 
@@ -452,6 +521,14 @@ Sample workflow nodes:
 ### Added in v1.1.0 — AI Storytelling Pipeline
 - `scripts/generate_story.py` — Complete AI story-to-video pipeline (LiteRouter → images → Kokoro → MoviePy assembly)
 - This script lives at `~/bardoyt/scripts/generate_story.py` during active development
+
+### Added in v1.2.0 — BerZoo US Fable Pipeline
+- `references/berzoo-aesop-pipeline.md` — Working pattern for BerZoo US Aesop's fables channel: Pollinations Pixar-style images, Kokoro am_santa voiceover, MoviePy 9:16 assembly with background music at 0.12 volume
+
+### Added in v1.3.0 (Jul 2026) — Free AI Video Tools + Image-to-Video Options
+- `references/free-ai-video-tools.md` — Comparison of free AI video generation tools: Vibes.ai, Seedance 2.0 (nanobanana.io), Google Gemini browser, nim.video, Pollinations API
+- **Key corrections from BerZoo test:** Santa voice speed=0.85 (not 0.95), background music volume 0.08-0.10 for storytelling, image gen alternatives for Pollinations free endpoint's inconsistent quality
+- **Image-to-video** is now feasible via nanobanana.io Seedance 2.0 (pro account) or Google Gemini browser — see reference file for details
 
 ## Absorbed Skills
 

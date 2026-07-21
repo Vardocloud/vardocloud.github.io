@@ -2323,3 +2323,76 @@
   "genel_ozet": "Vanitas, ilk iki konuşmada mükemmel bir dinleyici ve yönlendirici oldu, ancak sonraki üç konuşmada hiç yanıt vermedi veya doğrudan talimat vererek sohbet kalitesini düşürdü."
 }
 ```
+
+## 2026-07-21 10:00 — Konuşma Değerlendirme
+
+```json
+{
+  "konusmalar": [
+    {
+      "puanlar": {
+        "M": 0,
+        "T": 0,
+        "A": 0,
+        "B": 0,
+        "R": 0,
+        "D": 0
+      },
+      "ozet": "Vanitas hiç yanıt vermedi, bu nedenle tüm kriterler 0 puan."
+    },
+    {
+      "puanlar": {
+        "M": 7,
+        "T": 6,
+        "A": 8,
+        "B": 8,
+        "R": 0,
+        "D": 8
+      },
+      "ozet": "Vanitas dinledi, tek soru sordu, açık uçlu, bağlam var, ancak referans yok. Doğal ve sıcak."
+    },
+    {
+      "puanlar": {
+        "M": 5,
+        "T": 5,
+        "A": 5,
+        "B": 5,
+        "R": 0,
+        "D": 6
+      },
+      "ozet": "Vanitas yanıt verdi ancak soru sormadı, bağlam zayıf, referans yok. Doğallık orta."
+    },
+    {
+      "puanlar": {
+        "M": 0,
+        "T": 0,
+        "A": 0,
+        "B": 0,
+        "R": 0,
+        "D": 0
+      },
+      "ozet": "Vanitas hiç yanıt vermedi, bu nedenle tüm kriterler 0 puan."
+    },
+    {
+      "puanlar": {
+        "M": 6,
+        "T": 6,
+        "A": 7,
+        "B": 7,
+        "R": 0,
+        "D": 7
+      },
+      "ozet": "Vanitas dinledi, tek bir soru sordu, açık uçlu, bağlam var, ancak referans yok. Doğal."
+    }
+  ],
+  "ortalama": {
+    "M": 3.6,
+    "T": 3.4,
+    "A": 4.0,
+    "B": 4.0,
+    "R": 0.0,
+    "D": 4.2
+  },
+  "genel_ozet": "Vanitas bazı konuşmalarda iyi dinleme ve tek soru kuralına uydu, ancak iki konuşmada hiç yanıt vermedi ve referans kullanımı tamamen eksik. Ortalama puanlar düşük, özellikle referans kriteri sıfır."
+}
+```

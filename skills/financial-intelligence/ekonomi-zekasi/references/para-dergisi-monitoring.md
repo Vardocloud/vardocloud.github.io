@@ -68,13 +68,57 @@ Her halka arz için:
 6. Makroekonomik veri yorumları (sanayi üretimi, enflasyon, büyüme)
 
 ## Scraping Approach
-- `paradergi.com.tr` ana sayfasını web_extract ile tara
-- X/Twitter hesabı (@ParaDergisi) postlarını tara (günlük atıyor)
+
+### Web Sitesi
+- `paradergi.com.tr` ana sayfasını `web_extract` ile tara — en kapsamlı içerik buradan gelir
+- Alt kategoriler: `/finans/` (çalışıyor, zengin içerik), `/teknoloji` (çalışıyor, güncel içerik)
+- **Kırık kategoriler (404):** `/ekonomi/`, `/son-dakika/`, `/saglik/`, `/seyahat/` — taşınmış veya kaldırılmış
 - KVKK çerez bildirimi gelebilir — içerik yine de okunabilir
 - Sayfa yapısı Turkuvaz Medya altyapısı (gazete/dergi formatı)
-- URL yapısı: paradergi.com.tr/{kategori}/{tarih}/{makale-basligi}
+- URL yapısı: `paradergi.com.tr/{kategori}/{YYYY}/{MM}/{GG}/{makale-basligi}`
+- **AMP sürümleri:** `/amp/` uzantılı sayfalarda "GÜNCELLEME: GG.AA.YYYY" ve "GİRİŞ TARİHİ: GG.AA.YYYY" timestamp'leri bulunur — hangi haberin bugüne ait olduğunu teyit etmek için AMP bağlantısını kontrol et
+- **Tarih bazlı keşif:** `web_search` ile `"paradergi.com.tr" "YYYY/MM/GG"` sorgusu (ör: `"2026/07/21"`) bugünün makalelerini doğrudan bulur. Tarih URL'de olduğu için güvenilir bir keşif yöntemidir.
+
+### X/Twitter (@ParaDergisi)
+- Hesap günde 1-2 tweet atıyor, web içeriğini linkliyor
+- **Önemli teknik:** X'te oturum açmadan kronolojik olmayan sıralama gösterilir (eski pinned tweet'ler önce gelir). Oturumsuz ana sayfayı taramak kronolojik içerik getirmez. Bunun yerine:
+  1. Önce `web_search` ile `"site:x.com/ParaDergisi" "anahtar-kelime"` (veya boş) sorgusuyla güncel tweet ID'lerini bul
+  2. Her tweet için `web_extract(url="https://x.com/ParaDergisi/status/{ID}")` yap — bu çalışır ve tam timestamp + içerik + görüntülenme sayısını döndürür
+  3. Alternatif: `browser_navigate` ile doğrudan tweet URL'sine git
+- En yüksek etkileşim "Para Dergisi'nde bu hafta" kapak duyurularında olur (1K+ görüntülenme)
+- Twitter taraması web taramasını tamamlayıcı niteliktedir — web'de olmayan ek içerik nadiren gelir
+
+### Genel
+- `web_extract` aynı anda 5 URL'e kadar destekler — tweet'leri ve makaleleri gruplayarak tara
+- `web_search` limit=10 kullanarak maksimum kapsama al
+- Taramaya ana sayfadan başla, sonra `/finans/` alt kategorisi, sonra Twitter
 
 ## Tarama Geçmişi
+
+### 21 Temmuz 2026 (Salı — Cron)
+**2 yeni makale bulundu (bugün yayınlanmış):**
+
+| # | Makale | Kategori | Öne Çıkan |
+|---|--------|----------|-----------|
+| 1 | **Otomat patlaması!** | Girişimcilik | Yeni nesil akıllı otomatlar (IoT + AI + temassız ödeme). Yatırım: 500K-1M TL, ROI 10-24 ay. Sıcak gıda otomatlarının Avrupa/ABD'ye ihraç potansiyeli. |
+| 2 | **Batı Afrika'nın 'Mutluluk Adaları': Cabo Verde** | Dünya/Turizm | Batı Afrika'nın en istikrarlı demokrasisi. Türkiye ile ticaret 9,5M$. Turizm + yenilenebilir enerji fırsatları. Doğrudan uçuş yok, vize gerekli. |
+
+**Aynı haftadan devam eden güncel içerikler (16-20 Temmuz):**
+- Saat&Saat (SSAAT) BIST'te işlem görmeye başladı: 3,75 milyar TL halka arz, 56 TL, 709 bin başvuru, 45 ülke, %32,4 FAVÖK marjı
+- Uzun vade için önerilen 23 hisse listesi: TSKB, ISCTR, GARAN, ASTOR, FROTO, KCHOL, SAHOL, THYAO, PGSUS, TCELL, MPARK, MGROS, SISE vb.
+- IGEXX 2026: 3-5 Eylül, Haliç Kongre Merkezi, 60+ ülke, 6,4 milyar $ e-ihracat
+- Bulls Yatırım Holding → Escar Filo: %77,62 hisse, 141,4 milyon $
+- Yapı Kredi: 700 milyon $ uluslararası fon
+- Yandex Go: 100 milyon $ yatırımla İstanbul'da
+- Hayat Finans: KOBİ'lere 40 milyar TL ek finansman
+- Garanti BBVA: 30 milyon € yeşil tahvil
+- Tosyalı: 1,2 GW GES için 187 milyon € finansman
+- QNB Türkiye: "Mavi Repo" ile su/mavi ekonomi finansmanı
+- Turknet: 141 milyon $ altyapı yatırımı
+
+**Güncel piyasa spotları (21 Temmuz):**
+- BIST: 14.070,98 | USD/TRY: 47,20 | EUR/TRY: 53,94
+- Altın Ons: $4.065,79 | Faiz: %41,71 | Brent: $88,96
 
 ### 20 Temmuz 2026 (Pazar — Kanban Task)
 **3 yeni makale bulundu:**

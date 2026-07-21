@@ -151,15 +151,15 @@ browser:
   camofox:
     adopt_existing_tab: false
     loopback_host_alias: host.docker.internal
-    managed_persistence: false
+    managed_persistence: true
     rewrite_loopback_urls: false
     session_key: ''
     user_id: ''
-  cdp_url: ''
+  cdp_url: http://localhost:9222
   command_timeout: 30
   dialog_policy: must_respond
   dialog_timeout_s: 300
-  engine: auto
+  engine: camofox
   inactivity_timeout: 600
   record_sessions: false
 checkpoints:
@@ -721,7 +721,7 @@ slack:
   require_mention: true
 streaming:
   buffer_threshold: 24
-  cursor: ' ▉'
+  cursor: " \u2589"
   edit_interval: 0.8
   enabled: false
   fresh_final_after_seconds: 60.0

@@ -1,7 +1,7 @@
 ---
 name: bulgu-degerlendirme
 description: "Rigorous evaluation pipeline for cron-discovered items (Skool, GitHub, YouTube, RSS, etc.). Before assigning any label (Adaptable / Try / Watch / Skip), the evaluator MUST research Vanitas's relevant subsystems for conflict, overlap, necessity, and integration cost. English-only for rules and procedures."
-version: 2.1.0
+version: 2.2.0
 metadata:
   hermes:
     tags: [evaluation, triage, decision, rubric, research, conflict-analysis]
@@ -40,6 +40,8 @@ When evaluating 5+ findings in one session (common in Skool/GitHub cron runs), *
 4. **Track budget per BATCH, not per finding:** The ~20 tool call budget applies to the entire evaluation batch. If batch budget is exhausted before all findings are evaluated, remaining unlabeled findings default to 🟡 WATCH — don't fabricate labels beyond budget.
 
 This prevents 20+ findings × 5 research steps = 100+ tool calls. Findings correctly caught by pre-triage (challenge posts, SaaS promos, off-topic discussions) consume near-zero Phase 2 budget.
+
+5. **All-Skip is the expected outcome, not an error:** Most cron batches will produce zero Adaptable/Try findings. When pre-triage assigns every finding to Watch/Skip, do NOT run deep Phase 2 on any of them. The downstream parent skill (e.g., skool-community-monitor) may have its own silent-output rule; follow it. Spending tool calls to "confirm" a Skip finding wastes budget — the pre-triage label is final unless new information surfaces.
 
 ### Phase 2 — System Research (MANDATORY)
 
@@ -224,6 +226,63 @@ Only after completing Phases 1-3, assign ONE label:
 
 ---
 
+## 🧪 Ek Harici Değerlendirme Modu
+
+**Tetikleyici:** Edel bir AI aracından bahsedip "ücretsiz mi? lokal mi?" diye sorduğunda — yani araç Vanitas'a entegre edilmeyecek, sadece genel bilgi amaçlı değerlendirilecekse, aşağıdaki hızlı şablon kullanılır.
+
+Bu mod, Phase 1–4'ün tam sürümü DEĞİLDİR. Sadece Edel'in sorduğu 4 soruyu yanıtlamak için tasarlanmıştır. Vanitas'a entegrasyon kararı gerektiğinde FULL pipeline (Phase 1–4) kullanılır.
+
+### Hızlı Değerlendirme Şablonu
+
+Her araç için şu 4 soruyu cevapla:
+
+| # | Soru | Nasıl öğrenirim? |
+|---|------|------------------|
+| 1 | **Ücretsiz mi?** | Fiyatlandırma sayfası, GitHub lisansı, API fiyatlandırması |
+| 2 | **Açık kaynak mı?** | Lisans türü (MIT/Apache 2.0/GPL vs. kapalı). GitHub'da repo var mı? HuggingFace'de ağırlıklar var mı? |
+| 3 | **Lokal çalışır mı?** | Cloud hizmeti mi (API-only) yoksa kendi makinede çalışan bir yazılım/model mi? |
+| 4 | **GPU/ donanım gereksinimi?** | CPU'da çalışır mı? GPU gerekliyse minimum VRAM? Özel bir işletim sistemi/platform şart mı? |
+
+**Çıktı formatı — her araç için 1-2 cümle ücretsiz/lokal durumu + varsa detaylar tablosu:**
+
+```
+**[Araç Adı]** — ÜCRETSİZ & AÇIK KAYNAK / ÜCRETLİ / KISMİ ÜCRETSİZ / ARAŞTIRMA AŞAMASINDA
+- **Lisans:** MIT / Apache 2.0 / Kapalı / —
+- **Lokal:** Evet (PyTorch, CUDA gerekli) / Hayır (sadece cloud) / Kısmen
+- **GPU:** Gerekli / Önerilir / Gerekmez
+- **Not:** Öne çıkan kısıtlama veya uyarı
+```
+
+### Örnek: Bu Oturumdaki Araştırma
+
+```
+**[PiD v1.5 (Nvidia)]** — ✅ ÜCRETSİZ & AÇIK KAYNAK
+- **Lisans:** Apache 2.0
+- **Lokal:** Evet — PyTorch ile GitHub'dan klonla çalışır
+- **GPU:** Gerekli (diffusion decoder, 2K-4K upscaling)
+- **Not:** ComfyUI ile kullanılabilir. FLUX, SD3, SDXL destekler.
+
+**[Lucida]** — ✅ ÜCRETSİZ & AÇIK KAYNAK
+- **Lisans:** MIT
+- **Lokal:** Evet — HuggingFace'den ağırlıklar indirilir
+- **GPU:** Önerilir ama CPU'da da inference yapılabilir (BiRefNet tabanlı, hafif)
+- **Not:** Kamuflaj, cam, yazı gibi zor vakalarda ticari API'leri geçer
+
+**[Google Vids (Avatar)]** — ⚠️ KISMİ ÜCRETSİZ
+- **Lisans:** Kapalı (Google Workspace)
+- **Lokal:** Hayır — sadece cloud hizmeti
+- **GPU:** Yok (cloud tarafında işlenir)
+- **Not:** Avatar özelliği ücretsiz ama Workspace hesabı gerekli ($12/kullanıcı/ay)
+```
+
+Bu şablon, `free-models` skill'inden farklıdır: `free-models` Vanitas'ın KULLANDIĞI provider'ları/model'leri kataloglar; bu ise DIŞARIDAN yeni karşılaşılan araçların hızlı değerlendirmesi içindir.
+
+### Sınırlar
+
+- Her araç için max 2 arama + 2 sayfa çekme — derin araştırma gerekiyorsa Phase 2'ye geç
+- Araştırma aşamasındaki (henüz kod/public olmayan) araçlar için "ARAŞTIRMA AŞAMASINDA" etiketi kullan, kod çıkana kadar bekle
+- Lisans bilgisi GitHub/HuggingFace/Resmi siteden alınır, üçüncü taraf yorumu değil
+
 ## Sample Decision Chains
 
 ### Example 1: "Loop Designer Skill" from today
@@ -266,7 +325,7 @@ Decision: SKIP — macOS-only, Apple Silicon exclusive. Our stack is Linux/WSL. 
 
 ## Pitfalls
 
-- **Do NOT skip Phase 2.** "I already know what this is" is the most common mistake. The system may have changed since you last researched it.
+- **Do NOT skip Phase 2 for individual findings.** "I already know what this is" is the most common mistake. The system may have changed since you last researched it. Exception: in Batch Mode (5+ findings), pre-triage is a valid Phase 2 substitute for Watch/Skip findings — see Batch Mode step 5. This exception does NOT apply to pre-triage candidates flagged as potential Adaptable/Try; those always get full Phase 2.
 - **Do NOT assign ADAPTABLE without checking session_search.** If Edel rejected a similar idea before, you'll waste time re-proposing it.
 - **Do NOT assign SKIP without a specific reason.** "Doesn't fit" is not a reason. "Paid $20/mo with free alternative in skill X" is a reason.
 - **Do NOT write evaluation reports in Turkish.** Rules and procedures are English. Only the final delivery to Edel may be in Turkish if she prefers.

@@ -13,6 +13,7 @@ This umbrella consolidates browser-related skills into a reusable library. It pr
 
 - browser-smart-navigation
 - cloudflare-bot-bypass
+- **headless-browser-auth** (see `devops/headless-browser-auth`) — Headless browser cookie auth for Google/NotebookLM: Camofox managed persistence, Playwright CDP, cookie import/refresh, Google sign-in bot blockade workarounds
 
 ### browser-smart-navigation
 

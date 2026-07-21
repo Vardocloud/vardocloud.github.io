@@ -18,7 +18,37 @@ triggers:
 
 For services that **only support browser-based authentication** (NotebookLM, some internal tools, Google Workspace add-ons), use headless Playwright Chromium with CDP for automated cookie refresh.
 
-## Core Pattern
+## 0. Camofox Managed Persistence (Hermes Native — Simplest)
+
+**For services accessed within Hermes browser (gemini.google.com, etc.), use Camofox managed_persistence instead of external Playwright/CDP.** This is the native Hermes solution:
+
+```bash
+hermes config set browser.camofox.managed_persistence true
+hermes config set browser.engine camofox
+```
+
+**Why this works:** Camofox (Firefox fork) saves cookies/logins/session state to a persistent profile directory. Login ONCE → session survives across page reloads and Hermes restarts. 
+
+**⚠️ CRITICAL — Session persistence across tool calls (21 Jul 2026):** Camofox `managed_persistence` preserves the session on disk, but **Hermes `browser_*` tool calls may spawn fresh Camofox instances** that don't share the same in-memory state. In practice, `browser_navigate` → login → `browser_snapshot` (same page) works within a single continuous flow, but after the next `browser_navigate` to a different URL, the session can go blank. **Do NOT open new tabs or navigate away during the auth flow** — complete login in one sequence. If the session goes blank between tool calls, the Camofox instance may have been recycled. Re-navigate to the target URL — if cookies are on disk, the session *may* still be alive.
+
+**Why headless Chrome doesn't work for Google:** Google classifies headless Chrome as an untrusted device and refuses to persist session cookies, even after successful 2FA (confirmed 3 Jul 2026, reconfirmed 21 Jul 2026 with Chromium 149). The `--disable-blink-features=AutomationControlled` flag does NOT bypass Google's sign-in detection — the "Couldn't sign you in" block fires at the email entry stage before any credentials are checked. Camofox (Firefox fork) avoids this detection because it presents as a regular Firefox browser.
+
+**2FA flow with Camofox (Gemini login — 21 Jul 2026):** 
+- SMS: Shows "Unavailable on this device" in Camofox — can't use it.
+- Authenticator: 30-second timeout too tight for browser-based typing — can't keep up.
+- **Tap Yes is the best option:** Push notification with 2-digit number match (e.g., 86, 93). Phone displays 3 numbers; user taps the matching one.
+
+**⚠️ Session persistence after Tap Yes (CRITICAL):** After user approves on phone, the browser page must complete the redirect naturally. Do NOT `browser_navigate` to a new URL — this kills the pending session and you'll see "Sign in" again. Instead, after the user confirms approval, use `browser_snapshot` on the SAME page to verify the redirect completed. Once on gemini.google.com/app with the sidebar visible (showing account name + "Pro" badge), the session is locked in — Camofox managed_persistence saves it to disk.
+
+## Pattern Selection Decision Tree
+
+| Scenario | Use |
+|----------|-----|
+| Gemini / Google services via Hermes browser | **Camofox managed_persistence** (this section) |
+| NotebookLM MCP server auth | Pattern A/B/C (CDP + cookie import) |
+| Manual intervention needed (CAPTCHA, passkey) | Pattern F (VNC fallback) |
+
+## Core Pattern (Legacy — Playwright/CDP)
 
 1. Start headless Chrome with CDP (no X server needed)
 2. Connect auth CLI via CDP (`nlm login --cdp-url`)
@@ -342,25 +372,54 @@ External AI analysis of code issues (like GLM-5.1's auth analysis) should always
 - **nlm login --cdp-url** needs a profile with existing Google session cookies
 - **Manual import (--manual)** is always available as fallback
 - **Auth expiry**: verify with actual write operations (`nlm report create ... --confirm -y`), not just `--check`
+- **Google sign-in blocked?** Before debugging browser methods, run `scripts/test-google-signin.py` to check if the account is flagged. If ALL methods fail identically, the account/IP is blocked — not the browser.
 - **Cron auth_monitor.sh false-positive DOWN alarms:** `systemctl --user is-active` user crontab icinde `XDG_RUNTIME_DIR` set edilmedigi icin sessizce basarisiz olur → servis calisiyor olsa bile "DOWN" raporlanir. Cozum: `export XDG_RUNTIME_DIR=/run/user/$(id -u)` ve `export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus` script basinda. Detay: `references/cron-systemd-user-pitfall.md`
 
 ### 🚨 Google "signin/rejected" Bot Blockade
 
 After **repeated automated login attempts** from the same IP (even with correct credentials),
-Google shows a `/v3/signin/rejected` page. This is a server-side bot detection block that
-affects ALL automation methods: Playwright, Selenium, headless, headed, fresh profiles, etc.
+Google shows a `/v3/signin/rejected` page. This is a **server-side account+IP flag** that
+affects ALL automation methods: Playwright, Camofox, Selenium, headless, headed, fresh profiles, etc.
+
+**Diagnostic signal:** URL contains `/signin/rejected?continue=...&rrk=46`. The `rrk` parameter
+is Google's internal risk score — 46 means the account/IP has been aggressively flagged.
+
+**Cross-method verification (21 Jul 2026):** When ALL four methods fail identically with
+`signin/rejected`, the problem is *not* the browser — it's the account flag:
+- ❌ Camofox (Firefox fork) → `signin/rejected?rrk=46`
+- ❌ Headless Chromium + CDP → `signin/rejected?rrk=46`  
+- ❌ Xvfb + headed Chromium → `signin/rejected?rrk=46`
+- ❌ Playwright (fresh context) → `signin/rejected?rrk=46`
+
+This uniform failure across all engines (including the one that *previously worked*) is the
+definitive signal that the account is temporarily blocked, not the browser method.
 
 **Symptom:** URL contains `/signin/rejected?continue=...`, only 3 session cookies saved
-(vs 53-73 on successful login).
+(vs 53-73 on successful login). The block fires at the *email entry stage* — before
+any credentials are checked.
 
 **Solutions (in order of reliability):**
-1. **Wait** — Google's block is temporary (hours to a day); do not retry during the block
+1. **Wait** — Google's block is temporary (hours to a day); do not retry during the block.
+   Every retry may extend the block duration.
 2. **Change IP** — Different source IP or proxy may bypass
-3. **VNC manual login** — Human completes the verification once; cookies then work for hours
-4. **Phone approval** — "Tap Yes on your phone" option bypasses the block
+3. **Cookie import from trusted browser** — Export cookies from a browser already logged in
+   on a different IP, import into the automation profile. See `references/google-cookie-export-import.md`.
+4. **VNC manual login** — Human completes the verification once; cookies then work for hours
+5. **Phone approval** — "Tap Yes on your phone" option may bypass the block
 
-**Prevention:** Limit automated login retries. If first attempt hits passkey/2FA, fall back
-to VNC immediately instead of retrying with different parameters.
+**Rapid diagnostic script:** Use `scripts/test-google-signin.py` (Playwright) to quickly
+check whether the account is blocked WITHOUT consuming browser tool calls:
+```bash
+DISPLAY=:99 python3 scripts/test-google-signin.py
+# Output: PAGE_LOADED_OK → not blocked; BLOCKED → wait
+```
+
+**Prevention:** 
+- Limit automated login retries to 2 per session. 
+- If first attempt hits passkey/2FA, fall back to VNC immediately — do NOT retry with different parameters.
+- If `signin/rejected` appears once, STOP all browser-based login attempts for that account for at least 2 hours.
+
+**Related:** See `references/cdp-headless-chromium-google-block.md` for the specific CDP headless Chromium dead-end (21 Jul 2026) — `--headless=new` is a guaranteed block for Google sign-in, even with stealth flags.
 
 ### 🚨 Playwright Password Field `is_visible()` Check
 

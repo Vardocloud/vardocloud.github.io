@@ -1,7 +1,7 @@
 ---
 name: agent-self-maintenance
 description: "Maintain Vanitas's own knowledge base — memory facts, skills, and config awareness. Triggered when adding/removing memory, creating/patching skills, observing recurring corrections, or hitting the memory char limit. Class-level umbrella for the learning loop."
-version: 1.0.0
+version: 1.1.0
 author: Vanitas
 license: MIT
 metadata:
@@ -143,6 +143,28 @@ Create a new skill when **any** of the following is true:
 
 When a skill needs new content, **patch it in place** rather than creating a sibling. The exception is when a skill has genuinely outgrown its original scope and a new class-level umbrella is justified (this skill is itself such an umbrella).
 
+## Session Continuity / Cross-Session Task Recovery
+
+After a daily reset or session break, the user may say "son verilen görevi tamamla" / "devam et" / "continue where we left off." The correct recovery workflow:
+
+1. **Check kanban first.** `kanban_show()` — if a kanban task is assigned, that IS the task.
+2. **Browse recent sessions.** `session_search(limit=5)` to see the last active user sessions.
+3. **Identify the last active user session.** Look for `source: telegram` or user DMs (not cron jobs). Read its first + last messages to understand what was happening.
+4. **Check for orphaned background processes.** `process(action='list')` — any process started with `terminal(background=true)` in a previous session is dead (session lifecycle kills it — see pitfall below). Don't rely on finding it alive.
+5. **Inventory partial artifacts.** Before re-running a pipeline, check if any intermediate artifacts were already produced (images, audio files, scripts). Skip completed steps.
+6. **Re-run the remaining pipeline.** Use `notify_on_complete=true` so you get notified even if the session ends.
+7. **Report what was completed vs what was re-done.** The user should know how much of the work was new vs resumed.
+
+**Important:** Do NOT just reply with "last time we were working on X" — actually complete the task. The user said "tamamla" (complete), not "hatırlat" (remind).
+
+### Cross-session context awareness
+
+When crossing session boundaries:
+- `session_search` is your primary tool — it's FTS5-backed and has ALL past conversations
+- The current session's memory (system prompt) is fresh — previous session's tool outputs are NOT in context
+- Background processes started by previous sessions are dead. Always re-run.
+- File artifacts (images, audio, scripts, config files) survive session resets — use them.
+
 ## Config awareness
 
 Key knobs (full list and current paths in the bundled `hermes-agent` skill and the Hermes Docs NotebookLM notebook):
@@ -169,6 +191,7 @@ Key knobs (full list and current paths in the bundled `hermes-agent` skill and t
 - ❌ **Don't** state "X doesn't exist" before searching env/config/skills directories. First search, then report.
 - ❌ **Don't** propose inbound replacement from external frameworks when the user asks "what should run on this machine?" (added 19 Jul 2026). Vanitas IS a Hermes agent with custom-architectural evolution. Researching OpenClaw/Cognee/Mem0 is fine for *inspiration*; presenting any of them as the canonical answer for Vanitas's own self misframes the question. The reference framing: "Vanitas as a Hermes-style agent with a custom evolution path" — external frameworks are vocabulary, not replacement.
 - ❌ **Don't** use `patch` tool on `config.yaml` — it's protected. Use `hermes config set <key> <value>` for config changes. For `auxiliary_models` (compression, vision, web_extract), use `hermes config set auxiliary_models.compression.provider ...` or delete the top-level `compression` block if duplicating with `auxiliary_models`.
+- ❌ **Don't** rely on `terminal(background=true)` processes surviving a session reset. When the session ends (daily reset, gateway shutdown, timeout), all child processes are killed. For long-running work that must outlive the session, use `cronjob(action='create')` or re-run on next session. **Always** use `notify_on_complete=true` so at least the current session can capture the result.
 - ❌ **Don't** report "done / updated / completed" without verifying with grep or read_file first.
 - ❌ **Don't** sequential trial-and-error when debugging setup issues. Instead of fix→test→fail→retry one dep at a time, batch diagnostics first: run `ldd` on the binary to enumerate ALL missing libraries at once, then batch-download everything. This avoids tool-limit exhaustion (29 Haz 2026: pulseaudio setup took 40+ tool calls because each missing lib was fixed one at a time instead of all at once).
 - ✅ **Do** self-audit memory at the end of long sessions.

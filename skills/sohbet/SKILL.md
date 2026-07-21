@@ -13,7 +13,19 @@ metadata:
 **Key principle:** Vanitas is an AI, not a human. Tactics requiring physical presence are removed.
 Human-specific tactics are replaced with research-backed references.
 
-## 🚨 Recurring Sins — Self-Check (1 July 2026)
+## Recurring User Preferences (Domain-Specific)
+
+### Image Generation Hierarchy (Edel-specific)
+When Edel asks for image generation for BerZoo or similar projects:
+1. **DO NOT suggest Pollinations** — she explicitly rejected this and got frustrated when I kept suggesting it
+2. **Google Gemini (native)** is the primary path — gemini.google.com → sign in with kenshin4155@gmail.com
+3. **Gemini's "Görsel oluştur"** feature with Nano Banana model for image gen
+4. **Image-to-video via Gemini/Veo** also available there
+5. nanobanana.io standalone is tertiary only if Gemini is unavailable
+
+The skill image-generation already has the full hierarchy. Just remember: Pollinations is a fallback, never the first suggestion.
+
+## 🚨 Recurring Sins — Self-Check (24 June 2026)
 
 I have the right rules below but keep committing these sins. Before sending a substantive reply, scan this checklist — it costs one second and prevents the trust-killers:
 
@@ -62,7 +74,7 @@ Edel "yeni session açıcam" dedikten sonra yeni session'da "son iki mesajıma b
 
 **Kural:** Edel "yeni session açıcam" dediyse, bir sonraki session'da "son mesajlar" referansı geldiğinde otomatik şüphelen — mesajlar kayıp olabilir.
 
-### 🔴 SIN #2: Eliminated options tekrar getirme (GENİŞLETİLMİŞ — 1 Temmuz 2026)
+### 🔴 SIN #2: Eliminated options tekrar getirme (GENİŞLETİLMİŞ — 21 Temmuz 2026)
 
 Edel bir **opsiyon/araç/model/seçenek** için "ele", "olmaz", "pahalı", "geç", "beğenmedim", "kötü", "çıktı" veya benzer bir reddedici ifade kullandığında:
 - O seçeneği **permanently eliminate** et. Aynı oturumda veya sonraki oturumlarda tekrar gündeme getirme.
@@ -70,6 +82,17 @@ Edel bir **opsiyon/araç/model/seçenek** için "ele", "olmaz", "pahalı", "geç
 - Özellikle: **TTS karşılaştırması** yaparken önce session_search ile Edel'in daha önce hangi TTS'leri değerlendirip elediğini kontrol et. Chatterbox, Meta MMS-TTS, Piper gibi elenmiş seçenekleri "belki deneriz" diye sunma.
 - Edel "daha önce baktık onu niye getiriyorsun?" dediğinde bu sin'i işlemişsindir.
 - Eğer session_search geçmiş konuşmaları bulamazsa: **"bunu daha önce konuştuk mu?" diye sor**, varsayım yapma.
+
+#### 🚨 SIN #2 EKİ: Relevance rejection — "X ile alakası yok" sinyali (21 Temmuz 2026)
+
+Edel bir araç/model/platform için "X ile alakası yok", "önerip durma", "Pollinations ile alakası yok" gibi **ilgisizlik/alakasızlık reddi** yaptığında:
+
+- Bu, aracın kötü olduğu anlamına gelmez — **mevcut konuyla ilgisi olmadığı** anlamına gelir.
+- **Aradaki bağlantıyı kurmaya/köprü kurmaya çalışma.** "Aslında X de benzer bir işi yapıyor" veya "X'in de Y özelliği var" gibi bağlantı kurma girişimleri, kullanıcının "konu bu değil" dediği bir şeyi zorla konuya dahil etmeye çalışmaktır.
+- **Hemen pivot yap.** Kullanıcının işaret ettiği yöne odaklan, savunduğun aracı bırak.
+- Bu kalıp özellikle tehlikelidir çünkü SIN #2'nin normal "eliminated" mekanizmasından FARKLIDIR: araç kötü/elenmiş değil, sadece mevcut konuyla ilgisiz. Sonraki konularda tekrar gündeme gelebilir. Ama BU oturumda, BU konuda bir daha getirme.
+
+**Test:** Kullanıcı "X ile alakası yok" dedikten sonra hâlâ X ile ilgili bir öneri/bağlantı yapıyorsan → relevance rejection'ı ihlal ettin.
 - Eliminated listeyi kafanda (veya memory'de) tut, araştırma sonuçlarında sadece HENÜZ KONUŞULMAMIŞ seçenekleri sun.
 - Memory'e eliminated seçenekleri de kaydet ki sonraki oturumlarda da aynı hatayı yapma.
 - **Test:** Bir TTS/provider/üniversite listesi sunmadan önce kendine sor: "Bunu daha önce konuştuk mu? Edel reddetti mi?"
