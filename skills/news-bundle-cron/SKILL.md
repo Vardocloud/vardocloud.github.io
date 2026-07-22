@@ -1,7 +1,7 @@
 ---
 name: news-bundle-cron
 description: "Recurring multi-source news cron — dedup ledger, 5N1K wiki storage, batch workflow for the Bundle Gündem İşleme v3 cron job"
-version: 1.2.0
+version: 1.3.0
 metadata:
   hermes:
     tags: [news, cron, wiki, ingestion, dedup, 5n1k]
@@ -122,16 +122,17 @@ re-running the cron will hit if not encoded.
   genuinely recent breakthroughs (vs. search engines that mix dates). Useful as
   a complement to ScienceDaily/SciTechDaily in the discovery wave.
 
-- **Day-summary file skipped (recurring)** — On July 14 AND July 15 2026, the cron
-  wrote per-item/category batch files under `news/<category>/` but did NOT write the
-  day-summary file (`news/YYYY-MM-DD-haber-ozeti.md`). On July 15, the agent wrote
-  `science/2026-07-15-batch.md` and `tech/2026-07-15-batch.md` (category batches)
-  thinking these were sufficient — they are NOT. The day-summary is the primary
-  deliverable (step 8), per-item files are optional (step 7, "frequently skipped
-  to save time"). **Category batch files are NOT a replacement for the day-summary.**
-  The day-summary (`YYYY-MM-DD-haber-ozeti.md`) aggregates ALL categories in one
-  document and is what makes the news wiki searchable by date.
-  **Always write the day-summary file.** If time is tight, skip per-item files.
+- **Day-summary file skipped (recurring — RESOLVED July 22 2026)** — On July 14,
+  July 15, AND July 22 2026, the cron wrote per-item files under `news/<category>/`
+  but did NOT write the day-summary file. **Root cause identified:** The workflow
+  contradicted itself — it said "Always write the day-summary" even when 10 per-item
+  files already contained all the information, making it feel like a redundant third
+  copy. **Fix applied in workflow step 7:** If per-item files are written for all
+  items, the day-summary is now explicitly optional. If per-item files are skipped,
+  the day-summary is mandatory. This resolves the tension that caused three
+  consecutive skips. The old "category batch files are NOT a replacement" warning
+  still applies — but per-item files (one file per story, in the correct category
+  directory) ARE a valid replacement for the day-summary.
 
 ## Workflow (deterministic order)
 
@@ -173,13 +174,20 @@ re-running the cron will hit if not encoded.
 5. Detail extraction: `web_extract` (max 5 URLs per call) for the 3-5 best
    candidates to fill 5N1K headings.
 6. Write per-item files under `news/<category>/`.
-   **In cron runs, this step is frequently skipped to save time** — the day-summary
-   file (step 7) captures all items in one document and is what the delivered output
-   mirrors. Per-item files add value for long-term wiki searchability but are not
-   required for the cron's primary deliverable. If time is tight, skip to step 7.
-7. Write day summary at `news/YYYY-MM-DD-haber-ozeti.md` (or `news/YYYY-MM-DD-bundle.md`).
+   **Two acceptable formats** (choose by time available):
+   - **Full 5N1K** (preferred when ≤5 items): `## Ne?`, `## Kim?`, `## Nerede?/Nasıl?`, `## Neden Önemli?`, `## Veri` headings per the template in `references/news-bundle-pipeline.md`.
+   - **Condensed** (preferred when 8-10 items, cron time pressure): `## Summary`, `## Key Data`, `## Why It Matters`, `## Source` — captures the same 5N1K information without forcing every item into all six headings. Tested and used successfully July 22 2026 (10 files, all searchable in wiki).
+   Per-item files add long-term wiki searchability. In cron runs, they are optional
+   if the day-summary (step 7) is written.
+7. **Write day summary** at `news/YYYY-MM-DD-haber-ozeti.md` (or `news/YYYY-MM-DD-bundle.md`).
+   **RELATIONSHIP RULE (resolves the recurring skip):**
+   - If you **wrote per-item files** for ALL items → day-summary is **optional** (the per-item files + ledger + chat output already archive everything).
+   - If you **skipped per-item files** → day-summary is **MANDATORY** (it's the only archival record).
+   - **Why this keeps getting skipped (July 14, 15, 22):** The old rule said "Always write the day-summary" even when 10 per-item files already existed — making it feel like a redundant third copy. The fix: per-item files ARE the archive when they exist. The day-summary is the fallback archive when they don't.
 8. Append to ledger with a new `## YYYY-MM-DD (NEW — Bundle)` heading.
-9. Final response: 5N1K-styled news thread with category emojis and 📎 citations.
+9. **Update `~/wiki/index.md`** "Recent Activity" section with a one-line entry (date, item count, key topics). This is the wiki's navigation backbone.
+   **Also update `~/wiki/log.md`** per llm-wiki conventions: append `## [YYYY-MM-DD] ingest | News Bundle — N items` with file list. (This step was missing from the workflow and caused index.md to be the only navigation record updated.)
+10. Final response: 5N1K-styled news thread with category emojis and 📎 citations.
 
 ## Lint / Maintenance
 

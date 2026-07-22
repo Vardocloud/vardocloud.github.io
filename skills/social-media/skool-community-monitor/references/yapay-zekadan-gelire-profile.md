@@ -3,7 +3,7 @@
 **İlk tarama:** 1 Temmuz 2026
 **URL:** https://www.skool.com/u-gpt-ile-yapay-zekadan-gelire-4122
 **Kurucu:** Umut Aktu
-**Üye sayısı:** ~1.2K (büyüyor)
+**Üye sayısı:** ~1.3K (büyüyor — 3 Tem 2026: ~1.3K)
 **Erişim:** Private — login gerekli
 
 ## İçerik Kategorileri
@@ -35,3 +35,8 @@ Toplulukta 5 kategori var:
 - Pinned post'ları atla (Hoş Geldin, Animasyon Duyurusu)
 - Son 24 saatte genelde 1-3 yeni post düşer
 - web_extract çalışmaz (private), browser_console ile DOM'dan çek
+
+## Tarama Geçmişi
+- **İlk tarama:** 1 Temmuz 2026 (30 post incelendi)
+- **3 Tem 2026:** Üye sayısı ~1.3K'ya yükseldi
+- **22 Tem 2026:** ~445+ URL işlendi. İçerik profili değişmedi — çoğunlukla topluluk üyesi showcase postları (AI reklam videoları, podcast denemeleri, abone takası). Ücretli araç promo'ları ve iş ilanları ikinci kategori. Vanitas'a uyarlanabilir teknik içerik oranı düşük.

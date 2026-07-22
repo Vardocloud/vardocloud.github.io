@@ -101,6 +101,27 @@ Target: 40-50% utilization after aggressive compression.
 
 **Verification step (do not skip):** after every batch of writes, re-read the file and confirm the changes actually landed. The "Yazma sonrası doğrulama" pitfall in `sohbet` exists for a reason — silent failures happen.
 
+### MEMORY_META.json TTL audit (standalone workflow)
+
+When memory entries are consistently expiring too fast, or the user reports stale information that should still be available, run a MEMORY_META.json audit. This is separate from the Hot Notes compression ritual — it targets the TTL classification metadata, not the content.
+
+Full methodology and script: `references/memory-meta-audit.md`
+
+**Trigger conditions:**
+- Multiple expired entries in MEMORY_META.json (check with the inventory script in the ref)
+- User says "bunu bilmiyor muydun?" about something that was in memory within 60 days
+- Hot Notes capacity is fine but memory feels empty
+- After a model change that affected context injection size
+
+**Key steps (summary):**
+1. Inventory MEMORY.md, USER.md, MEMORY_META.json
+2. Find all expired entries (past `expires_date`)
+3. Classify each entry's content_preview by TTL rules: short (temp/config/errors), medium (procedures/status/lessons), long (infrastructure/rules/archive)
+4. Fix types and renew TTL in MEMORY_META.json
+5. Verify new distribution
+
+**🚩 Turkish character pitfall:** Python's `in` operator is character-exact. Turkish letters (`ü`, `ı`, `ğ`, `ö`, `ş`, `ç`) in source data WON'T match ASCII keyword variants. Always include BOTH forms in classification keyword lists, e.g. `'apa uyelik', 'apa üyelik'`. (Found 22 Tem 2026 — script misclassified APA account entry because `'apa uyelik' in 'apa üyelik...'` evaluates False.)
+
 ## Model stack drift — periodic audit
 
 Memory lies. Models get retired, budgets change, providers go down — but the memory entry still says "DeepSeek primary" six months after the switch. Periodic audit (and after every model change):
@@ -165,6 +186,58 @@ When crossing session boundaries:
 - Background processes started by previous sessions are dead. Always re-run.
 - File artifacts (images, audio, scripts, config files) survive session resets — use them.
 
+## Session search strategy for Turkish FTS5
+
+**Critical context:** session_search uses FTS5 with the default `unicode61` tokenizer, which performs simple Unicode-aware word splitting — it does NOT do stemming, NOT handle Turkish agglutinative morphology. "taşıma" and "taşıyalım" are completely different tokens even though they share the root "taşı". Full methodology and patterns: `references/session-search-strategy.md`
+
+### The 4-step recall workflow
+
+When the user asks about a past conversation or fact:
+
+1. **Check session-index.md first.** `wiki/references/session-index.md` has curated session summaries with topic tags. If the topic is listed, read the session ID and use `session_search(session_id=ID)` directly — skips FTS5 entirely and costs ~50ms.
+
+2. **Use wildcards on Turkish roots.** FTS5 supports `*` prefix wildcards. Search for the ROOT of a Turkish word, not its inflected form:
+   ```
+   DO:   "taşı* pc* lokal*"
+   DONT: "taşıma PC lokal sunucu hermes local machine"
+   ```
+   A 3-word wildcard query typically finds 30-90 relevant messages vs. a 7-word AND query that finds 0-2.
+
+3. **Use OR for synonym variation.** Turkish↔English pairs, or multiple spelling variants:
+   ```
+   "lokal* OR local* OR yerel* taşı* pc*"
+   ```
+
+4. **Step back when results are 0-2.** If the query returns ≤2 results, the search is likely too narrow — widen it (remove a term, add a wildcard, try a different root). The data is almost certainly there — the search strategy is wrong.
+
+### Quick reference: Turkish root wildcard patterns
+
+| Turkish root | Common inflections | Wildcard query |
+|---|---|---|
+| taşı- (carry) | taşıma, taşıyalım, taşınma | `taşı*` |
+| konuş- (talk) | konuştuk, konuşuyoruz, konuşma | `konuş*` |
+| hatırla- (remember) | hatırlıyor, hatırladın, hatırlıyor musun | `hatırla*` or `hatırlı*` |
+| yap- (do) | yaptık, yapıyoruz, yapalım | `yap*` (pair with another term) |
+| gel- (come) | geldim, geliyorum, gelmişti | `gel*` (pair with context) |
+| al- (take) | aldım, alıyoruz, alış | `al*` (pair with context) |
+
+### session-index.md maintenance
+
+The session-index.md file lives at `~/wiki/references/session-index.md`. It's the preferred recall method over FTS5 because it avoids Turkish tokenizer issues entirely.
+
+- **Add entries** for every significant conversation topic
+- **Include tags** (comma-separated keywords) for topic-based lookup
+- **Include session_id** so recall is a single tool call
+- **Don't delete old entries** — referential integrity matters more than file size
+
+```markdown
+## N. Topic Name
+- **tags:** keyword1, keyword2 → `session_id_here`
+  - *Detay:* one-line summary
+```
+
+Verification: if a user asks about a past topic and session_search returns 0 results, the first debugging step is "did I check session-index.md?"
+
 ## Config awareness
 
 Key knobs (full list and current paths in the bundled `hermes-agent` skill and the Hermes Docs NotebookLM notebook):
@@ -193,7 +266,8 @@ Key knobs (full list and current paths in the bundled `hermes-agent` skill and t
 - ❌ **Don't** use `patch` tool on `config.yaml` — it's protected. Use `hermes config set <key> <value>` for config changes. For `auxiliary_models` (compression, vision, web_extract), use `hermes config set auxiliary_models.compression.provider ...` or delete the top-level `compression` block if duplicating with `auxiliary_models`.
 - ❌ **Don't** rely on `terminal(background=true)` processes surviving a session reset. When the session ends (daily reset, gateway shutdown, timeout), all child processes are killed. For long-running work that must outlive the session, use `cronjob(action='create')` or re-run on next session. **Always** use `notify_on_complete=true` so at least the current session can capture the result.
 - ❌ **Don't** report "done / updated / completed" without verifying with grep or read_file first.
-- ❌ **Don't** sequential trial-and-error when debugging setup issues. Instead of fix→test→fail→retry one dep at a time, batch diagnostics first: run `ldd` on the binary to enumerate ALL missing libraries at once, then batch-download everything. This avoids tool-limit exhaustion (29 Haz 2026: pulseaudio setup took 40+ tool calls because each missing lib was fixed one at a time instead of all at once).
+- ❌ **Don't** report "not found / bulamadım" without first running the 4-step recall workflow (see "Session search strategy for Turkish FTS5" above). State.db holds 45K+ messages — zero results usually means a narrow query, not missing data.
+- ✅ **Do** sequential trial-and-error when debugging setup issues. Instead of fix→test→fail→retry one dep at a time, batch diagnostics first: run `ldd` on the binary to enumerate ALL missing libraries at once, then batch-download everything. This avoids tool-limit exhaustion (29 Haz 2026: pulseaudio setup took 40+ tool calls because each missing lib was fixed one at a time instead of all at once).
 - ✅ **Do** self-audit memory at the end of long sessions.
 - ✅ **Do** save the WORKAROUND, not the failure.
 - ✅ **Do** verify the source is current before citing it.
@@ -265,6 +339,7 @@ config_subcommand | grep 'setting'
 - `sohbet` — Vanitas conversation tactics
 - `hermes-agent` — bundled, do not edit
 - `references/hermes-memory-architecture.md` — distilled knowledge from the "Hermes Docs" NotebookLM notebook
+- `references/memory-meta-audit.md` — MEMORY_META.json TTL audit: classification heuristics, fix script, Turkish character pitfall (22 Tem 2026)
 - `references/prompt-caching-optimization.md` — DeepSeek prompt caching behavior, cache-killer patterns, and memory structure optimization for cache efficiency (10 Tem 2026)
 - `references/hermes-prompt-cache-architecture.md` — Hermes 3-layer prompt structure
 - `references/kimlik-derinlestirme.md` — Kimlik derinleştirme, güvenli identity depolama, karanlık ikiz konsepti ve "varlık sebebi" hatası düzeltmesi (11 Tem 2026) (STABLE→CONTEXT→VOLATILE) from source code, natural ~89% cache hit rate, why anchor edits are unnecessary (10 Tem 2026)

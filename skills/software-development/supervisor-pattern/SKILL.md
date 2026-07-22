@@ -448,6 +448,10 @@ Only errored skills are evaluated. Working skills are not scanned. No auto-patch
   - **v3.0** (5 Jul): Heartbeat + supervisor integration, 3 tasks (2 normal + 1 trap)
   - **v4.0** (12 Jul): Provenance Layer integration — execution path logging, confidence tagging, assumption recording
 
+## References
+
+- `references/shared-state-store.md` — Shared State Store / Chief of Staff pattern: centralized coordination layer for multi-agent supervisor execution (22 Jul 2026). Extends v2.0 with inter-agent state sharing, dynamic priority queue, and mid-execution re-prioritization. Pull model vs current push model.
+
 ## Limitations
 
 - Schema definition still manual — automatic inference is future work

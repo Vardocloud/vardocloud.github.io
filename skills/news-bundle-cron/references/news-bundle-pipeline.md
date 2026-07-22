@@ -7,6 +7,8 @@ running the cron, debugging a failed run, or performing ledger maintenance.
 
 ### Per-item news file (`news/<category>/<YYYY-MM-DD-slug>.md`)
 
+**Full 5N1K format** (preferred for ≤5 items or deep-dive runs):
+
 ```markdown
 ---
 title: "News Item Title"
@@ -34,6 +36,30 @@ confidence: high | medium | low
 
 📎 [Source Name], [Date]
 ```
+
+**Condensed format** (preferred for 8-10 items in cron runs — tested July 22 2026):
+
+```markdown
+# News Item Title
+
+## Summary
+[2-3 sentences: what happened, who did it, where/how]
+
+## Key Data
+- [Key statistic or finding 1]
+- [Key statistic or finding 2]
+- [Key statistic or finding 3]
+
+## Why It Matters
+[1-2 sentences: significance and implications]
+
+## Source
+[Source Name / Journal, Date]
+```
+
+The condensed format captures the same 5N1K information without forcing every
+item into all six headings — many short news items don't have a meaningful
+"Nerede?" or separate "Kim?" section. Both formats are wiki-searchable.
 
 ### Day summary (`news/YYYY-MM-DD-haber-ozeti.md`)
 
@@ -118,15 +144,24 @@ self-contained for future wiki queries without needing to re-read source URLs.
    inferring from headline alone.
 
 7. **Write per-item files** — one `write_file` per item under
-   `news/<category>/`. Use the template above.
+   `news/<category>/`. Use the template above (full 5N1K) OR the condensed
+   format (Summary / Key Data / Why It Matters / Source — tested July 22 2026,
+   10 files, works well for high-volume runs).
 
 8. **Write day summary** — `news/YYYY-MM-DD-haber-ozeti.md` aggregating
-   the batch.
+   the batch. **SKIP ALLOWED if per-item files were written for all items**
+   (per-item files + ledger + chat output already archive everything).
+   **MANDATORY if per-item files were skipped** (it's the only archival record).
 
 9. **Append to ledger** — new `## YYYY-MM-DD (NEW — Bundle)` heading
    with one-line-per-item entries.
 
-10. **Deliver** — 5N1K-styled news thread with category emojis (🧠/🔬/📱/📊/🌿)
+10. **Update wiki navigation** — append a one-line entry to `~/wiki/index.md`
+    "Recent Activity" section AND append to `~/wiki/log.md` per llm-wiki
+    conventions: `## [YYYY-MM-DD] ingest | News Bundle — N items` with file list.
+    (The log.md step was missing from earlier versions of this workflow.)
+
+11. **Deliver** — 5N1K-styled news thread with category emojis (🧠/🔬/📱/📊/🌿)
     and 📎 source citations. Group by category.
 
 ## Rotation Procedure

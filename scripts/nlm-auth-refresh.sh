@@ -9,7 +9,7 @@ source "$HOME/.hermes/.env"
 set +a
 
 NLM_BIN=/home/ubuntu/node_modules/.bin/nlm
-LOG_FILE=~/.nlm/auth_check.log
+LOG_FILE="$HOME/.nlm/auth_check.log"
 DATE=$(date '+%Y-%m-%d %H:%M')
 
 # Ensure log directory exists

@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-21T04:02:06.454090",
+  "timestamp": "2026-07-22T04:01:51.521994",
   "working_models": [
     "deepseek-v4-flash",
     "deepseek-v4-pro",
@@ -10,7 +10,6 @@
     "gpt-5.4-mini",
     "kimi-k2.5",
     "kimi-k2.6",
-    "mimo-v2.5",
     "mimo-v2.5-pro",
     "minimax",
     "minimax-m2.5",

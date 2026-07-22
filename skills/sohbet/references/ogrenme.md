@@ -2396,3 +2396,76 @@
   "genel_ozet": "Vanitas bazı konuşmalarda iyi dinleme ve tek soru kuralına uydu, ancak iki konuşmada hiç yanıt vermedi ve referans kullanımı tamamen eksik. Ortalama puanlar düşük, özellikle referans kriteri sıfır."
 }
 ```
+
+## 2026-07-22 10:00 — Konuşma Değerlendirme
+
+```json
+{
+  "konusmalar": [
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Vanitas hiç yanıt vermemiş, bu nedenle tüm kriterlerden 1 puan alır."
+    },
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Vanitas hiç yanıt vermemiş, bu nedenle tüm kriterlerden 1 puan alır."
+    },
+    {
+      "puanlar": {
+        "M": 7,
+        "T": 7,
+        "A": 7,
+        "B": 8,
+        "R": 1,
+        "D": 8
+      },
+      "ozet": "Vanitas dinlemiş, tek soru sormuş, bağlamlı yanıt vermiş, ancak referans kullanmamış ve 'anladım canım' ifadesi biraz yapay."
+    },
+    {
+      "puanlar": {
+        "M": 1,
+        "T": 1,
+        "A": 1,
+        "B": 1,
+        "R": 1,
+        "D": 1
+      },
+      "ozet": "Vanitas hiç yanıt vermemiş, bu nedenle tüm kriterlerden 1 puan alır."
+    },
+    {
+      "puanlar": {
+        "M": 8,
+        "T": 8,
+        "A": 8,
+        "B": 9,
+        "R": 8,
+        "D": 9
+      },
+      "ozet": "Vanitas dinlemiş, tek soru sormuş, bağlamlı ve referanslı yanıt vermiş, doğal bir dil kullanmış."
+    }
+  ],
+  "ortalama": {
+    "M": 3.6,
+    "T": 3.6,
+    "A": 3.6,
+    "B": 4.0,
+    "R": 2.4,
+    "D": 4.0
+  },
+  "genel_ozet": "Vanitas'ın yanıtları genellikle eksik veya yok; sadece 2 konuşmada anlamlı yanıt vermiş. Bu yanıtlar bağlamlı ve doğal olsa da, referans kullanımı zayıf ve çoğu konuşmada hiç yanıt yok."
+}
+```
