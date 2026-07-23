@@ -507,7 +507,7 @@ memory:
   memory_char_limit: 2200
   memory_enabled: true
   provider: ''
-  user_char_limit: 1375
+  user_char_limit: 2000
   user_profile_enabled: true
   write_approval: false
 model:

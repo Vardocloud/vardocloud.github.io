@@ -640,6 +640,14 @@ Detaylı auth yenileme akışı: `references/notebook-ids.md`
 **Katman 1 — Bulgu Değerlendirme Özeti (Adım 6'da yapıldı)**
 
 Değerlendirme rubric'i ve karar ağacı Adım 6'da (Bulgu Değerlendirme) uygulandı. Raporda sadece sonuç etiketlerini (adaptable/try/watch/skip) ve gerekçelerini listele, değerlendirme sürecini tekrar anlatma.
+
+**🔥 KRİTİK KURAL — İç değerlendirme asla çıktıya dökülmez:**
+- "Faz 1 — Keşif:", "Faz 2 — Sistem Araştırması:", "Faz 3 — Çatışma & Uyum:", "Faz 4 — Karar:" gibi iç değerlendirme ADIMLARI asla kullanıcıya gösterilmez
+- "Selenium Fairness", "Necessity=Critical", "Risk=Düşük" gibi değerlendirme jargonu kullanıcı çıktısında olmaz
+- Kullanıcı sadece şunu görür: bulgu etiketi (🔵 TRY / 🟢 Uyarlanabilir) + 1-2 cümle gerekçe
+- İç değerlendirmeyi kendin yap, çıktıya sadece SONUCU yansıt
+- **Örnek — YANLIŞ:** "Faz 1 — Keşif: OmniRoute, 278+ provider'ı tek endpoint arkasında toplayan... Faz 2 — Sistem Araştırması: session_search boş döndü..."
+- **Örnek — DOĞRU:** "🔵 TRY: OmniRoute — ücretsiz açık kaynak AI gateway, rate limit yönetimi için test edilmeye değer."
 - **🟢 Uyarlanabilir** — Doğrudan entegre edilebilir, düşük risk, yüksek kazanç
 - **🔵 Dene** — Test etmeye değer, geri dönüşü kolay, önce PoC yap
 - **🟡 İzle** — Potansiyel var ama şimdi değil, bilgi topla bekle
@@ -695,6 +703,24 @@ Değerlendirme rubric'i ve karar ağacı Adım 6'da (Bulgu Değerlendirme) uygul
 - Post başlıklarını **bold** yap, repo adlarını **bold** yap.
 - Vanitas'a uyarlanabilirliğini bold olarak belirt: `**uyarlanabilir**`, `**izle**`, `**ücretli**`
 - "Vanitas:" ön eki kullanma — bağlam zaten belli.
+
+**🔥 TÜRKÇE KALİTE KURALLARI (23 Tem 2026 — Edel feedback'i):**
+
+1. **Tek dilde yaz.** İngilizce kelimeyi Türkçe cümle içine serpiştirme. Ya tamamen Türkçe anlat ya da İngilizce terimi ilk geçtiği yerde açıkla ve sonra Türkçe devam et.
+   - ❌ "AI Automation Society'de Chetan Mishra 'silent quality degradation' tartışması."
+   - ✅ "AI Automation Society'de Chetan Mishra, AI sağlayıcılarının sessizce kalite düşürmesi üzerine bir tartışma başlattı."
+
+2. **Kısa cümleler.** Bir cümlede tek bir fikir olmalı. Virgülle birbirine bağlanmış 3-4 fikirli cümleler yasak.
+   - ❌ "OmniRoute, 278+ provider'ı tek endpoint arkasında toplayan, MIT lisanslı, ücretsiz, lokal AI gateway olup 19 routing stratejisi, circuit breaker ve token compression ile çalışır."
+   - ✅ "OmniRoute, 278+ AI sağlayıcısını tek bir noktada birleştiren ücretsiz bir AI gateway. MIT lisanslı, lokal çalışıyor. 19 farklı yönlendirme stratejisi var."
+
+3. **İç jargonu kullanıcıya gösterme.** "Faz 1-4", "Selenium Fairness", "RTK", "Caveman compression", "circuit breaker" gibi terimler iç değerlendirmede kalır. Kullanıcıya sadeleştirilmiş halini ilet.
+   - ❌ "Selenium Fairness: Setup 30dk, Per-op $0"
+   - ✅ "Kurulumu 30 dakika, kullanımı tamamen ücretsiz."
+
+4. **Doğal anlatım.** Resmi rapor değil, bir arkadaşına anlatıyormuş gibi yaz. "Gereklilik analizi neticesinde tespit edilmiştir" yerine "ihtiyacımız var çünkü..." de.
+
+5. **Her cümle Türkçe dil bilgisi kurallarına uygun olmalı.** Özne-yüklem uyumu, ekler, tamlamalar — hepsi düzgün.
 
 **Sessiz kalma kuralı (ZORUNLU):**
 - **bulgu-degerlendirme değerlendirmesi sonucu hiçbir bulgu Adaptable/Try etiketi almadıysa** hiçbir çıktı verme. Sadece `[SILENT]` döndür. Bu kural, yeni post işlenmiş olsa bile geçerlidir — post sayısı değil, Adaptable/Try sayısı belirleyicidir.
@@ -854,6 +880,7 @@ Yeni kurulumda wiki'deki mevcut skool dosyalarını tara, URL'leri ve dosya adla
 - `references/notebook-ids.md` — NotebookLM notebook ID'leri ve kaynak başlık formatları
 - `references/cloakbrowser-skool-access.md` — CloakBrowser ile Skool erişimi (Browserbase fallback), güncel API örnekleri
 - `references/glm52-opencode-hermes-setup.md` — GLM 5.2 + OpenCode + Hermes Agent kurulumu, Claude Code Skill Builder audit best practice'leri ve redacted_thinking hatası. Community'den keşfedilen teknik bilgiler.
+- `references/omniroute-install.md` — OmniRoute AI gateway kurulumu ve test notları (23 Tem 2026, AI Automation Society keşfi).
 - `warp-proxy/SKILL.md` — Browser + WARP teşhis karar ağacı
 - `references/paperclip-open-source-orchestrator.md` — Paperclip açık kaynak orchestrator keşfi (4 Tem 2026). CEO agent, heartbeat, skills, budgets yapısı ve Vanitas supervisor pattern uyarlaması.
 - `references/url-triage-patterns.md` — URL slug pattern'ları ile hızlı post triage. AI Automation Society ve Yapay Zekâdan Gelire için önceliklendirme tabloları.

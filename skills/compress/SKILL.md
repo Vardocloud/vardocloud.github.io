@@ -218,6 +218,60 @@ session_search(session_id="BULUNAN_ID")
 
 Veri kaybı DEĞİL, arama sınırlaması — tüm session'lar state.db'de sağlam.
 
+### FTS5 Trigram Architecture (23 Tem 2026)
+
+state.db'de iki FTS5 tablosu var, biri kullanilmiyor:
+
+| Tablo | Tokenizer | Satir | Kullanim |
+|-------|-----------|-------|----------|
+| messages_fts | unicode61 | ~45K | session_search'un kullandigi |
+| messages_fts_trigram | trigram | ~45K | VAR AMA KULLANILMIYOR |
+
+#### wiki_fts_trigram — Cozum (24 Tem 2026)
+
+`session_search` tool'unu degistiremem ama **wiki_fts** icin trigram index olusturdum:
+
+```bash
+# state.db'de olusturulan tablo (872 wiki dosyasi):
+python3 ~/.hermes/scripts/wiki_trigram_reindex.py
+# 872 dosya indeklendi, 0 hata (24 Tem 2026)
+```
+
+**Turkce kok bulma basarimi karsilastirmasi (wiki_fts vs wiki_fts_trigram):**
+
+| Kelime | unicode61 | trigram | Fark |
+|--------|:--------:|:-------:|:----:|
+| arastirma | 51 | **89** | **+%75** |
+| degerlendirme | 23 | **42** | **+%83** |
+| basvuru | 6 | **14** | **+%133** |
+| konustuk | **0** | **1** | unicode61 bulamadi |
+| klinik | 40 | **42** | +%5 |
+| calisiyor | 26 | **28** | +%8 |
+
+**Script:** `~/.hermes/scripts/wiki_trigram_reindex.py` — 872 .md dosyayi okur, her birini trigram ile indeksler.
+**Cron:** `📚 Wiki Trigram Reindex (Gunluk)` — her gece 02:30'da calisir.
+**Sinirlama:** Trigram minimum 3 karakter. 2 harfli sorgular dogrudan calismaz.
+
+### Okuma Hiyerarsisi - Pratik Kullanim
+
+6-katmanli okuma hiyerarsisinde NotebookLM teoride var ama pratikte sorgulanmaz:
+
+| Katman | Kullanim | Gecikme |
+|--------|----------|---------|
+| MEMORY.md + USER.md | Her tur injekte edilir | ~5ms |
+| session_search | Sik kullanilir | ~50ms |
+| Skills | Skill eslesirse yuklenir | ~100ms |
+| wiki_fts / wiki_fts_trigram | Ara sira | ~10ms |
+| NotebookLM | NEREDEYSE HIC KULLANILMAZ | 10-30s |
+
+NotebookLM Layer 6 Gap: 10-30s gecikme (auth stabil — 23 Tem 2026 itibariyle duzgun calisiyor, Edel teyit etti). Wiki'ye yazilan bilgi NotebookLM'de de var diye varsayma. wiki_fts'yi guclu tutmak trigram'dan daha kritik. Edel onceligi: USER.md/MEMORY.md duzeltmeleri > trigram > NotebookLM aktarimi (rafa kalkti — extra is, anlik fayda yok).
+
+### Oncelik (24 Tem 2026 — Edel duzeltmesiyle revize)
+
+1. **USER.md limit artisi + MEMORY.md auto-archive canlandirma** (en acil — USER.md %99 dolu, auto-archive calismiyor) ✅ COZULDU
+2. **Trigram gecisi** (en yuksek kazanc — wiki_fts_trigram + cron ile cozuldu) ✅ COZULDU
+3. **Session retention: SILME — OPTIMIZE ET.** 1.741 session veri hazinesidir. Edel: *"sohbetlerde yazdigim mesajlar, alinan kararlar onemli bilgiler barindirir, silinmesi kendi gecmisini tutmak gibi."* Cozum: state.db incremental backup (SQL dump + gzip → GitHub), asla delete degil. ✅ COZULDU
+
 ## Sıkıştırma Davranışını Değiştirme
 
 Eğer threshold veya diğer compression ayarlarını değiştirmek gerekirse,

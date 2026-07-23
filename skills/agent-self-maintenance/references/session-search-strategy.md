@@ -75,11 +75,20 @@ When the topic is not in session-index.md or the session_id is unknown:
 → "yarın* toplantı* saat*"        # narrow by adding terms
 ```
 
-### 3. Trigram fallback (when standard FTS fails)
+### 3. Trigram fallback (when standard FTS fails with wildcards)
 
-If standard FTS returns 0 results for a short word (≤3 chars like "pc", "ai"), try the trigram tokenizer. The trigram table indexes every 3-character substring, so short words are harder to match via trigram but special characters work better.
+If standard FTS returns 0-2 results for a Turkish wildcard query, try the trigram tokenizer. 23 Tem 2026 tests over 45K rows showed trigram dramatically outperforms standard FTS for Turkish wildcard queries:
 
-In practice, standard FTS5 with wildcard gives adequate results for Turkish. Trigram is not significantly better for Turkish morphology (confirmed 22 Tem 2026 — `konuşuyordum` returns 1 result in both tokenizers).
+| Sorgu | Standard FTS | Trigram FTS | Fark |
+|-------|:-----------:|:----------:|:----:|
+| `gel*` | 30 | **320** | **10.7x** |
+| `yap*` | 77 | **413** | **5.4x** |
+| `hatırla*` | 2 | **58** | **29x** |
+| `konuş*` | 34 | **55** | **1.6x** |
+
+Trigram indexes every 3-char substring, so wildcards match across Turkish agglutinative suffixes better. Only case where standard FTS wins: short words (<=3 chars) where `taşı*` gives 24 vs 2. In those cases, fall back to standard FTS.
+
+**Architectural gap:** `messages_fts_trigram` table exists with 45K rows indexed, but `session_search` tool hardcodes the standard `messages_fts` table. The trigram table is not wired to the tool. See `compress` skill's "FTS5 Trigram Architecture" section for migration approach.
 
 ### 4. session-index.md update
 

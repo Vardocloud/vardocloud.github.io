@@ -103,6 +103,20 @@ Target: 40-50% utilization after aggressive compression.
 
 ### MEMORY_META.json TTL audit (standalone workflow)
 
+**⚠️ Known issue (23 Tem 2026): Auto-archive DOES NOT RUN at session start.** 
+MEMORY_META.json'da 52 kayit var (34 medium, 17 long, 1 short) — 0 arsivlenmis, 0 silinmis. 
+"Cleanup runs at session start" kodu calismiyor. TTL temizligi MANUEL tetiklenmeli:
+- Medium kayitlar (60 gun): added_ts > 60 gun onceyse wiki'ye archivable
+- Long kayitlar (365 gun): added_ts > 60 gun onceyse wiki'ye archive edilebilir (1 satir ozet kalir)
+- Short kayitlar: direkt temizlenebilir
+Bu bir bug degil — calistirilmamis bir mekanizma.
+
+**Cozum (24 Tem 2026):** `scripts/memory_cleanup.py` — haftalik cron job olarak calisir (Pazar 06:00).
+- Expired long entry'leri → `wiki/vanitas-memory/` arsivler
+- Expired short/medium'leri → MEMORY.md + MEMORY_META.json'dan temizler
+- Cron: `🧠 Hafiza Temizlik (Haftalik)` — Pazar 06:00, no_agent mode
+- El ile tetikleme: `python3 ~/.hermes/scripts/memory_cleanup.py`
+
 When memory entries are consistently expiring too fast, or the user reports stale information that should still be available, run a MEMORY_META.json audit. This is separate from the Hot Notes compression ritual — it targets the TTL classification metadata, not the content.
 
 Full methodology and script: `references/memory-meta-audit.md`
@@ -121,6 +135,23 @@ Full methodology and script: `references/memory-meta-audit.md`
 5. Verify new distribution
 
 **🚩 Turkish character pitfall:** Python's `in` operator is character-exact. Turkish letters (`ü`, `ı`, `ğ`, `ö`, `ş`, `ç`) in source data WON'T match ASCII keyword variants. Always include BOTH forms in classification keyword lists, e.g. `'apa uyelik', 'apa üyelik'`. (Found 22 Tem 2026 — script misclassified APA account entry because `'apa uyelik' in 'apa üyelik...'` evaluates False.)
+
+## state.db (conversation) backup strategy
+
+Edel requires full conversation history backup so that a complete restore (config + skills + wiki + chat history) is possible if everything is wiped. state.db is 963 MB (46K messages, 1.7K sessions) — too large for git as-is.
+
+**Incremental SQL dump approach (implemented 24 Tem 2026):**
+
+1. `daily_backup.py` tracks last backed-up message ID via `backups/state/.last_msg_id`
+2. Each night at 02:00: dumps only NEW messages (WHERE id > last_id) as SQL insert statements
+3. Compresses with gzip (~29% of original size)
+4. Stored at `backups/state/msgs_YYYY-MM-DD.sql.gz` in the same git repo
+5. Sessions table backed up monthly (full dump, rarely changes)
+6. `backups/state/` dir is now included in `daily_backup.py` git add list
+
+**Restore path:** apply full dumps in chronological order + latest sessions dump → `sqlite3 state.db < dump.sql`
+
+**Key metrics (24 Tem 2026 test):** 50 messages = 238KB raw → 69KB gzipped. Daily increment: ~1-3MB to git repo.
 
 ## Model stack drift — periodic audit
 
@@ -243,10 +274,12 @@ Verification: if a user asks about a past topic and session_search returns 0 res
 Key knobs (full list and current paths in the bundled `hermes-agent` skill and the Hermes Docs NotebookLM notebook):
 
 - **Memory char limit:** default 2200
-- **User char limit:** default 1375
+- **User char limit:** default 1375 (config.yaml line 510: `user_char_limit: 1375`)
 - **Tool output max_bytes:** default 50000
 - **Hygiene hard message limit:** default 400
 - **protect_first_n (compaction):** default 3
+
+**Modifying user_char_limit:** Line 510 of config.yaml. Direct `patch` tool is refused (protected config). Use `sed` via terminal, then mirror the change in golden_config.yaml. USER.md was increased 1375→2000 on 24 Tem 2026 (was 99% full at 1437/1375). No crash risk — ~200 extra tokens per turn overhead.
 
 **Rule of thumb:** if you have a 1M+ context model, raise memory char limit to 3,000–4,000 (~1,100–1,500 token, negligible against 1M). The docs explicitly say "raise it for large context windows" — do this proactively, don't ask first.
 
@@ -261,9 +294,10 @@ Key knobs (full list and current paths in the bundled `hermes-agent` skill and t
 - ❌ **Don't** ask the user "is X limit OK to raise?" before doing it when the docs clearly recommend it for your setup.
 - ❌ **Don't** create a sibling skill when a patch to an existing skill would do.
 - ❌ **Don't** rely on cross-session memory to maintain topic isolation on multi-thread platforms. Memory is global — it pools facts from all Telegram topics, Discord channels, and CLI sessions together. When the user runs separate topics for separate subjects (e.g., klinik psikoloji DM ≠ Prolific AI Trainer topic), disable `memory.memory_enabled` to prevent cross-topic contamination.
-- ❌ **Don't** state "X doesn't exist" before searching env/config/skills directories. First search, then report.
-- ❌ **Don't** propose inbound replacement from external frameworks when the user asks "what should run on this machine?" (added 19 Jul 2026). Vanitas IS a Hermes agent with custom-architectural evolution. Researching OpenClaw/Cognee/Mem0 is fine for *inspiration*; presenting any of them as the canonical answer for Vanitas's own self misframes the question. The reference framing: "Vanitas as a Hermes-style agent with a custom evolution path" — external frameworks are vocabulary, not replacement.
-- ❌ **Don't** use `patch` tool on `config.yaml` — it's protected. Use `hermes config set <key> <value>` for config changes. For `auxiliary_models` (compression, vision, web_extract), use `hermes config set auxiliary_models.compression.provider ...` or delete the top-level `compression` block if duplicating with `auxiliary_models`.
+- ❌ **Don't** propose deleting old conversations — Edel explicitly stated they are a "veri hazinesi" (data treasure) that preserves decision rationale and personal history. Optimize search performance (trigram, archive partitioning) instead of deleting data. (24 Tem 2026: *"günlük sohbetlerin veri hazinesi ve geriye dönük sorgulama yapılabilmesi bakımından silinmemesi gerektiğini düşünüyorum."*)
+- ❌ **Don't** propose large architectural projects (NotebookLM wiki transfer, full backfill) when front-burner issues exist (USER.md full, MEMORY.md auto-archive broken). Priority framework: active memory fixes > search optimization > deferred projects. Edel (24 Tem 2026): *"notebooklm oncelik degil memory.md ve user.md onemli."*
+- ❌ **Don't** propose deleting old conversations — Edel explicitly stated they are a "veri hazinesi" (data treasure) that preserves decision rationale and personal history. Optimize search performance (trigram, archive partitioning, incremental backup) instead of deleting data. (24 Tem 2026: *"gunluk sohbetlerin veri hazinesi ve geriye donuk sorgulama yapilabilmesi bakimindan silinmemesi gerektigini dusunuyorum."*)
+- ❌ **Don't** use `patch` tool on `config.yaml` — it's protected. Use `sed` via terminal for `user_char_limit` or use `hermes config set` for other config changes. Always mirror changes in `golden_config.yaml` for update resilience.
 - ❌ **Don't** rely on `terminal(background=true)` processes surviving a session reset. When the session ends (daily reset, gateway shutdown, timeout), all child processes are killed. For long-running work that must outlive the session, use `cronjob(action='create')` or re-run on next session. **Always** use `notify_on_complete=true` so at least the current session can capture the result.
 - ❌ **Don't** report "done / updated / completed" without verifying with grep or read_file first.
 - ❌ **Don't** report "not found / bulamadım" without first running the 4-step recall workflow (see "Session search strategy for Turkish FTS5" above). State.db holds 45K+ messages — zero results usually means a narrow query, not missing data.

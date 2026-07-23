@@ -264,7 +264,13 @@ tail -20 ~/.hermes/cron/output/f4ea19bb906a/<en-son-dosya> | grep -i "APA\|Edito
 Hepsi bağımsız. Membership/promo ATLA. Yeni içerik yok → [SILENT].
 - **Kanal A — Monitor + Press Releases:** Araştırma makaleleri, Yazar'a gönderilir
 - **Kanal B — Events & Education:** Webinar/workshop/konferans, direkt raporlanır (Yazar'sız)
-- Her iki kanal birbirinden bağımsız. Kanal A boşsa Kanal B'yi ATLAMA. Kanal A ve Kanal B'nin her ikisi de boşsa → `[SILENT]`.
+- **Kanal C — Advocacy/Politics (NEW — 23 Tem 2026):** `from:advocacy@info.apa.org` adresinden gelen **APA Advocacy Washington Update** bülteni. Politika/savunuculuk odaklıdır: Medicare kuralları, federal hibe düzenlemeleri, yasa değişiklikleri, psikolog hakları. Kategori: 📈 KARİYER & GELİŞİM. Yazar'sız direkt raporlanır. Bilimsel makale formatında işlenmez — kısa politika notu olarak wiki'ye kaydedilir ve NotebookLM'e text source olarak eklenir.
+- Her üç kanal birbirinden bağımsız. Kanal A boşsa Kanal B veya C'yi ATLAMA. Tüm kanallar boşsa → `[SILENT]`.
+
+**⚡ Gmail'de ATLANACAK mail tipleri (net liste — 23 Tem 2026):**
+- **CE Roundup** (`from:apace@info.apa.org`, subject "APA CE Roundup") — CE promosyon, ATLA
+- **Membership** (`from:membership@info.apa.org`, subject "Member Update") — üyelik yenileme/seçim duyurusu, ATLA
+- **Doğrulama/onay kodları** — verification, confirm, reset password, 2FA — ATLA
 
 **NE YAPILIR:**
 0. **⚠️ DEDUP KONTROLÜ (ZORUNLU — TEK TOOL, İLK İŞ, TAM TARA):** `~/wiki/apa-articles/index.md`'yi **TAMAMEN** tara (limit=2000, offset atlama — tüm satırları oku). **SADECE Monitor makalelerine değil, TÜM kanallara bak:** Monitor başlıkları, Press Release başlıkları ve Events kayıtlarının hepsi aynı index.md içinde listelenir. Bir başlık **"işlendi"** veya **"Haz"** statülü olarak geçiyorsa → ATLA, tekrar işleme. Hiçbir yeni tam başlıklı/linkli içerik yoksa → `[SILENT]`. "At APA: Convention" gibi soyut maddeler SUS sebebi DEĞİL.
@@ -273,12 +279,8 @@ Hepsi bağımsız. Membership/promo ATLA. Yeni içerik yok → [SILENT].
 
 **⚠️ DEDUP PITFALL — Index/Filesystem Mismatch (26 Haz 2026):** Index.md bir entry için dosya adı gösterebilir ama o dosya **diskte olmayabilir**. Her entry için `search_files(target="files")` ile diskte varlığını doğrula. Konsolide prosedür: `references/dedup-check-sequence.md`.
 
-**⚠️ DEDUP PITFALL — Topic-tabanlı eşleşme (27 Haz 2026):** Bir makaleyi index.md'de ararken sadece exact başlık eşlemesine güvenme. Press release başlıkları Monitor başlıklarından farklı olabilir (örn. "Study: Growing up gets less scary over time" vs "Growing up less scary" — ikisi de AYNI makale). **Çözüm:** web_search'te bulduğun makalenin URL slug'ını ve core keyword'lerini al, `search_files` ile wiki'de ara:
-```bash
-search_files "patients chatbots" path="$WIKI/apa-articles"
-search_files "growing up less scary" path="$WIKI/apa-articles"
-```
-Eğer sonuç dönerse duplicate'tir, işleme. Emin değilsen web_extract'e geçmeden ÖNCE core topic kelimelerini index.md'de tara. Geçiyorsa ATLA, gerekmiyorsa web_extract'le onayla.
+**⚠️ DEDUP PITFALL — Topic-tabanlı eşleşme (27 Haz 2026):** Bir makaleyi index.md'de ararken sadece exact başlık eşlemesine güvenme. Press release başlıkları Monitor başlıklarından farklı olabilir (örn. "Study: Growing up gets less scary over time" vs "Growing up less scary" — ikisi de AYNI makale). **Çözüm:** web_search'te bulduğun makalenin URL slug'ını ve core keyword'lerini al, `search_files` ile wiki'de ara.
+**⚠️ Index.md format korunumu (23 Tem 2026):** Subagent'lar veya paralel task'ler `~/wiki/apa-articles/index.md`'yi farklı formatta yeniden yazabilir (Türkçe başlıklar → İngilizce, farklı sütun isimleri, sütunların yeniden sıralanması). **Kural:** Index.md'yi güncellerken MEVCUT formatı koru. Tablo başlıklarını, dil seçimini ve tarih formatını olduğu gibi bırak. Sadece yeni satır ekle — tüm dosyayı rewrite etme. Subagent kullanıyorsan context'e "index.md formatını değiştirme, sadece satır ekle" talimatını koy.
 1. **Monitor:** `web_search` ile Monitor linklerini keşfet (birincil): `web_search query="site:apa.org/monitor/2026/07-08 psychology" limit=10`. `/monitor/2026` sayfasındaki issue listing'i de `web_extract` ile kontrol et. Browser console sadece web_search bulamazsa yedek kullan.
    **Press Release:** `web_extract(urls=["https://www.apa.org/news/press/"])` ile tara.
 2. AI makalelerini ÖNCELİKLİ işle
@@ -1361,7 +1363,8 @@ Without `is_visible()` checks, the script may try to fill a hidden password auto
 - **Cron summary discipline:** Final raporda yalnızca sonucu ve engeli söyle; "ne yaptım + ne kaldı" dışında detaylı süreç anlatma. Özellikle tool limiti dolduysa uzun metin yerine kısa durum özeti ver.
 - **Gmail search stencil'ı (27 Haz 2026):** `from:apa.org newer_than:3d` en güvenilir arama pattern'idir. `is:unread` rate-limit'e takılabilir (LiteRouter 403 hatası). Geniş zaman aralığı + dar domain filtresi ile rate-limit riski azalır.
 - **Cron interlock — çift pipeline çatışması:** APA Gmail pipeline (email-checker) ve APA web pipeline (notebooklm-pipeline) aynı kaynakları farklı aralıklarla tarar. Çakışmayı önlemek için: web pipeline başlamadan ÖNCE email-checker'ın son N saatlik çıktısını kontrol et. Email-checker zaten mailleri taradıysa (hatta 403 dahi dönse), aynı Gmail sorgusunu tekrar yapma — direkt web_extract ile tam metin çekmeye geç.
-- **Index.md patch kırılganlığı (10 Haz 2026):** `patch` ile index.md'de satır ekleme/çıkarma, büyüyen dosyada "ambiguous match" hatasına yol açabilir. **Çözüm:** `read_file` ile tüm index.md'yi oku → `write_file` ile baştan yaz. `patch` belirsiz string eşleşmesinde sessizce başarısız olur, `write_file` ise deterministiktir.
+- **Index.md format korunumu (23 Tem 2026):** Subagent'lar veya paralel task'ler `~/wiki/apa-articles/index.md`'yi farklı formatta yeniden yazabilir (Türkçe başlıklar → İngilizce, farklı sütun isimleri, kayıp satırlar). **Kural:** Index.md'yi güncellerken MEVCUT formatı koru. İlk satırdaki tablo başlıklarını, kolon isimlerini, tarih formatını olduğu gibi bırak. Sadece yeni satır ekle veya mevcut satırı güncelle — tüm dosyayı rewrite etme. Subagent kullanıyorsan index.md formatını context'te belirt.
+- **Subagent'ların index.md'yi rewrite etmesini engelle (23 Tem 2026):** Subagent'lara index.md güncelleme görevi verirken, mutlaka context'te mevcut formatı korumaları gerektiğini belirt. Aksi halde tablo yapısı, dil (Türkçe/İngilizce), emoji kullanımı ve tarih formatı bozulur.
   - **Cron mod farkı:** `execute_code` (Python script) cron'da BLOKE olduğu için manuel dize işleme gerekir. `read_file` ile tam içeriği oku → string manipulation ile yeni satırları ekle → `write_file` ile dosyayı baştan yaz. `read_file` limit=200 ile tüm satırları al, ardından yeni entry'leri doğru yere ekleyip write_file ile yaz.
   - **Numaralandırma tuzağı:** Markdown tablolarında elle numara verme (| 1 |, | 2 |) hata üretir — iki farklı entry aynı numarayı alabilir, sıralama kayar, taşıma sırasında kırılır. **Çözüm:** `| # |` kolonunu kullanma, tabloda numara kolonunu boş bırak veya sadece sıra belirteci olarak alfabetik sırayı kullan. En güvenlisi: tablo yerine bullet list (`- **makale**: açıklama — tarih`) formatına geç. Tablo formatı korunacaksa numaraları otomatik değil manuel gir ve her eklemede tüm numaraları yeniden kontrol et.
 
@@ -1439,16 +1442,7 @@ Without `is_visible()` checks, the script may try to fill a hidden password auto
   ```
   Script `Page.addScriptToEvaluateOnNewDocument` ile eklenir, `identifier` döner. Sonra `Page.navigate` ile hedef URL'ye gidilir. Bu script Google'ın temel bot tespitini geçer ama fingerprint tabanlı tespiti geçemez (`signin/rejected`).
 
-- **Auth read/write asimetrisi (8 Haz 2026):** MCP `auth_status: "stale"` iken TÜM işlemler aynı değildir:
-  - **Read ops (genelde çalışır) ✅:** notebook_list, notebook_get, notebook_query, source_get_content, studio_status
-  - **source_add — sınırlı güvenilirlik ⚠️:** URL ve text source ekleme, auth tamamen ölü olduğunda (stale değil, tamamen kopuk) İKİSİ DE başarısız olabilir. "Read ops" olarak sınıflandırılsa da Google'ın iç katmanında farklı bir auth seviyesi gerektirebilir. 28 Haz 2026 cron'da her iki yöntem de "Could not add source" hatasıyla başarısız oldu. Çözüm: wiki + NBLM best-effort pattern'i — wiki asıl teslimat, NBLM bonustur.
-  - **Write ops (bloke olabilir) ❌:** studio_create (slide_deck, infographic, report, audio, video), notebook_create (bazı durumlarda), source_delete
-  - **⚠️ CLI da farklı davranabilir:** `nlm login --check` "Authentication valid!" dese bile `nlm report create` "PERMISSION_DENIED" (API code 7) dönebilir. Google yazma token'ını ayrı bir seviyede doğrular. CLI auth ≠ full yazma yetkisi.
-  - **Doğrulama prosedürü:** `nlm login` başarılı olsa da yazma işlemini DOĞRULA: `nlm report create NOTEBOOK_ID --format "Briefing Doc" --confirm -y`. PERMISSION_DENIED alırsan yazma kapalıdır.
-  - **MCP cache uyarısı:** `nlm login` sonrası MCP `refresh_auth()` hâlâ "expired" diyebilir — bu MCP cache sorunu değil, auth gerçekten eksik veya MCP validator'ü bot detection'a takılıyor.
-  - **🎯 Kesin Çözüm — Owned Notebook:** `notebook_list`'te `ownership: "owned"` olan notebook'larda CLI (`nlm`) write işlemleri ÇALIŞIR. `shared_with_me` olanlarda PERMISSION_DENIED alınır.
-  - **🎯 Kesin Çözüm — Manuel Cookie Export:** Edel kendi tarayıcısından (Google'ın güvendiği bir IP'den) cookie export edip atarsa, direkt Chrome profiline yazılır.
-  - **❌ Otomatik Google login (20 Haz 2026):** WARP+ proxy + undetected-chromedriver + anti-detection script ile bile Google "signin/rejected" sayfasından kurtulmak neredeyse imkansız. Google fingerprint tabanlı tespit yapıyor. **Cookie import en güvenilir auth yöntemidir.** Detay: `references/cookie-import-procedure.md`
+- **Auth read/write asimetrisi (8 Haz 2026):** `nlm login --check` başarılı olsa bile yazma işlemleri farklı auth seviyesi gerektirebilir. Önce yazma işlemini DOĞRULA. Detay: `references/auth-readwrite-asymmetry.md` Google fingerprint tabanlı tespit yapıyor. **Cookie import en güvenilir auth yöntemidir.** Detay: `references/cookie-import-procedure.md`
   - **Kesin workaround (auth'tan tamamen bağımsız):** `notebook_query` ile içeriği çek → HTML olarak slayt tasarla → browser screenshot ile PNG çek. Sıfır auth gerektirir.
 
 - **`nlm list` CLI sözdizimi (5 Haz 2026):** `Page.addScriptToEvaluateOnNewDocument` ile her sayfada çalışacak WebDriver gizleme script'i eklenebilir:

@@ -1,7 +1,7 @@
 ---
 name: browser-debugging
 description: "Tarayıcı otomasyonunda hata ayıklama — API endpoint keşfi, fetch interceptor, session teşhisi, rate-limit handling, form validation hatalarını yakalama."
-version: 1.0.0
+version: 1.1.0
 metadata:
   hermes:
     tags: [browser, debugging, api, interception, automation]
@@ -447,6 +447,88 @@ asyncio.run(connect())
 - **Skool login** — Cloudflare korumalı, residential IP gerekli
 - **APA/Incapsula** — Anti-bot korumalı siteler
 - **Genel web otomasyonu** — Yüksek kaliteli residential IP gerektiğinde
+
+## 14. CDP Target Routing — browser_console Yanlış Sekmeyi Hedeflediğinde
+
+`browser_navigate` çağrısından sonra `browser_console`'un beklendiği gibi çalışmadığı, farklı bir sekmeye (ör. "New Tab") yöneldiği durumlar. Bu, özellikle Browserbase cloud'da görülür — birden fazla tab açıldığında `browser_console` her zaman en son aktif sekmeyi hedeflemez.
+
+### Belirti
+- `browser_navigate(url)` doğru sayfayı gösteriyor (snapshot'ta doğru içerik)
+- `browser_console` boş dönüyor veya beklenmeyen çıktı veriyor
+- `browser_console(expression="document.location.href")` başka bir URL döndürüyor (örn. `about:blank`)
+- İkinci `browser_console` çağrısı aynı sonucu veriyor
+
+### Çözüm — CDP ile Doğrudan Tab Hedefleme
+
+```python
+# 1. Tüm açık sekmeleri listele
+browser_cdp(method="Target.getTargets", params={})
+
+# 2. Çıktıda her target'ın targetId, title, url alanlarını kontrol et.
+#    Hedef sayfanın URL'ini (veya title'ını) içeren target'ı bul.
+#    Örnek çıktı:
+#    {"targetInfos": [
+#       {"targetId": "A", "type": "page", "title": "New Tab", "url": "about:blank"},
+#       {"targetId": "B", "type": "page", "title": "AI Automation Society", "url": "https://www.skool.com/ai-automation-society"}
+#    ]}
+#    Doğru target = "B" (URL/title eşleşen)
+
+# 3. Doğru target_id ile Runtime.evaluate kullan
+browser_cdp(method="Runtime.evaluate", params={
+    "expression": "document.body.innerText.substring(0, 5000)",
+    "returnByValue": true
+}, target_id="TARGET_ID")
+
+# 4. Post URL'lerini çıkarmak için:
+browser_cdp(method="Runtime.evaluate", params={
+    "expression": """Array.from(document.querySelectorAll('a'))
+    .map(a => ({title: a.textContent?.trim()?.slice(0,100), href: a.href}))
+    .filter(h => h.href && h.href.includes('/ai-automation-society/') 
+      && !h.href.includes('?c=') && !h.href.includes('/classroom'))
+    .slice(0,30)""",
+    "returnByValue": true
+}, target_id="TARGET_ID")
+```
+
+### Ne Zaman Kullanılır
+
+| İşaret | Olasılık |
+|--------|----------|
+| `browser_navigate` snapshot doğru, `browser_console` farklı URL döndürüyor | 🔴 Yüksek — bu yöntemi dene |
+| `browser_console` ilk çağrı çalışıyor, ikincide boş dönüyor | 🟡 Orta — önce `browser_snapshot` ile state tazele |
+| `browser_console` "Request failed" hatası veriyor | 🟢 Düşük — farklı sorun (Cloudflare) |
+
+### Alternatif: browser_vision
+
+CDP çalışmazsa `browser_vision` dene — Browserbase screenshot alır, sayfanın görsel durumunu gösterir:
+
+```python
+browser_vision(question="Sayfada hangi postlar görünüyor?")
+```
+
+### Pitfall: target_id Süreklilik Sağlamaz
+
+Aynı target_id'yi kullanarak yapılan birden fazla `browser_cdp` Runtime.evaluate çağrısı **bağımsız isteklerdir** — aralarındaki JS state'i (tanımlanan değişkenler) bir sonraki çağrıda kaybolabilir. Her evaluate'de ihtiyacın olan tüm mantığı tek expression'a sığdır.
+
+**Doğru:** Tek expression'da tüm işi bitir:
+```python
+browser_cdp(method="Runtime.evaluate", params={
+    "expression": "Array.from(document.querySelectorAll('a'))...",
+    "returnByValue": true
+}, target_id="B")
+```
+
+**Yanlış:** Değişkene atayıp sonraki çağrıda kullan:
+```python
+# İLK çağrı
+browser_cdp(..., params={"expression": "window.myData = [...]"}, target_id="B")
+# İKİNCİ çağrı — window.myData undefined olabilir!
+browser_cdp(..., params={"expression": "JSON.stringify(window.myData)"}, target_id="B")
+```
+
+### Örnek Vaka (23 Temmuz 2026)
+
+AI Automation Society feed'inde post linkleri çekilirken `browser_console` ikinci çağrıda "New Tab" sekmesine yöneldi, URL `about:blank` döndü. `browser_navigate` snapshot doğru sayfayı gösteriyordu ama console başka bir sekmedeydi. `Target.getTargets` ile iki target tespit edildi (New Tab + ai-automation-society). Doğru target_id ile `Runtime.evaluate` kullanıldı.
 
 ## Reference
 

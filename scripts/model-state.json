@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-22T04:01:51.521994",
+  "timestamp": "2026-07-23T04:00:58.824806",
   "working_models": [
     "deepseek-v4-flash",
     "deepseek-v4-pro",
@@ -10,6 +10,7 @@
     "gpt-5.4-mini",
     "kimi-k2.5",
     "kimi-k2.6",
+    "mimo-v2.5",
     "mimo-v2.5-pro",
     "minimax",
     "minimax-m2.5",
@@ -32,7 +33,7 @@
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash (PROTECTED)",
     "glm-5.1 (PROTECTED)",
-    "glm-5.1 (PROTECTED)",
+    "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
     "deepseek-v4-flash-free (PROTECTED)",
