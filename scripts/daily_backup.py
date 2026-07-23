@@ -32,33 +32,29 @@ RETENTION_DAYS = 14
 
 os.chdir(str(HERMES))
 
-# ── 0. state.db FULL backup ────────────────────────────────────────
+# ── 0. state.db FULL backup (SADECE Pazar) ─────────────────────────
 today = date.today().isoformat()
 is_sunday = date.today().weekday() == 6  # 6 = Sunday
 
-if STATE_DB.exists():
+if STATE_DB.exists() and is_sunday:
     try:
-        # Full messages dump
+        # Full messages dump — 600s timeout, haftada 1 kere
         msgs_path = FULL_DIR / f"msgs_{today}.sql"
         with open(msgs_path, "w") as f:
-            f.write(f"-- FULL messages backup {today}\n")
-            f.write("PRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n")
             subprocess.run(
-                ["sqlite3", str(STATE_DB), ".mode insert messages\nSELECT * FROM messages ORDER BY id;"],
-                stdout=f, timeout=300
+                ["sqlite3", str(STATE_DB)],
+                input=".mode insert messages\n.output stdout\nBEGIN TRANSACTION;\nSELECT * FROM messages ORDER BY id;\nCOMMIT;\n",
+                stdout=f, timeout=600, text=True
             )
-            f.write("COMMIT;\n")
 
         # Full sessions dump
         sess_path = FULL_DIR / f"sessions_{today}.sql"
         with open(sess_path, "w") as f:
-            f.write(f"-- FULL sessions backup {today}\n")
-            f.write("PRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n")
             subprocess.run(
-                ["sqlite3", str(STATE_DB), ".mode insert sessions\nSELECT * FROM sessions ORDER BY id;"],
-                stdout=f, timeout=120
+                ["sqlite3", str(STATE_DB)],
+                input=".mode insert sessions\n.output stdout\nBEGIN TRANSACTION;\nSELECT * FROM sessions ORDER BY id;\nCOMMIT;\n",
+                stdout=f, timeout=120, text=True
             )
-            f.write("COMMIT;\n")
 
         # Compress both
         for p in [msgs_path, sess_path]:
@@ -106,14 +102,11 @@ if STATE_DB.exists():
         if max_id > last_id:
             dump_path = INCR_DIR / f"msgs_{today}.sql"
             with open(dump_path, "w") as f:
-                f.write(f"-- Incremental messages {today} (id > {last_id})\n")
-                f.write("PRAGMA foreign_keys=OFF;\nBEGIN TRANSACTION;\n")
                 subprocess.run(
-                    ["sqlite3", str(STATE_DB),
-                     f"SELECT * FROM messages WHERE id > {last_id};"],
-                    stdout=f, timeout=120
+                    ["sqlite3", str(STATE_DB)],
+                    input=f".mode insert messages\n.output stdout\nBEGIN TRANSACTION;\nSELECT * FROM messages WHERE id > {last_id};\nCOMMIT;\n",
+                    stdout=f, timeout=120, text=True
                 )
-                f.write("COMMIT;\n")
 
             with open(dump_path, "rb") as f_in:
                 with gzip.open(str(dump_path) + ".gz", "wb") as f_out:

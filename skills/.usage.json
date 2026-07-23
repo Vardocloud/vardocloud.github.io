@@ -262,13 +262,13 @@
     "created_at": "2026-06-24T15:58:08.414691+00:00",
     "created_by": "agent",
     "last_patched_at": "2026-07-14T22:01:01.887290+00:00",
-    "last_used_at": "2026-07-14T22:01:09.855495+00:00",
-    "last_viewed_at": "2026-07-14T22:01:09.741627+00:00",
+    "last_used_at": "2026-07-23T13:03:50.205883+00:00",
+    "last_viewed_at": "2026-07-23T13:03:50.153863+00:00",
     "patch_count": 2,
     "pinned": false,
     "state": "active",
-    "use_count": 4,
-    "view_count": 4
+    "use_count": 5,
+    "view_count": 5
   },
   "cloud-video-transcription": {
     "archived_at": null,
@@ -1079,14 +1079,14 @@
     "archived_at": null,
     "created_at": "2026-06-30T00:37:00.409666+00:00",
     "created_by": "agent",
-    "last_patched_at": "2026-07-12T12:06:22.948438+00:00",
-    "last_used_at": "2026-07-12T12:05:18.102268+00:00",
-    "last_viewed_at": "2026-07-12T12:05:18.051857+00:00",
-    "patch_count": 3,
+    "last_patched_at": "2026-07-23T13:04:10.340350+00:00",
+    "last_used_at": "2026-07-23T13:04:26.346094+00:00",
+    "last_viewed_at": "2026-07-23T13:04:26.278801+00:00",
+    "patch_count": 4,
     "pinned": false,
     "state": "active",
-    "use_count": 5,
-    "view_count": 5
+    "use_count": 7,
+    "view_count": 7
   },
   "mcp/notebooklm-mcp": {
     "archived_at": null,
@@ -1622,14 +1622,14 @@
     "archived_at": null,
     "created_at": "2026-06-06T06:38:21.319960+00:00",
     "created_by": "agent",
-    "last_patched_at": "2026-07-23T12:52:07.749198+00:00",
-    "last_used_at": "2026-07-23T12:52:34.989183+00:00",
-    "last_viewed_at": "2026-07-23T12:52:34.911064+00:00",
-    "patch_count": 177,
+    "last_patched_at": "2026-07-23T13:04:44.290035+00:00",
+    "last_used_at": "2026-07-23T13:03:12.138414+00:00",
+    "last_viewed_at": "2026-07-23T13:03:12.100759+00:00",
+    "patch_count": 178,
     "pinned": false,
     "state": "active",
-    "use_count": 200,
-    "view_count": 156
+    "use_count": 201,
+    "view_count": 157
   },
   "sohbet": {
     "archived_at": null,

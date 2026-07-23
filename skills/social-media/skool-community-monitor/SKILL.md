@@ -1,7 +1,7 @@
 ---
 name: skool-community-monitor
 description: "Skool topluluklarını düzenli tarama, video/dosya içeriğini işleme (YouTube transcript, Whisper, Google Drive, NotebookLM), Vanitas gelişimi için bilgi toplama. Günlük cron job'lar ve içerik analizi workflow'u."
-version: 1.24.0
+version: 1.25.0
 metadata:
   hermes:
     tags: [skool, community, monitoring, cron, notebooklm, youtube, transcript]

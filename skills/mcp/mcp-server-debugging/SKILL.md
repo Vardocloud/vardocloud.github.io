@@ -218,6 +218,52 @@ head -3 /path/to/mcp-binary     # First line reveals interpreter
 
 ## Node-Based MCP Server Recovery
 
+### Scoped npm Packages (Binary Name ≠ Package Name)
+
+Some MCP servers are published as **scoped npm packages** (`@scope/package-name`) but expose a binary with a different name. This means:
+- `npm install -g @scop/name` installs to `~/.npm-global/lib/node_modules/@scop/name/`
+- The binary symlink goes to `~/.npm-global/bin/<binary-name>` (not `@scope/name`)
+- `which <binary>` may fail if npm-global is in PATH but the binary name isn't obvious
+
+**Known examples:**
+
+| Binary | Package | Install Command |
+|--------|---------|----------------|
+| `codegraph` | `@colbymchenry/codegraph` | `npm install -g @colbymchenry/codegraph` |
+| `context-mode` | `context-mode` | `npm install -g context-mode` |
+
+**Finding the binary:**
+```bash
+# List all globally installed binaries
+ls ~/.npm-global/bin/ | sort
+
+# Check what npm package provides a specific binary
+readlink -f ~/.npm-global/bin/<binary>
+# → resolves to ~/.npm-global/lib/node_modules/@scope/package/...
+
+# If binary exists but 'which' fails, use full path
+/home/ubuntu/.npm-global/bin/<binary> --version
+```
+
+### npm `--allow-scripts` Flag
+
+When npm's `allow-scripts` config blocks postinstall scripts, the package installs but its native addons or postinstall hooks never run:
+
+```
+npm warn allow-scripts   <package>@<version> (postinstall: node scripts/postinstall.mjs)
+```
+
+**Fix — allow the blocked scripts:**
+```bash
+# One-time allow
+npm install -g --allow-scripts=<package-name>,better-sqlite3,<other-addons> <package>
+
+# Or permanent (adds to npm config)
+npm config set allow-scripts=<package-name>,<other> --location=user
+```
+
+**Signs you need this:** Binary symlink exists but binary crashes silently, or `--version` returns no output.
+
 ### Symptom: `notebooklm-mcp` binary missing or `Connection closed`
 
 The binary path may differ between npm prefix locations:
@@ -228,13 +274,13 @@ The binary path may differ between npm prefix locations:
 
 1. Check both locations:
    ```bash
-   ls -la ~/.local/bin/notebooklm-mcp 2>/dev/null
-   ls -la ~/.npm-global/bin/notebooklm-mcp 2>/dev/null
+   ls -la ~/.local/bin/<binary> 2>/dev/null
+   ls -la ~/.npm-global/bin/<binary> 2>/dev/null
    ```
 
-2. If missing, reinstall:
+2. If missing, reinstall — check if it's a scoped package:
    ```bash
-   npm install -g notebooklm-mcp
+   npm install -g <package-name>  # might be @scope/name
    ```
 
 3. If Playwright browser binary missing:
@@ -246,12 +292,35 @@ The binary path may differ between npm prefix locations:
 
 4. Add to Hermes (use the actual binary path):
    ```bash
-   hermes mcp add <name> --command /home/ubuntu/.npm-global/bin/notebooklm-mcp
+   hermes mcp add <name> --command /home/ubuntu/.npm-global/bin/<binary>
    ```
 
 5. Verify health:
    - Current session → subagent ile dene (see "MCP Tool Visibility Across Sessions" above)
    - Yeni session → tools directly visible
+
+### MCP Binary in npm-global but Still "Command Not Found"
+
+**Symptom:** Binary exists at `~/.npm-global/bin/<binary>` but `which <binary>` fails from Hermes terminal.
+
+**Cause:** The `~/.npm-global/bin` directory is in the PATH that Hermes uses, but only for commands run AFTER login shell init. Some Hermes invocations use a clean PATH.
+
+**Diagnostic:**
+```bash
+# Check if npm-global is in current PATH
+echo "$PATH" | tr ':' '\n' | grep npm-global
+
+# Test via non-interactive bash (Hermes mode)
+bash -c 'which <binary>'
+
+# Test with explicit full path
+/home/ubuntu/.npm-global/bin/<binary> --version
+```
+
+**Fix options (in order):**
+1. Use full path in MCP command config: `/home/ubuntu/.npm-global/bin/<binary> serve --mcp`
+2. Add npm-global to bashrc before non-interactive guard (see `cli-tool-installation` skill)
+3. Symlink from ~/.local/bin: `ln -s /home/ubuntu/.npm-global/bin/<binary> /home/ubuntu/.local/bin/<binary>`
 
 ### "Failed to connect: Connection closed"
 The server process starts but crashes before completing the MCP handshake. Check:
