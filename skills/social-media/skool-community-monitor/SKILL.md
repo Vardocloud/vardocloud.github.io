@@ -1,7 +1,7 @@
 ---
 name: skool-community-monitor
 description: "Skool topluluklarını düzenli tarama, video/dosya içeriğini işleme (YouTube transcript, Whisper, Google Drive, NotebookLM), Vanitas gelişimi için bilgi toplama. Günlük cron job'lar ve içerik analizi workflow'u."
-version: 1.25.0
+version: 1.26.0
 metadata:
   hermes:
     tags: [skool, community, monitoring, cron, notebooklm, youtube, transcript]
@@ -326,6 +326,39 @@ Array.from(document.querySelectorAll('a[href*="youtube.com"], a[href*="youtu.be"
 // Post içeriği — zaman damgası ara ("Xh ago", "Xd ago")
 document.body.innerText.substring(0, 10000).replace(/[\uD800-\uDFFF]/g, '')
 ```
+
+**3a-alt. browser_cdp post extraction (browser_console fallback)**
+
+`browser_console` bazen Skool'da 0 link döndürür — browser yanlış frame'e bağlı olduğunda (ör. `chrome://new-tab-page` frame'ine düşmüş olabilir). Bu durumda `browser_cdp` ile doğrudan target'a evaluate yap:
+
+```python
+# 1. Tüm sekmeleri (target'ları) listele
+result = browser_cdp(method="Target.getTargets")
+# result.targetInfos içinde her sekmenin targetId + title + url
+
+# 2. Skool sayfasını bul (title'da community adı geçer)
+# Örn: "AI Automation Society | Skool" veya "Yapay Zekâdan Gelire"
+target_id = "19199B58802CEB329856C5711B6D5C8B"  # örnek — gerçek Target.getTargets çıktısından al
+
+# 3. JavaScript expression'ı doğrudan target'ta çalıştır
+browser_cdp(method="Runtime.evaluate", params={
+    "expression": "Array.from(document.querySelectorAll('a')).map(a => ({text: (a.textContent || '').trim().slice(0, 120), href: a.href})).filter(h => h.href && h.href.includes('skool.com/') && h.text.length > 0).slice(0, 60)",
+    "returnByValue": True
+}, target_id=target_id)
+```
+
+Bu yöntem `browser_console`'dan bağımsız çalışır — CDP üzerinden direkt Runtime'a gider. `target_id` almak için `Target.getTargets` sonuçlarındaki her entry'nin `targetId` alanını kullan.
+
+⚠️ **Hedef seçimi:** Skool sekmesini title'dan bul:
+```javascript
+// Target.getTargets dönen array'de şu title pattern'lerini ara:
+// "AI Automation Society | Skool" — AIAS
+// "Yapay Zekâdan Gelire | Skool" — YZG
+// "Skool" — community sayfası
+// NOT: title değil url de içerebilir — skool.com içeren target'ı seç
+```
+
+⚠️ **Cookie persistence:** `browser_cdp` Hermes browser'ın MEVCUT CDP session'ı üzerinden çalışır. Eğer browser'da cookie'ler düşmüşse ("JOIN GROUP" görünüyorsa), `Runtime.evaluate` da login gerektiren içeriği göremez. Önce login durumunu kontrol et: `browser_cdp(method="Runtime.evaluate", params={expression: "document.body.innerText.includes('JOIN GROUP')", returnByValue: true}, target_id=target_id)`.
 
 **3b. Snapshot (sadece browser_console başarısız olduğunda)**
 
@@ -829,6 +862,7 @@ Yeni kurulumda wiki'deki mevcut skool dosyalarını tara, URL'leri ve dosya adla
 | **Skool araması topluluk içi** | Search box sadece aktif toplulukta arar | Önce switcher'dan geçiş yap, sonra ara |
 | **Skool video player + YouTube link yok** | Video Skool'a yüklenmiş, YouTube embed'i değil | web_search ile video başlığı + yazar ara, WisdomAI'den özet çek |\n| **yt-dlp \"Sign in to confirm\" bot koruması** | YouTube bot detection | Aşama 2'ye geç: web_search ile link bul, sonra WisdomAI/analyzeVideo dene |\n| **Login redirect — zaten login olunmus** | `/login` sayfasina navigate edince, eger gecerli cookie varsa Skool otomatik community feed'ine yonlendirir. Sonra browser_type/browser_click login sayfasinda degil, community sayfasinda calisir — sessizce basarisiz olur | browser_type'dan ONCE `browser_console("document.location.href")` ile login sayfasinda oldugunu dogrula. Community'deysen (redirect), password login'i atla, direkt hedef URL'e git |
 | **Browser'da farklı hesabın cookies'i (22 Tem 2026)** | Daha önce farklı bir hesapla (Sudenaz Kalendar gibi) login olunmuşsa, cookie'ler hala aktif olabilir ve private community'ye erişim sağlar. `/login`'e gitmek redirect yedirir, login formu hiç görünmez | Adım 0'daki gibi: hedef topluluğa **direkt navigate et** — içerik geliyorsa login gerekmez. Navigasyon sırasında cookie düşerse (Browserbase epheméral), normal login akışına dön |\n| **Pinned post'ları atla** | İlk görünen postlar sabitlenmiş karşılama postlarıdır | Scroll yap, pinned etiketi olmayan postlara bak |
+| **`browser_console` 0 link döndürüyor (frame/session sorunu)** | Browser yanlış frame'e bağlı (ör. `chrome://new-tab-page`) veya session cookie'leri düşmüş. `browser_navigate` sonrası sayfa yüklense bile console boş dönebilir. | `browser_cdp` (Runtime.evaluate) ile target_id üzerinden alternatif: (1) `browser_cdp(method="Target.getTargets")` ile tüm sekmeleri listele, (2) doğru target_id'yi bul (sayfa title'ında community adı geçen), (3) `browser_cdp(method="Runtime.evaluate", params={expression: "JS_KODU", returnByValue: true}, target_id="BULUNAN_ID")` ile linkleri çek. Detay: `3a. browser_cdp post extraction (browser_console fallback)` bölümüne bak. |
 | **`browser_console` surrogate character hatası** | Emoji dolu sayfalarda `'utf-8' codec can't encode character '\ud835'` | Expression'a `.replace(/[\\uD800-\\uDFFF]/g, '')` ekle veya text içermeyen expression kullan (sadece href çek) |
 | **`browser_snapshot` timeout (büyük topluluk)** | Büyük topluluklarda snapshot 30sn+ timeout | Snapshot yerine ÖNCE `browser_console` ile text çek. Snapshot sadece küçük topluluklarda dene |
 | **Classroom modülü tıklandı ama sayfa değişmedi** | Skool client-side routing kullanır — URL görünürde aynı kalır | `browser_console` ile `document.location.href` kontrol et. `classroom/{id}?md={md}` formatına döndü mü? |

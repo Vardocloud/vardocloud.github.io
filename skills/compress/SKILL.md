@@ -218,7 +218,7 @@ session_search(session_id="BULUNAN_ID")
 
 Veri kaybı DEĞİL, arama sınırlaması — tüm session'lar state.db'de sağlam.
 
-### FTS5 Trigram Architecture (23 Tem 2026)
+#### FTS5 Trigram Architecture (23 Tem 2026)
 
 state.db'de iki FTS5 tablosu var, biri kullanilmiyor:
 
@@ -227,15 +227,7 @@ state.db'de iki FTS5 tablosu var, biri kullanilmiyor:
 | messages_fts | unicode61 | ~45K | session_search'un kullandigi |
 | messages_fts_trigram | trigram | ~45K | VAR AMA KULLANILMIYOR |
 
-#### wiki_fts_trigram — Cozum (24 Tem 2026)
-
-`session_search` tool'unu degistiremem ama **wiki_fts** icin trigram index olusturdum:
-
-```bash
-# state.db'de olusturulan tablo (872 wiki dosyasi):
-python3 ~/.hermes/scripts/wiki_trigram_reindex.py
-# 872 dosya indeklendi, 0 hata (24 Tem 2026)
-```
+#### wiki_fts_trigram — Cozum (24 Tem 2026)\n\n`session_search` tool'unu degistiremem ama **wiki_fts** icin trigram index olusturup 872 dosyayi indeksledim. Script: `~/.hermes/scripts/wiki_trigram_reindex.py`. Her gece 02:30'da otomatik yenilenir. Tablo adi: `wiki_fts_trigram`. Schema: wiki_fts ile ayni, `tokenize='trigram'` farkiyla.
 
 **Turkce kok bulma basarimi karsilastirmasi (wiki_fts vs wiki_fts_trigram):**
 
@@ -250,9 +242,7 @@ python3 ~/.hermes/scripts/wiki_trigram_reindex.py
 
 **Script:** `~/.hermes/scripts/wiki_trigram_reindex.py` — 872 .md dosyayi okur, her birini trigram ile indeksler.
 **Cron:** `📚 Wiki Trigram Reindex (Gunluk)` — her gece 02:30'da calisir.
-**Sinirlama:** Trigram minimum 3 karakter. 2 harfli sorgular dogrudan calismaz.
-
-### Okuma Hiyerarsisi - Pratik Kullanim
+**Sinirlama:** Trigram minimum 3 karakter. 2 harfli sorgular dogrudan calismaz.\n\n### Edel Session Retention Kurali (23 Tem 2026)\n\nKonusma gecmisi ASLA silinmez. 1.741 session veri hazinesidir. Retention = archive + optimize, delete degil. state.db backup (full + incremental) GitHub'a gider, boylece silme olmaz.\n\n### Guncel Oncelik Sirasi (23 Tem 2026)\n\n1. USER.md/MEMORY.md duzeltmeleri ✅\n2. FTS5 trigram (en yuksek kazanc) ✅\n3. state.db backup (tam gocmenlik guvencesi) ✅\n4. NotebookLM wiki aktarimi ⏸️ RAFTA — Edel: \"ekstra is, backup calisiyor\"\n\n### Okuma Hiyerarsisi - Pratik Kullanim
 
 6-katmanli okuma hiyerarsisinde NotebookLM teoride var ama pratikte sorgulanmaz:
 

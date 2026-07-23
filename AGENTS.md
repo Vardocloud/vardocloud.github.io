@@ -152,6 +152,16 @@ nlm source add <NOTEBOOK_ID> --file <wiki_md_path> --title "Başlık" --wait --w
 | Günlük podcast/report | İlgili notebook | 1 gün | nlm audio create |
 | Test/geçici içerik | Test notebook | 7 gün | nlm add text |
 
+## Session Retention Policy
+
+**Tüm konuşma geçmişleri kalıcıdır. Silme yoktur.**
+state.db'deki session'lar ve mesajlar asla silinmez — geçmiş bir veri hazinesidir.
+
+- **Performans:** state.db büyümesi FULL+INCR backup ile yönetilir
+- **Arama:** FTS5 trigram index (messages_fts_trigram + wiki_fts_trigram) Türkçe morfoloji için optimize edilmiştir
+- **Arşiv:** GitHub'a FULL (Pazar) + INCR (günlük) dump ile yedeklenir
+- **Geri yükleme:** Herhangi bir felaket senaryosunda full dump + incremental dump'lar sırayla yüklenerek tüm konuşma geçmişi aynen geri getirilir
+
 ## Session Isolation Rules
 
 - New session = clean slate. Don't carry context from previous sessions.
