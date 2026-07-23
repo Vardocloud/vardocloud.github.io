@@ -514,37 +514,21 @@ model:
   default: deepseek-v4-flash
   max_tokens: 16384
   provider: opencode-go
-model_aliases:
-  bedava:
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-  bedava-deep:
-    model: nemotron-3-ultra-free
-    provider: opencode-zen
-  bedava-kod:
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-  derin:
-    model: deepseek-v4-flash-free
-    provider: opencode-zen
-  glm-5.2:
-    model: z-ai/glm-5.2
-    provider: NVIDIA
-  groq:
-    model: groq-llama-4-scout
-    provider: Groq
-  groq-hizli:
-    model: groq-instant
-    provider: Groq
-  qwen:
-    model: qwen3.7-max
-    provider: opencode-go
-  qwen-arti:
-    model: qwen3.7-plus
-    provider: opencode-go
-  varsayilan:
-    model: deepseek-v4-flash
-    provider: opencode-go
+model_aliases: "{\n  \"omniroute\": {\"model\": \"auto/best-free\", \"provider\":\
+  \ \"omniroute-free\"},\n  \"omniroute-kod\": {\"model\": \"auto/best-coding\", \"\
+  provider\": \"omniroute-coding\"},\n  \"omniroute-hizli\": {\"model\": \"auto/best-fast\"\
+  , \"provider\": \"omniroute-fast\"},\n  \"omniroute-ucretsiz\": {\"model\": \"auto/best-free\"\
+  , \"provider\": \"omniroute-free\"},\n  \"bedava\": {\"model\": \"deepseek-v4-flash-free\"\
+  , \"provider\": \"opencode-zen\"},\n  \"bedava-deep\": {\"model\": \"nemotron-3-ultra-free\"\
+  , \"provider\": \"opencode-zen\"},\n  \"bedava-kod\": {\"model\": \"deepseek-v4-flash-free\"\
+  , \"provider\": \"opencode-zen\"},\n  \"derin\": {\"model\": \"deepseek-v4-flash-free\"\
+  , \"provider\": \"opencode-zen\"},\n  \"glm-5.2\": {\"model\": \"z-ai/glm-5.2\"\
+  , \"provider\": \"NVIDIA\"},\n  \"groq\": {\"model\": \"groq-llama-4-scout\", \"\
+  provider\": \"Groq\"},\n  \"groq-hizli\": {\"model\": \"groq-instant\", \"provider\"\
+  : \"Groq\"},\n  \"qwen\": {\"model\": \"qwen3.7-max\", \"provider\": \"opencode-go\"\
+  },\n  \"qwen-arti\": {\"model\": \"qwen3.7-plus\", \"provider\": \"opencode-go\"\
+  },\n  \"varsayilan\": {\"model\": \"deepseek-v4-flash\", \"provider\": \"opencode-go\"\
+  }\n}"
 model_catalog:
   enabled: false
   providers: {}
@@ -586,19 +570,16 @@ profile_describer:
   model: deepseek-v4-flash-free
 prompt_caching:
   cache_ttl: 5m
-providers:
-- base_url: http://127.0.0.1:19998/v1
-  model: deepseek-v4-flash
-  name: opencode-go
-- base_url: https://opencode.ai/zen/v1
-  model: deepseek-v4-flash-free
-  name: opencode-zen
-- base_url: https://api.groq.com/openai/v1
-  model: groq-llama-4-scout
-  name: Groq
-- base_url: https://api.mistral.ai/v1
-  model: mistral-large
-  name: Mistral
+providers: "[\n  {\"base_url\": \"http://127.0.0.1:19998/v1\", \"model\": \"deepseek-v4-flash\"\
+  , \"name\": \"opencode-go\"},\n  {\"base_url\": \"https://opencode.ai/zen/v1\",\
+  \ \"model\": \"deepseek-v4-flash-free\", \"name\": \"opencode-zen\"},\n  {\"base_url\"\
+  : \"https://api.groq.com/openai/v1\", \"model\": \"groq-llama-4-scout\", \"name\"\
+  : \"Groq\"},\n  {\"base_url\": \"https://api.mistral.ai/v1\", \"model\": \"mistral-large\"\
+  , \"name\": \"Mistral\"},\n  {\"base_url\": \"http://localhost:20128/v1\", \"model\"\
+  : \"auto/best-free\", \"name\": \"omniroute-free\"},\n  {\"base_url\": \"http://localhost:20128/v1\"\
+  , \"model\": \"auto/best-coding\", \"name\": \"omniroute-coding\"},\n  {\"base_url\"\
+  : \"http://localhost:20128/v1\", \"model\": \"auto/best-fast\", \"name\": \"omniroute-fast\"\
+  }\n]"
 quick_commands:
   dashboard-restart:
     command: ~/.hermes/scripts/infra.sh dashboard-restart

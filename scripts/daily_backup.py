@@ -25,6 +25,8 @@ STATE_DB = HERMES / "state.db"
 BACKUP_DIR = HERMES / "backups" / "state"
 FULL_DIR = BACKUP_DIR / "full"
 INCR_DIR = BACKUP_DIR / "incr"
+FULL_DIR.mkdir(parents=True, exist_ok=True)
+INCR_DIR.mkdir(parents=True, exist_ok=True)
 TRACKER = BACKUP_DIR / ".last_msg_id"
 RETENTION_DAYS = 14
 
